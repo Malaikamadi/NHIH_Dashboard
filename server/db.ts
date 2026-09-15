@@ -196,7 +196,7 @@ export async function tickOverdue(): Promise<OpsState | null> {
   return commit(ticked)
 }
 
-export function persistence(): 'blob' | 'kv' | 'file' {
+export function persistence(): 'kv' | 'blob' | 'file' {
   return storageKind()
 }
 

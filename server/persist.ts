@@ -22,6 +22,10 @@ export type SnapshotRead =
   | { ok: false; missing: true }
   | { ok: false; missing: false; error: string }
 
+/** Blob is optional recovery only. Prefer Redis/KV for durable hub data. */
+const blobAllowed =
+  process.env.ENABLE_BLOB === '1' || process.env.ENABLE_BLOB === 'true'
+
 let blobBroken = false
 
 function kvConfig() {
@@ -36,25 +40,27 @@ function blobConfigured(): boolean {
 }
 
 function blobEnabled(): boolean {
-  return blobConfigured() && !blobBroken
+  return blobAllowed && blobConfigured() && !blobBroken
 }
 
-export function storageKind(): 'blob' | 'kv' | 'file' {
-  if (blobEnabled()) return 'blob'
+export function storageKind(): 'kv' | 'blob' | 'file' {
   if (kvConfig()) return 'kv'
+  if (blobEnabled()) return 'blob'
   return 'file'
 }
 
 export function storageStatus(): {
-  kind: 'blob' | 'kv' | 'file'
+  kind: 'kv' | 'blob' | 'file'
   blobConfigured: boolean
   blobBroken: boolean
+  blobAllowed: boolean
   kvConfigured: boolean
 } {
   return {
     kind: storageKind(),
     blobConfigured: blobConfigured(),
     blobBroken,
+    blobAllowed,
     kvConfigured: Boolean(kvConfig()),
   }
 }
@@ -62,7 +68,9 @@ export function storageStatus(): {
 function markBlobBroken(reason: string): void {
   if (!blobBroken) {
     blobBroken = true
-    console.error(`[persist] Vercel Blob unavailable, falling back to ${kvConfig() ? 'kv' : 'file'}: ${reason}`)
+    console.error(
+      `[persist] Vercel Blob unavailable, using ${kvConfig() ? 'kv' : 'file'}: ${reason}`,
+    )
   }
 }
 
@@ -163,44 +171,37 @@ function writeFileStore(snapshot: Snapshot): void {
 }
 
 export async function readSnapshot(): Promise<SnapshotRead> {
-  if (blobEnabled()) {
-    const blob = await readBlob()
-    if (blob.ok) return blob
-    if (!blob.missing) {
-      markBlobBroken(blob.error)
-    }
-  }
-
+  // Durable store first: Upstash Redis / Vercel KV
   if (kvConfig()) {
     const kv = await readKv()
     if (kv.ok || !kv.missing) return kv
+  }
+
+  // Optional Blob (off unless ENABLE_BLOB=1) — used only if Redis is not set
+  if (blobEnabled()) {
+    const blob = await readBlob()
+    if (blob.ok) return blob
+    if (!blob.missing) markBlobBroken(blob.error)
   }
 
   return readFileStore()
 }
 
 export async function writeSnapshot(snapshot: Snapshot): Promise<void> {
+  if (kvConfig()) {
+    await redis(['SET', KEY, JSON.stringify(snapshot)])
+    writeFileStore(snapshot)
+    return
+  }
+
   if (blobEnabled()) {
     try {
       await writeBlob(snapshot)
-      if (kvConfig()) {
-        try {
-          await redis(['SET', KEY, JSON.stringify(snapshot)])
-        } catch {
-          /* optional mirror */
-        }
-      }
       writeFileStore(snapshot)
       return
     } catch (error) {
       markBlobBroken(error instanceof Error ? error.message : String(error))
     }
-  }
-
-  if (kvConfig()) {
-    await redis(['SET', KEY, JSON.stringify(snapshot)])
-    writeFileStore(snapshot)
-    return
   }
 
   writeFileStore(snapshot)

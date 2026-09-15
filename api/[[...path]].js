@@ -3332,17 +3332,17 @@ var require_exec = __commonJS({
     var import_node_path2 = __toESM2(require("node:path"));
     var import_execa = __toESM2(require_execa());
     var import_envpath = require_envpath();
-    var import_errors4 = require_errors();
+    var import_errors5 = require_errors();
     var import_lookup = require_lookup();
     async function execVercelCli2(args, options = {}) {
       const cwd = import_node_path2.default.resolve(options.cwd ?? process.cwd());
-      await (0, import_errors4.assertValidCwd)(cwd);
+      await (0, import_errors5.assertValidCwd)(cwd);
       const env = mergeExecEnv(options.env);
       const pathValue = (0, import_envpath.getEnvPath)(env);
       try {
         return await execResolvedVercelCli(args, options, cwd, env, pathValue);
       } catch (error61) {
-        if (error61 instanceof import_errors4.VercelCliError && error61.code === "VERCEL_CLI_NOT_FOUND") {
+        if (error61 instanceof import_errors5.VercelCliError && error61.code === "VERCEL_CLI_NOT_FOUND") {
           (0, import_lookup.clearCachedCliInvocation)(cwd, pathValue);
           return await execResolvedVercelCli(args, options, cwd, env, pathValue);
         }
@@ -3373,15 +3373,15 @@ var require_exec = __commonJS({
         );
         return { stdout, stderr, invocation };
       } catch (error61) {
-        throw (0, import_errors4.toVercelCliError)(invocation, error61);
+        throw (0, import_errors5.toVercelCliError)(invocation, error61);
       }
     }
     async function resolveInvocationOrThrow(cwd, pathValue) {
       const resolution = await (0, import_lookup.resolveCachedCliInvocation)(cwd, pathValue);
       if (!resolution.found) {
-        throw new import_errors4.VercelCliError({
+        throw new import_errors5.VercelCliError({
           code: "VERCEL_CLI_NOT_FOUND",
-          message: (0, import_errors4.getCliNotFoundMessage)(resolution.diagnostics)
+          message: (0, import_errors5.getCliNotFoundMessage)(resolution.diagnostics)
         });
       }
       return (0, import_lookup.toVercelCliInvocation)(resolution);
@@ -3431,13 +3431,13 @@ var require_dist = __commonJS({
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var src_exports = {};
     __export2(src_exports, {
-      VercelCliError: () => import_errors4.VercelCliError,
+      VercelCliError: () => import_errors5.VercelCliError,
       clearVercelCliLookupCache: () => import_lookup.clearVercelCliLookupCache,
       execVercelCli: () => import_exec.execVercelCli,
       findVercelCli: () => import_lookup.findVercelCli
     });
     module2.exports = __toCommonJS2(src_exports);
-    var import_errors4 = require_errors();
+    var import_errors5 = require_errors();
     var import_exec = require_exec();
     var import_lookup = require_lookup();
   }
@@ -50884,7 +50884,8 @@ var WORK_TYPES = [
   { id: "data_quality", label: "Data quality" },
   { id: "hio_field_visit", label: "HIO field visit" },
   { id: "analysis_request", label: "Analysis request" },
-  { id: "facility_followup", label: "Facility follow-up" }
+  { id: "facility_followup", label: "Facility follow-up" },
+  { id: "other", label: "Others" }
 ];
 var DISTRICTS = [
   { id: "national", label: "National / Hub" },
@@ -50905,6 +50906,14 @@ var DISTRICTS = [
   { id: "pujehun", label: "Pujehun" },
   { id: "tonkolili", label: "Tonkolili" }
 ];
+var ACTIVITY_KINDS = [
+  { id: "field_visit", label: "Field visit" },
+  { id: "training", label: "Training" },
+  { id: "workshop", label: "Workshop" },
+  { id: "supervision", label: "Supervision" },
+  { id: "partner", label: "Partner engagement" },
+  { id: "other", label: "Other" }
+];
 var LOG_KINDS = [
   { id: "extract_failed", label: "Extract failed" },
   { id: "extract_restored", label: "Extract restored" },
@@ -50921,7 +50930,14 @@ var DISTRICT_LABEL = Object.fromEntries(
 var LOG_KIND_LABEL = Object.fromEntries(
   LOG_KINDS.map((item) => [item.id, item.label])
 );
-function workTypeLabel(id) {
+var ACTIVITY_KIND_LABEL = Object.fromEntries(
+  ACTIVITY_KINDS.map((item) => [item.id, item.label])
+);
+function workTypeLabel(id, other) {
+  if (id === "other") {
+    const custom2 = other?.trim();
+    return custom2 || "Other";
+  }
   return WORK_TYPE_LABEL[id] ?? id;
 }
 function districtLabel(id) {
@@ -50930,8 +50946,15 @@ function districtLabel(id) {
 function logKindLabel(id) {
   return LOG_KIND_LABEL[id] ?? id;
 }
-function placeLine(workKind2, district, facility) {
-  const base = `${workTypeLabel(workKind2)} \xB7 ${districtLabel(district)}`;
+function activityKindLabel(id, other) {
+  if (id === "other") {
+    const custom2 = other?.trim();
+    return custom2 || "Other";
+  }
+  return ACTIVITY_KIND_LABEL[id] ?? id;
+}
+function placeLine(workKind2, district, facility, workKindOther) {
+  const base = `${workTypeLabel(workKind2, workKindOther)} \xB7 ${districtLabel(district)}`;
   return facility?.trim() ? `${base} \xB7 ${facility.trim()}` : base;
 }
 
@@ -50944,6 +50967,11 @@ function startOfDay(date5) {
   d.setHours(0, 0, 0, 0);
   return d;
 }
+function endOfDay(date5) {
+  const d = new Date(date5);
+  d.setHours(23, 59, 59, 999);
+  return d;
+}
 function atTime(base, hours, minutes) {
   const d = new Date(base);
   d.setHours(hours, minutes, 0, 0);
@@ -50953,6 +50981,14 @@ function addDays(base, days) {
   const d = new Date(base);
   d.setDate(d.getDate() + days);
   return d;
+}
+function startOfWeek(date5) {
+  const d = startOfDay(date5);
+  const weekday = d.getDay();
+  return addDays(d, weekday === 0 ? -6 : 1 - weekday);
+}
+function endOfWeek(date5) {
+  return endOfDay(addDays(startOfWeek(date5), 6));
 }
 function startOfMonth(date5) {
   const d = startOfDay(date5);
@@ -51031,6 +51067,20 @@ function agendaLines(agenda) {
 function todaysMeetings(meetings, now = /* @__PURE__ */ new Date()) {
   return meetings.filter((m) => isSameDay(new Date(m.startTime), now)).sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime));
 }
+function weeksMeetings(meetings, now = /* @__PURE__ */ new Date()) {
+  const start = startOfWeek(now);
+  const end = endOfWeek(now);
+  return meetings.filter((meeting) => isInRange(meeting.startTime, start, end)).sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime));
+}
+function openWeekMeetings(meetings, now = /* @__PURE__ */ new Date()) {
+  return weeksMeetings(meetings, now).filter((meeting) => meetingStatus(meeting, now) !== "completed");
+}
+function todaysActivities(activities, now = /* @__PURE__ */ new Date()) {
+  return [...activities ?? []].filter((item) => isSameDay(new Date(item.startTime), now)).sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime));
+}
+function openTodayActivities(activities, now = /* @__PURE__ */ new Date()) {
+  return todaysActivities(activities, now).filter((item) => meetingStatus(item, now) !== "completed");
+}
 function isDueToday(task, now = /* @__PURE__ */ new Date()) {
   return isSameDay(new Date(task.dueDate), now);
 }
@@ -51056,9 +51106,12 @@ function teamMetrics(state, now = /* @__PURE__ */ new Date()) {
   const tasks = state.tasks;
   const total = tasks.length;
   const completed = tasks.filter((t) => displayStatus(t, now) === "completed");
-  const today = todaysMeetings(state.meetings, now);
+  const today = openWeekMeetings(state.meetings, now);
+  const activities = openTodayActivities(state.activities, now);
   return {
-    meetingsToday: today.length,
+    meetingsToday: todaysMeetings(state.meetings, now).filter((m) => meetingStatus(m, now) !== "completed").length,
+    meetingsThisWeek: today.length,
+    activitiesToday: activities.length,
     dueToday: tasks.filter((t) => isDueToday(t, now) && displayStatus(t, now) !== "completed").length,
     completedToday: tasks.filter((t) => wasCompletedToday(t, now)).length,
     inProgress: tasks.filter((t) => {
@@ -51071,6 +51124,7 @@ function teamMetrics(state, now = /* @__PURE__ */ new Date()) {
     onTime: tasks.filter((t) => completedOnTime(t)).length,
     total,
     liveMeetings: today.filter((m) => meetingStatus(m, now) === "live").length,
+    liveActivities: activities.filter((item) => meetingStatus(item, now) === "live").length,
     highPriorityDue: tasks.filter((t) => {
       const s = displayStatus(t, now);
       return isDueToday(t, now) && s !== "completed" && (t.priority === "high" || t.priority === "critical");
@@ -51110,6 +51164,7 @@ function buildWeeklyReport(state, now = /* @__PURE__ */ new Date()) {
   const metrics = teamMetrics(state, now);
   const closed = state.tasks.filter((t) => t.completedAt && isInRange(t.completedAt, start, end));
   const meetings = state.meetings.filter((m) => isInRange(m.startTime, start, end)).sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime));
+  const weekActivities = [...state.activities ?? []].filter((item) => isInRange(item.startTime, start, end)).sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime));
   const people = memberWorkloads(state, now).map((row) => ({
     name: row.member.name,
     role: row.member.role,
@@ -51137,6 +51192,7 @@ function buildWeeklyReport(state, now = /* @__PURE__ */ new Date()) {
       inProgress: metrics.inProgress,
       onTime: closed.filter((t) => completedOnTime(t)).length,
       meetings: meetings.length,
+      activities: weekActivities.length,
       openActions: state.actionItems.filter((a) => a.status !== "completed").length,
       hubLog: hubLog.length
     },
@@ -51153,13 +51209,22 @@ function buildWeeklyReport(state, now = /* @__PURE__ */ new Date()) {
         notes: meeting.notes?.trim() ?? "",
         actions: actions.map((item) => ({
           title: item.title,
-          place: placeLine(item.workKind, item.district, item.facility),
+          place: placeLine(item.workKind, item.district, item.facility, item.workKindOther),
           owner: memberName(state.members, item.assignedTo),
           status: item.status.replace("_", " "),
           deadline: formatDate(item.deadline)
         }))
       };
-    })
+    }),
+    activities: weekActivities.map((item) => ({
+      id: item.id,
+      title: item.title,
+      kind: activityKindLabel(item.kind, item.kindOther),
+      when: `${formatDate(item.startTime)} \xB7 ${formatTimeRange(item.startTime, item.endTime)} \xB7 ${meetingStatus(item, now)}`,
+      place: item.facility ? `${districtLabel(item.district)} \xB7 ${item.facility}` : districtLabel(item.district),
+      attendees: item.participantIds.map((id) => memberName(state.members, id)).join(", "),
+      notes: item.notes?.trim() ?? ""
+    }))
   };
 }
 function reportToHtml(report) {
@@ -51178,6 +51243,9 @@ function reportToHtml(report) {
     const agenda = items.length ? `<ol class="agenda">${items.map((item) => `<li>${esc2(item)}</li>`).join("")}</ol>` : '<p class="mute">Agenda not set for this session.</p>';
     return `<section class="meeting"><h3>${esc2(m.title)}</h3><p class="meta">${esc2(m.when)}</p><p class="meta">Attendees: ${esc2(m.attendees)}</p><h4>Agenda</h4>${agenda}<h4>Minutes</h4>${minutes}<h4>Action items</h4>${actions}</section>`;
   }).join("");
+  const activityBlocks = report.activities.map(
+    (item) => `<section class="meeting"><h3>${esc2(item.title)}</h3><p class="meta">${esc2(item.kind)} \xB7 ${esc2(item.when)}</p><p class="meta">${esc2(item.place)}</p><p class="meta">Attending: ${esc2(item.attendees || "Not listed")}</p>${item.notes ? `<p class="minutes">${esc2(item.notes)}</p>` : ""}</section>`
+  ).join("");
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -51218,11 +51286,12 @@ function reportToHtml(report) {
     <div class="kpi"><strong>${report.performance.overdue}</strong><span>Still overdue</span></div>
     <div class="kpi"><strong>${report.performance.inProgress}</strong><span>In progress</span></div>
     <div class="kpi"><strong>${report.performance.meetings}</strong><span>Meetings this week</span></div>
+    <div class="kpi"><strong>${report.performance.activities}</strong><span>Activities this week</span></div>
     <div class="kpi"><strong>${report.performance.openActions}</strong><span>Open action items</span></div>
-    <div class="kpi"><strong>${report.performance.hubLog}</strong><span>Hub log entries</span></div>
+    <div class="kpi"><strong>${report.performance.hubLog}</strong><span>Hub incident log entries</span></div>
   </div>
 
-  <h2>Hub log</h2>
+  <h2>Hub incident log</h2>
   ${hubLogRows ? `<table><thead><tr><th>When</th><th>Kind</th><th>What happened</th><th>Where</th><th>Detail</th><th>Logged by</th></tr></thead><tbody>${hubLogRows}</tbody></table>` : '<p class="mute">No extract, late-reporting, or incident entries this week.</p>'}
 
   <h2>Individual performance</h2>
@@ -51233,6 +51302,9 @@ function reportToHtml(report) {
 
   <h2>Meetings and minutes</h2>
   ${meetingBlocks || '<p class="mute">No meetings recorded in this period.</p>'}
+
+  <h2>Team activities</h2>
+  ${activityBlocks || '<p class="mute">No trainings, field visits, or other activities recorded in this period.</p>'}
 </body>
 </html>`;
 }
@@ -51242,7 +51314,7 @@ function esc2(value) {
 
 // src/data/seed.ts
 var MEMBERS = [
-  { id: "m1", name: "Regina Daniels", role: "Coordinator", initials: "RD" },
+  { id: "m1", name: "Regina Samuels", role: "Coordinator", initials: "RS" },
   { id: "m2", name: "Ibrahim Sorie", role: "Team Lead", initials: "IS" },
   { id: "m3", name: "Prince Mafinda", role: "Operations Manager", initials: "PM" },
   { id: "m4", name: "Maliaka Madi", role: "Data Engineer", initials: "MM" },
@@ -51252,7 +51324,12 @@ var MEMBERS = [
   { id: "m8", name: "Ishmael Kamara", role: "HMIS Officer", initials: "IK" },
   { id: "m9", name: "Sallay", role: "HIO", initials: "SA" },
   { id: "m10", name: "Karim SB Momoh", role: "HMIS", initials: "KM" },
-  { id: "m11", name: "Ahmed Saidu", role: "HMIS", initials: "AS" }
+  { id: "m11", name: "Ahmed Saidu", role: "HMIS", initials: "AS" },
+  { id: "m12", name: "Success", role: "Sand Technologies", initials: "SU" },
+  { id: "m13", name: "Mohamed Sesay", role: "Country Director, Sand Technologies", initials: "MS" },
+  { id: "m14", name: "Golda", role: "Sand Technologies", initials: "GO" },
+  { id: "m15", name: "Dr. Ini", role: "DPPI", initials: "DI" },
+  { id: "m16", name: "Director", role: "DPPI", initials: "DP" }
 ];
 function buildSeed() {
   return {
@@ -51261,8 +51338,17 @@ function buildSeed() {
     meetings: [],
     actionItems: [],
     events: [],
-    hubLog: []
+    hubLog: [],
+    activities: []
   };
+}
+
+// src/utils/hub.ts
+function hubHasWork(state) {
+  if (!state) return false;
+  return Boolean(
+    state.tasks?.length || state.meetings?.length || state.activities?.length || state.actionItems?.length || state.hubLog?.length
+  );
 }
 
 // server/errors.ts
@@ -51295,7 +51381,8 @@ function viewState(state, now = /* @__PURE__ */ new Date()) {
   return {
     ...state,
     meetings: state.meetings.map((meeting) => rollMeeting(meeting, now)),
-    hubLog: state.hubLog ?? []
+    hubLog: state.hubLog ?? [],
+    activities: state.activities ?? []
   };
 }
 function tickOverdue(state, now = /* @__PURE__ */ new Date()) {
@@ -51376,6 +51463,28 @@ function updateMeeting(state, id, patch) {
   }
   return following;
 }
+function addActivity(state, activity) {
+  return pushEvent(
+    { ...state, activities: [...state.activities ?? [], activity] },
+    `Activity added \xB7 ${activity.title}`,
+    "info"
+  );
+}
+function updateActivity(state, id, patch) {
+  const current = (state.activities ?? []).find((activity) => activity.id === id);
+  if (!current) throw new HttpError(404, "Activity not found");
+  const next = { ...current, ...patch };
+  let following = {
+    ...state,
+    activities: (state.activities ?? []).map((activity) => activity.id === id ? next : activity)
+  };
+  if (patch.startTime && patch.startTime !== current.startTime) {
+    following = pushEvent(following, `Activity started \xB7 ${next.title}`, "info");
+  } else if (patch.endTime && patch.endTime !== current.endTime) {
+    following = pushEvent(following, `Activity ended \xB7 ${next.title}`, "success");
+  }
+  return following;
+}
 function addActionItem(state, item) {
   return pushEvent(
     { ...state, actionItems: [item, ...state.actionItems] },
@@ -51409,6 +51518,7 @@ function convertAction(state, actionId, assignedBy) {
     createdAt: nowIso(),
     fromActionItemId: actionId,
     workKind: item.workKind,
+    workKindOther: item.workKindOther,
     district: item.district,
     facility: item.facility
   };
@@ -51430,6 +51540,59 @@ function addHubLog(state, entry) {
     { ...state, hubLog: [entry, ...state.hubLog ?? []].slice(0, 40) },
     `${prefix} \xB7 ${entry.title}`,
     entry.kind === "extract_failed" || entry.kind === "incident" ? "danger" : "info"
+  );
+}
+function updateHubLog(state, id, patch) {
+  const current = (state.hubLog ?? []).find((entry) => entry.id === id);
+  if (!current) throw new HttpError(404, "Hub log entry not found");
+  return {
+    ...state,
+    hubLog: (state.hubLog ?? []).map((entry) => entry.id === id ? { ...entry, ...patch } : entry)
+  };
+}
+function removeTask(state, id) {
+  const current = state.tasks.find((task) => task.id === id);
+  if (!current) throw new HttpError(404, "Task not found");
+  return pushEvent(
+    { ...state, tasks: state.tasks.filter((task) => task.id !== id) },
+    `Task deleted \xB7 ${current.title}`,
+    "info"
+  );
+}
+function removeMeeting(state, id) {
+  const current = state.meetings.find((meeting) => meeting.id === id);
+  if (!current) throw new HttpError(404, "Meeting not found");
+  return pushEvent(
+    { ...state, meetings: state.meetings.filter((meeting) => meeting.id !== id) },
+    `Meeting deleted \xB7 ${current.title}`,
+    "info"
+  );
+}
+function removeActivity(state, id) {
+  const current = (state.activities ?? []).find((activity) => activity.id === id);
+  if (!current) throw new HttpError(404, "Activity not found");
+  return pushEvent(
+    { ...state, activities: (state.activities ?? []).filter((activity) => activity.id !== id) },
+    `Activity deleted \xB7 ${current.title}`,
+    "info"
+  );
+}
+function removeActionItem(state, id) {
+  const current = state.actionItems.find((item) => item.id === id);
+  if (!current) throw new HttpError(404, "Action item not found");
+  return pushEvent(
+    { ...state, actionItems: state.actionItems.filter((item) => item.id !== id) },
+    `Action item deleted \xB7 ${current.title}`,
+    "info"
+  );
+}
+function removeHubLog(state, id) {
+  const current = (state.hubLog ?? []).find((entry) => entry.id === id);
+  if (!current) throw new HttpError(404, "Hub log entry not found");
+  return pushEvent(
+    { ...state, hubLog: (state.hubLog ?? []).filter((entry) => entry.id !== id) },
+    `Hub incident log deleted \xB7 ${current.title}`,
+    "info"
   );
 }
 
@@ -53048,18 +53211,37 @@ var SEED_VERSION = "live-empty-1";
 var BLOB_PATH = "ops-state.json";
 var KEY = "nhih-ops-state";
 var LOCAL_FILE = process.env.VERCEL ? import_node_path.default.join("/tmp", "ops-state.json") : import_node_path.default.join(process.cwd(), "data", "ops-state.json");
+var blobBroken = false;
 function kvConfig() {
   const url2 = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url2 || !token) return null;
   return { url: url2.replace(/\/$/, ""), token };
 }
-function blobEnabled() {
+function blobConfigured() {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
+}
+function blobEnabled() {
+  return blobConfigured() && !blobBroken;
 }
 function storageKind() {
   if (blobEnabled()) return "blob";
-  return kvConfig() ? "kv" : "file";
+  if (kvConfig()) return "kv";
+  return "file";
+}
+function storageStatus() {
+  return {
+    kind: storageKind(),
+    blobConfigured: blobConfigured(),
+    blobBroken,
+    kvConfigured: Boolean(kvConfig())
+  };
+}
+function markBlobBroken(reason) {
+  if (!blobBroken) {
+    blobBroken = true;
+    console.error(`[persist] Vercel Blob unavailable, falling back to ${kvConfig() ? "kv" : "file"}: ${reason}`);
+  }
 }
 async function redis(command) {
   const kv = kvConfig();
@@ -53079,15 +53261,34 @@ async function redis(command) {
   const body = await res.json();
   return body.result ?? null;
 }
+function parseSnapshot(text) {
+  const parsed = JSON.parse(text);
+  if (!parsed || typeof parsed !== "object" || !parsed.state) {
+    throw new Error("Invalid hub snapshot");
+  }
+  return {
+    version: typeof parsed.version === "string" ? parsed.version : SEED_VERSION,
+    state: parsed.state
+  };
+}
 async function readBlob() {
   try {
     const result = await get(BLOB_PATH, { access: "private", useCache: false });
-    if (!result || result.statusCode !== 200 || !result.stream) return null;
-    const text = await new Response(result.stream).text();
-    if (!text) return null;
-    return JSON.parse(text);
-  } catch {
-    return null;
+    if (!result) return { ok: false, missing: true };
+    const status = result.statusCode;
+    if (status === 304) {
+      return { ok: false, missing: false, error: "blob not modified and no local copy" };
+    }
+    if (status === 200 && result.stream) {
+      const text = await new Response(result.stream).text();
+      if (!text) return { ok: false, missing: true };
+      return { ok: true, snapshot: parseSnapshot(text) };
+    }
+    return { ok: false, missing: false, error: `blob status ${String(status)}` };
+  } catch (error61) {
+    const message = error61 instanceof Error ? error61.message : String(error61);
+    if (/not found|404/i.test(message)) return { ok: false, missing: true };
+    return { ok: false, missing: false, error: message };
   }
 }
 async function writeBlob(snapshot2) {
@@ -53099,53 +53300,120 @@ async function writeBlob(snapshot2) {
     cacheControlMaxAge: 0
   });
 }
-async function readSnapshot() {
-  if (blobEnabled()) return readBlob();
-  const kv = kvConfig();
-  if (kv) {
-    const result = await redis(["GET", KEY]);
-    if (!result) return null;
-    return typeof result === "string" ? JSON.parse(result) : result;
-  }
-  if (!(0, import_node_fs.existsSync)(LOCAL_FILE)) return null;
+async function readKv() {
   try {
-    return JSON.parse((0, import_node_fs.readFileSync)(LOCAL_FILE, "utf8"));
-  } catch {
-    return null;
+    const result = await redis(["GET", KEY]);
+    if (!result) return { ok: false, missing: true };
+    const snapshot2 = typeof result === "string" ? parseSnapshot(result) : result;
+    if (!snapshot2?.state) return { ok: false, missing: true };
+    return { ok: true, snapshot: snapshot2 };
+  } catch (error61) {
+    return {
+      ok: false,
+      missing: false,
+      error: error61 instanceof Error ? error61.message : String(error61)
+    };
   }
 }
-async function writeSnapshot(snapshot2) {
-  if (blobEnabled()) {
-    await writeBlob(snapshot2);
-    return;
+function readFileStore() {
+  if (!(0, import_node_fs.existsSync)(LOCAL_FILE)) return { ok: false, missing: true };
+  try {
+    return { ok: true, snapshot: parseSnapshot((0, import_node_fs.readFileSync)(LOCAL_FILE, "utf8")) };
+  } catch (error61) {
+    return {
+      ok: false,
+      missing: false,
+      error: error61 instanceof Error ? error61.message : String(error61)
+    };
   }
-  const kv = kvConfig();
-  if (kv) {
-    await redis(["SET", KEY, JSON.stringify(snapshot2)]);
-    return;
-  }
+}
+function writeFileStore(snapshot2) {
   (0, import_node_fs.mkdirSync)(import_node_path.default.dirname(LOCAL_FILE), { recursive: true });
   (0, import_node_fs.writeFileSync)(LOCAL_FILE, JSON.stringify(snapshot2), "utf8");
 }
+async function readSnapshot() {
+  if (blobEnabled()) {
+    const blob = await readBlob();
+    if (blob.ok) return blob;
+    if (!blob.missing) {
+      markBlobBroken(blob.error);
+    }
+  }
+  if (kvConfig()) {
+    const kv = await readKv();
+    if (kv.ok || !kv.missing) return kv;
+  }
+  return readFileStore();
+}
+async function writeSnapshot(snapshot2) {
+  if (blobEnabled()) {
+    try {
+      await writeBlob(snapshot2);
+      if (kvConfig()) {
+        try {
+          await redis(["SET", KEY, JSON.stringify(snapshot2)]);
+        } catch {
+        }
+      }
+      writeFileStore(snapshot2);
+      return;
+    } catch (error61) {
+      markBlobBroken(error61 instanceof Error ? error61.message : String(error61));
+    }
+  }
+  if (kvConfig()) {
+    await redis(["SET", KEY, JSON.stringify(snapshot2)]);
+    writeFileStore(snapshot2);
+    return;
+  }
+  writeFileStore(snapshot2);
+}
 
 // server/db.ts
-var cacheProcess = !process.env.VERCEL;
 var memory = null;
 var loading = null;
-async function loadFromStore() {
-  const stored = await readSnapshot();
-  if (!stored || stored.version !== SEED_VERSION) {
-    const next = { version: SEED_VERSION, state: buildSeed() };
-    await writeSnapshot(next);
-    return next;
+function withRoster(state) {
+  const current = state.members;
+  const same = current.length === MEMBERS.length && current.every((member, index) => {
+    const next = MEMBERS[index];
+    return member.id === next.id && member.name === next.name && member.role === next.role && member.initials === next.initials;
+  });
+  if (same) {
+    return {
+      state: { ...state, hubLog: state.hubLog ?? [], activities: state.activities ?? [] },
+      changed: false
+    };
   }
   return {
-    version: stored.version,
-    state: { ...stored.state, hubLog: stored.state.hubLog ?? [] }
+    state: { ...state, members: MEMBERS, hubLog: state.hubLog ?? [], activities: state.activities ?? [] },
+    changed: true
   };
 }
+function adopt(state) {
+  const merged = withRoster(state);
+  return { version: SEED_VERSION, state: merged.state };
+}
+async function loadFromStore() {
+  const stored = await readSnapshot();
+  if (stored.ok) {
+    const merged = withRoster(stored.snapshot.state);
+    const next2 = { version: SEED_VERSION, state: merged.state };
+    if (merged.changed || stored.snapshot.version !== SEED_VERSION) {
+      await writeSnapshot(next2);
+    }
+    return next2;
+  }
+  if (!stored.missing) {
+    if (memory) return memory;
+    throw new HttpError(503, `Hub storage is unavailable (${stored.error}). Existing work was not overwritten.`);
+  }
+  if (memory && hubHasWork(memory.state)) return memory;
+  const next = { version: SEED_VERSION, state: buildSeed() };
+  await writeSnapshot(next);
+  return next;
+}
 async function snapshot() {
-  if (cacheProcess && memory) return memory;
+  if (memory) return memory;
   if (!loading) {
     loading = loadFromStore().finally(() => {
       loading = null;
@@ -53156,8 +53424,9 @@ async function snapshot() {
   return next;
 }
 async function commit(state) {
-  memory = { version: SEED_VERSION, state };
-  await writeSnapshot(memory);
+  const next = { version: SEED_VERSION, state };
+  await writeSnapshot(next);
+  memory = next;
   return viewState(state);
 }
 async function getState() {
@@ -53169,6 +53438,25 @@ async function getState() {
 async function resetState() {
   memory = null;
   return commit(buildSeed());
+}
+async function restoreState(incoming) {
+  const current = await snapshot().catch(() => memory);
+  const candidate = {
+    members: MEMBERS,
+    tasks: incoming.tasks ?? [],
+    meetings: incoming.meetings ?? [],
+    activities: incoming.activities ?? [],
+    actionItems: incoming.actionItems ?? [],
+    hubLog: incoming.hubLog ?? [],
+    events: incoming.events ?? []
+  };
+  if (current && hubHasWork(current.state) && !hubHasWork(candidate)) {
+    return viewState(current.state);
+  }
+  if (!hubHasWork(candidate)) {
+    return viewState(current?.state ?? buildSeed());
+  }
+  return commit(adopt(candidate).state);
 }
 async function addTask2(task) {
   const current = await snapshot();
@@ -53186,6 +53474,14 @@ async function updateMeeting2(id, patch) {
   const current = await snapshot();
   return commit(updateMeeting(current.state, id, patch));
 }
+async function addActivity2(activity) {
+  const current = await snapshot();
+  return commit(addActivity(current.state, activity));
+}
+async function updateActivity2(id, patch) {
+  const current = await snapshot();
+  return commit(updateActivity(current.state, id, patch));
+}
 async function addActionItem2(item) {
   const current = await snapshot();
   return commit(addActionItem(current.state, item));
@@ -53202,8 +53498,35 @@ async function addHubLog2(entry) {
   const current = await snapshot();
   return commit(addHubLog(current.state, entry));
 }
+async function updateHubLog2(id, patch) {
+  const current = await snapshot();
+  return commit(updateHubLog(current.state, id, patch));
+}
+async function removeTask2(id) {
+  const current = await snapshot();
+  return commit(removeTask(current.state, id));
+}
+async function removeMeeting2(id) {
+  const current = await snapshot();
+  return commit(removeMeeting(current.state, id));
+}
+async function removeActivity2(id) {
+  const current = await snapshot();
+  return commit(removeActivity(current.state, id));
+}
+async function removeActionItem2(id) {
+  const current = await snapshot();
+  return commit(removeActionItem(current.state, id));
+}
+async function removeHubLog2(id) {
+  const current = await snapshot();
+  return commit(removeHubLog(current.state, id));
+}
 function persistence() {
   return storageKind();
+}
+function persistenceStatus() {
+  return storageStatus();
 }
 
 // server/operator.ts
@@ -53250,7 +53573,8 @@ var workKind = external_exports.enum([
   "data_quality",
   "hio_field_visit",
   "analysis_request",
-  "facility_followup"
+  "facility_followup",
+  "other"
 ]);
 var districtId = external_exports.enum([
   "national",
@@ -53271,6 +53595,14 @@ var districtId = external_exports.enum([
   "pujehun",
   "tonkolili"
 ]);
+var activityKind = external_exports.enum([
+  "field_visit",
+  "training",
+  "workshop",
+  "supervision",
+  "partner",
+  "other"
+]);
 var hubLogKind = external_exports.enum(["incident", "late_reporting", "extract_failed", "extract_restored", "note"]);
 var taskCreate = external_exports.object({
   id: external_exports.string().optional(),
@@ -53286,8 +53618,12 @@ var taskCreate = external_exports.object({
   completedAt: external_exports.string().optional(),
   fromActionItemId: external_exports.string().optional(),
   workKind: workKind.optional().default("facility_followup"),
+  workKindOther: external_exports.string().optional().default(""),
   district: districtId.optional().default("national"),
   facility: external_exports.string().optional().default("")
+}).refine((value) => value.workKind !== "other" || Boolean(value.workKindOther?.trim()), {
+  message: "Type the other work type",
+  path: ["workKindOther"]
 });
 var taskPatch = external_exports.object({
   title: external_exports.string().trim().min(1).optional(),
@@ -53300,6 +53636,7 @@ var taskPatch = external_exports.object({
   progress: external_exports.number().int().min(0).max(100).optional(),
   completedAt: external_exports.string().optional(),
   workKind: workKind.optional(),
+  workKindOther: external_exports.string().optional(),
   district: districtId.optional(),
   facility: external_exports.string().optional()
 }).refine((value) => Object.keys(value).length > 0, "No fields to update");
@@ -53331,8 +53668,12 @@ var actionCreate = external_exports.object({
   deadline: isoDate,
   status: actionStatus.optional().default("open"),
   workKind: workKind.optional().default("facility_followup"),
+  workKindOther: external_exports.string().optional().default(""),
   district: districtId.optional().default("national"),
   facility: external_exports.string().optional().default("")
+}).refine((value) => value.workKind !== "other" || Boolean(value.workKindOther?.trim()), {
+  message: "Type the other work type",
+  path: ["workKindOther"]
 });
 var actionPatch = external_exports.object({
   title: external_exports.string().trim().min(1).optional(),
@@ -53342,12 +53683,39 @@ var actionPatch = external_exports.object({
   meetingId: external_exports.string().optional(),
   meetingTitle: external_exports.string().optional(),
   workKind: workKind.optional(),
+  workKindOther: external_exports.string().optional(),
   district: districtId.optional(),
   facility: external_exports.string().optional()
 }).refine((value) => Object.keys(value).length > 0, "No fields to update");
 var convertBody = external_exports.object({
   assignedBy: external_exports.string().min(1).optional().default("m1")
 });
+var activityCreate = external_exports.object({
+  id: external_exports.string().optional(),
+  title: external_exports.string().trim().min(1, "Title is required"),
+  kind: activityKind.optional().default("training"),
+  kindOther: external_exports.string().optional().default(""),
+  startTime: isoDate,
+  endTime: isoDate,
+  participantIds: external_exports.array(external_exports.string()).optional().default([]),
+  district: districtId.optional().default("national"),
+  facility: external_exports.string().optional().default(""),
+  notes: external_exports.string().optional().default("")
+}).refine((value) => value.kind !== "other" || Boolean(value.kindOther?.trim()), {
+  message: "Type the other activity",
+  path: ["kindOther"]
+});
+var activityPatch = external_exports.object({
+  title: external_exports.string().trim().min(1).optional(),
+  kind: activityKind.optional(),
+  kindOther: external_exports.string().optional(),
+  startTime: isoDate.optional(),
+  endTime: isoDate.optional(),
+  participantIds: external_exports.array(external_exports.string()).optional(),
+  district: districtId.optional(),
+  facility: external_exports.string().optional(),
+  notes: external_exports.string().optional()
+}).refine((value) => Object.keys(value).length > 0, "No fields to update");
 var hubLogCreate = external_exports.object({
   id: external_exports.string().optional(),
   at: external_exports.string().optional(),
@@ -53358,6 +53726,22 @@ var hubLogCreate = external_exports.object({
   facility: external_exports.string().optional().default(""),
   authorId: external_exports.string().min(1)
 });
+var hubLogPatch = external_exports.object({
+  kind: hubLogKind.optional(),
+  title: external_exports.string().trim().min(1).optional(),
+  detail: external_exports.string().optional(),
+  district: districtId.optional(),
+  facility: external_exports.string().optional(),
+  authorId: external_exports.string().optional()
+}).refine((value) => Object.keys(value).length > 0, "No fields to update");
+var restoreBody = external_exports.object({
+  tasks: external_exports.array(external_exports.any()).optional(),
+  meetings: external_exports.array(external_exports.any()).optional(),
+  activities: external_exports.array(external_exports.any()).optional(),
+  actionItems: external_exports.array(external_exports.any()).optional(),
+  hubLog: external_exports.array(external_exports.any()).optional(),
+  events: external_exports.array(external_exports.any()).optional()
+});
 
 // server/app.ts
 var api = new Hono2();
@@ -53366,7 +53750,7 @@ api.use(
   "*",
   cors({
     origin: "*",
-    allowMethods: ["GET", "POST", "PATCH", "HEAD", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PATCH", "DELETE", "HEAD", "OPTIONS"],
     allowHeaders: ["Content-Type", "X-Operator-Code"]
   })
 );
@@ -53419,6 +53803,7 @@ api.get(
     ok: true,
     service: "nhih-ops-api",
     storage: persistence(),
+    storageStatus: persistenceStatus(),
     clients: clientCount(),
     at: (/* @__PURE__ */ new Date()).toISOString()
   })
@@ -53513,6 +53898,25 @@ api.patch("/meetings/:id", async (c) => {
   const patch = await readBody(c, meetingPatch);
   return c.json(await push(await updateMeeting2(c.req.param("id"), patch)));
 });
+api.post("/activities", async (c) => {
+  const body = await readBody(c, activityCreate);
+  return c.json(
+    await push(
+      await addActivity2({
+        ...body,
+        id: body.id || uid("act"),
+        kindOther: body.kind === "other" ? body.kindOther : "",
+        facility: body.facility || void 0
+      })
+    )
+  );
+});
+api.patch("/activity", async (c) => {
+  const id = c.req.query("id");
+  if (!id) throw new HttpError(400, "Activity id is required");
+  const patch = await readBody(c, activityPatch);
+  return c.json(await push(await updateActivity2(id, patch)));
+});
 api.post("/actions", async (c) => {
   const body = await readBody(c, actionCreate);
   return c.json(
@@ -53559,6 +53963,41 @@ api.post("/hub-log", async (c) => {
       })
     )
   );
+});
+api.patch("/log", async (c) => {
+  const id = c.req.query("id");
+  if (!id) throw new HttpError(400, "Hub log id is required");
+  const patch = await readBody(c, hubLogPatch);
+  return c.json(await push(await updateHubLog2(id, patch)));
+});
+api.delete("/task", async (c) => {
+  const id = c.req.query("id");
+  if (!id) throw new HttpError(400, "Task id is required");
+  return c.json(await push(await removeTask2(id)));
+});
+api.delete("/meeting", async (c) => {
+  const id = c.req.query("id");
+  if (!id) throw new HttpError(400, "Meeting id is required");
+  return c.json(await push(await removeMeeting2(id)));
+});
+api.delete("/activity", async (c) => {
+  const id = c.req.query("id");
+  if (!id) throw new HttpError(400, "Activity id is required");
+  return c.json(await push(await removeActivity2(id)));
+});
+api.delete("/action", async (c) => {
+  const id = c.req.query("id");
+  if (!id) throw new HttpError(400, "Action id is required");
+  return c.json(await push(await removeActionItem2(id)));
+});
+api.delete("/log", async (c) => {
+  const id = c.req.query("id");
+  if (!id) throw new HttpError(400, "Hub log id is required");
+  return c.json(await push(await removeHubLog2(id)));
+});
+api.post("/restore", async (c) => {
+  const body = await readBody(c, restoreBody);
+  return c.json(await push(await restoreState(body)));
 });
 api.post("/reset", async (c) => c.json(await push(await resetState())));
 var app = new Hono2();
