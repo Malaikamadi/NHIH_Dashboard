@@ -15,6 +15,8 @@ export const MEMBERS: TeamMember[] = [
   { id: 'm12', name: 'Success', role: 'Sand Technologies', initials: 'SU' },
   { id: 'm13', name: 'Mohamed Sesay', role: 'Country Director, Sand Technologies', initials: 'MS' },
   { id: 'm14', name: 'Golda', role: 'Sand Technologies', initials: 'GO' },
+  { id: 'm15', name: 'Dr. Ini', role: 'DPPI', initials: 'DI' },
+  { id: 'm16', name: 'Director', role: 'DPPI', initials: 'DP' },
 ]
 
 export function buildSeed(): OpsState {
