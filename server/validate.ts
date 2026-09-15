@@ -199,3 +199,12 @@ export const hubLogPatch = z
     authorId: z.string().optional(),
   })
   .refine((value) => Object.keys(value).length > 0, 'No fields to update')
+
+export const restoreBody = z.object({
+  tasks: z.array(z.any()).optional(),
+  meetings: z.array(z.any()).optional(),
+  activities: z.array(z.any()).optional(),
+  actionItems: z.array(z.any()).optional(),
+  hubLog: z.array(z.any()).optional(),
+  events: z.array(z.any()).optional(),
+})

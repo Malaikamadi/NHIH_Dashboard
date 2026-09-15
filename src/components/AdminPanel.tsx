@@ -298,7 +298,19 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
           </section>
         )}
 
-        <button type="button" className="ghost-btn danger-text" onClick={resetDemo}>
+        <button
+          type="button"
+          className="ghost-btn danger-text"
+          onClick={() => {
+            if (
+              window.confirm(
+                'Clear all hub tasks, meetings, activities, actions, and incident log? This cannot be undone.',
+              )
+            ) {
+              resetDemo()
+            }
+          }}
+        >
           Clear hub data
         </button>
       </aside>

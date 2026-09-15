@@ -71,8 +71,9 @@ async function snapshot(): Promise<Snapshot> {
 }
 
 async function commit(state: OpsState): Promise<OpsState> {
-  memory = { version: SEED_VERSION, state }
-  await writeSnapshot(memory)
+  const next = { version: SEED_VERSION, state }
+  await writeSnapshot(next)
+  memory = next
   return ops.viewState(state)
 }
 

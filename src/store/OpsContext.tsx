@@ -28,7 +28,10 @@ import {
   patchMeeting,
   patchTask,
   resetDemo as resetDemoApi,
+  restoreHub,
 } from '../api'
+import { clearHubCache, readHubCache, writeHubCache } from './cache'
+import { hubHasWork } from '../utils/hub'
 import type {
   ActionItem,
   ActivityEvent,
@@ -345,21 +348,54 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
 
   const hydrate = useCallback((next: OpsState) => {
     dispatch({ type: 'hydrate', state: next })
+    writeHubCache(next)
   }, [])
+
+  const adoptServerState = useCallback(
+    async (remote: OpsState) => {
+      if (hubHasWork(remote)) {
+        hydrate(remote)
+        setConnected(true)
+        return
+      }
+      const cached = readHubCache()
+      if (cached && hubHasWork(cached)) {
+        hydrate(cached)
+        setConnected(true)
+        try {
+          hydrate(await restoreHub(cached))
+        } catch {
+          /* keep local cache until storage is writable again */
+        }
+        return
+      }
+      hydrate(remote)
+      setConnected(true)
+    },
+    [hydrate],
+  )
 
   const refresh = useCallback(async () => {
     try {
-      hydrate(await fetchState())
-      setConnected(true)
+      await adoptServerState(await fetchState())
     } catch {
+      const cached = readHubCache()
+      if (cached && hubHasWork(cached)) {
+        hydrate(cached)
+      }
       setConnected(false)
     }
-  }, [hydrate])
+  }, [adoptServerState, hydrate])
 
   useEffect(() => {
     void refresh()
-    return openStateStream(hydrate, setConnected)
-  }, [hydrate, refresh])
+    return openStateStream(
+      (remote) => {
+        void adoptServerState(remote)
+      },
+      setConnected,
+    )
+  }, [adoptServerState, refresh])
 
   const addTask = useCallback<OpsContextValue['addTask']>(
     (input) => {
@@ -529,6 +565,7 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
   )
 
   const resetDemo = useCallback(() => {
+    clearHubCache()
     void resetDemoApi().then(hydrate).catch(refresh)
   }, [hydrate, refresh])
 
