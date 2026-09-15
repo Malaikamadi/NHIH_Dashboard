@@ -60,6 +60,7 @@ type Action =
   | { type: 'add_activity'; activity: TeamActivity }
   | { type: 'update_activity'; id: string; patch: Partial<TeamActivity> }
   | { type: 'add_action'; item: ActionItem }
+  | { type: 'update_action'; id: string; patch: Partial<ActionItem> }
   | { type: 'convert_action'; actionId: string; task: Task }
   | { type: 'add_hub_log'; entry: HubLogEntry }
   | { type: 'update_hub_log'; id: string; patch: Partial<HubLogEntry> }
@@ -218,6 +219,13 @@ function reducer(state: OpsState, action: Action): OpsState {
       return {
         ...state,
         actionItems: [action.item, ...state.actionItems],
+      }
+    case 'update_action':
+      return {
+        ...state,
+        actionItems: state.actionItems.map((item) =>
+          item.id === action.id ? { ...item, ...action.patch } : item,
+        ),
       }
     case 'convert_action':
       return {
@@ -397,6 +405,7 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
 
   const updateActionItem = useCallback(
     (id: string, patch: Partial<ActionItem>) => {
+      dispatch({ type: 'update_action', id, patch })
       void patchActionItem(id, patch).then(hydrate).catch(refresh)
     },
     [hydrate, refresh],

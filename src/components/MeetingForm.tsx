@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react'
 import { useOps } from '../store/OpsContext'
 import type { Meeting } from '../types'
 import { toDatetimeLocal } from '../utils/time'
@@ -21,20 +22,29 @@ export function MeetingForm({
   onCancel?: () => void
 }) {
   const { state, addMeeting, updateMeeting } = useOps()
+  const formRef = useRef<HTMLFormElement>(null)
+  const [error, setError] = useState('')
+  const [saved, setSaved] = useState(false)
   const lead = state.members.find((m) => m.role === 'Team Lead')?.id ?? state.members[0]?.id ?? ''
   const editing = Boolean(meeting)
+  const formId = meeting ? `edit-meeting-${meeting.id}` : 'add-meeting'
 
   return (
     <form
+      id={formId}
+      ref={formRef}
       className="meeting-composer"
       onSubmit={(e) => {
         e.preventDefault()
+        e.stopPropagation()
         const form = e.currentTarget
         const data = new FormData(form)
         const selected = data.getAll('participants').map(String)
         const start = new Date(String(data.get('start')))
         const end = new Date(String(data.get('end')))
         if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
+          setError('End must be after the start time.')
+          setSaved(false)
           return
         }
         const payload = {
@@ -51,6 +61,9 @@ export function MeetingForm({
           addMeeting(payload)
           form.reset()
         }
+        setError('')
+        setSaved(true)
+        window.setTimeout(() => setSaved(false), 2000)
         onAdded?.()
       }}
     >
@@ -103,7 +116,11 @@ export function MeetingForm({
         />
       </label>
       <div className="meeting-composer-actions">
-        <button type="submit" className="primary-btn sm">
+        <button
+          type="button"
+          className="primary-btn sm"
+          onClick={() => formRef.current?.requestSubmit()}
+        >
           {editing ? 'Save meeting' : 'Add meeting'}
         </button>
         {onCancel && (
@@ -112,6 +129,8 @@ export function MeetingForm({
           </button>
         )}
       </div>
+      {error && <p className="warn-text">{error}</p>}
+      {saved && <p className="meet-saved">{editing ? 'Meeting saved.' : 'Meeting added.'}</p>}
     </form>
   )
 }

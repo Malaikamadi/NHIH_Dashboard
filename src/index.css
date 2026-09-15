@@ -1318,6 +1318,18 @@ button { cursor: pointer; }
 .convert-btn { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 8px 12px; font-weight: 700; }
 .ghost-btn, .admin-item button { background: var(--icon-bg); border: 0; border-radius: 10px; padding: 8px 12px; }
 .admin-item .complete-btn { background: var(--ok); color: #fff; padding: 6px 10px; }
+.admin-item .primary-btn,
+.meeting-composer .primary-btn,
+.hub-log-form .primary-btn,
+.admin-form .primary-btn,
+.task-update-card .primary-btn {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  pointer-events: auto;
+  opacity: 1;
+  cursor: pointer;
+}
 
 .stack, .meeting-list { display: flex; flex-direction: column; gap: 8px; }
 .task-row, .meeting { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 10px; background: var(--row); border-radius: 10px; }

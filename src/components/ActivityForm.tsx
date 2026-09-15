@@ -24,6 +24,8 @@ export function ActivityForm({
 }) {
   const { state, addActivity, updateActivity } = useOps()
   const [kind, setKind] = useState<ActivityKind>(activity?.kind ?? 'training')
+  const [error, setError] = useState('')
+  const [saved, setSaved] = useState(false)
   const rootRef = useRef<HTMLFormElement>(null)
   const lead = state.members.find((m) => m.role === 'Team Lead')?.id ?? state.members[0]?.id ?? ''
   const editing = Boolean(activity)
@@ -38,16 +40,20 @@ export function ActivityForm({
 
   return (
     <form
+      id={activity ? `edit-activity-${activity.id}` : 'add-activity'}
       ref={rootRef}
       className="meeting-composer"
       onSubmit={(e) => {
         e.preventDefault()
+        e.stopPropagation()
         const form = e.currentTarget
         const data = new FormData(form)
         const selected = data.getAll('participants').map(String)
         const start = new Date(String(data.get('start')))
         const end = new Date(String(data.get('end')))
         if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
+          setError('End must be after the start time.')
+          setSaved(false)
           return
         }
         const nextKind = String(data.get('kind')) as ActivityKind
@@ -68,6 +74,9 @@ export function ActivityForm({
           addActivity(payload)
           form.reset()
         }
+        setError('')
+        setSaved(true)
+        window.setTimeout(() => setSaved(false), 2000)
         onAdded?.()
       }}
     >
@@ -143,10 +152,12 @@ export function ActivityForm({
         />
       </label>
       <div className="meeting-composer-actions">
-        <button type="submit" className="primary-btn sm">
+        <button type="button" className="primary-btn sm" onClick={() => rootRef.current?.requestSubmit()}>
           {editing ? 'Save activity' : 'Add activity'}
         </button>
       </div>
+      {error && <p className="warn-text">{error}</p>}
+      {saved && <p className="meet-saved">{editing ? 'Activity saved.' : 'Activity added.'}</p>}
     </form>
   )
 }

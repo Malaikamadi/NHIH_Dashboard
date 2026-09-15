@@ -75,7 +75,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
                       ? 'Activity'
                       : id === 'action'
                         ? 'Action item'
-                        : 'Hub log'}
+                        : 'Hub incident log'}
             </button>
           ))}
         </div>
@@ -85,6 +85,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
             className="admin-form"
             onSubmit={(e) => {
               e.preventDefault()
+              e.stopPropagation()
               const form = e.currentTarget
               const data = new FormData(form)
               const due = new Date(String(data.get('dueDate')))
@@ -228,6 +229,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
             className="admin-form"
             onSubmit={(e) => {
               e.preventDefault()
+              e.stopPropagation()
               const form = e.currentTarget
               const data = new FormData(form)
               const meetingTitle = String(data.get('meetingTitle') || '').trim() || 'Ad hoc'
@@ -366,6 +368,7 @@ function ActionItemEdit({
 }) {
   const { state, updateActionItem, convertActionToTask } = useOps()
   const [saved, setSaved] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
 
   return (
     <div className="admin-item admin-meeting">
@@ -378,9 +381,12 @@ function ActionItemEdit({
         </em>
       </span>
       <form
+        id={`edit-action-${item.id}`}
+        ref={formRef}
         className="admin-form"
         onSubmit={(e) => {
           e.preventDefault()
+          e.stopPropagation()
           const data = new FormData(e.currentTarget)
           const meetingTitle = String(data.get('meetingTitle') || '').trim() || 'Ad hoc'
           const meeting = meetings.find(
@@ -442,7 +448,7 @@ function ActionItemEdit({
           facility={item.facility ?? ''}
         />
         <div className="meeting-composer-actions">
-          <button type="submit" className="primary-btn sm">
+          <button type="button" className="primary-btn sm" onClick={() => formRef.current?.requestSubmit()}>
             Save action
           </button>
           {!item.convertedToTaskId && (

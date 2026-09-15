@@ -248,10 +248,10 @@ export function reportToHtml(report: WeeklyReport): string {
     <div class="kpi"><strong>${report.performance.meetings}</strong><span>Meetings this week</span></div>
     <div class="kpi"><strong>${report.performance.activities}</strong><span>Activities this week</span></div>
     <div class="kpi"><strong>${report.performance.openActions}</strong><span>Open action items</span></div>
-    <div class="kpi"><strong>${report.performance.hubLog}</strong><span>Hub log entries</span></div>
+    <div class="kpi"><strong>${report.performance.hubLog}</strong><span>Hub incident log entries</span></div>
   </div>
 
-  <h2>Hub log</h2>
+  <h2>Hub incident log</h2>
   ${
     hubLogRows
       ? `<table><thead><tr><th>When</th><th>Kind</th><th>What happened</th><th>Where</th><th>Detail</th><th>Logged by</th></tr></thead><tbody>${hubLogRows}</tbody></table>`

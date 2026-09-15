@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { PlaceFields, PlaceLine, placeFromForm } from './PlaceFields'
 import { StatusPill } from './Header'
 import { TaskActions } from './TaskActions'
@@ -97,6 +97,7 @@ function TaskUpdateCard({
 }) {
   const { state, updateTask } = useOps()
   const [saved, setSaved] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
   const status = displayStatus(task, now)
 
   return (
@@ -137,9 +138,12 @@ function TaskUpdateCard({
 
       {editing && (
         <form
+          id={`edit-task-${task.id}`}
+          ref={formRef}
           className="admin-form"
           onSubmit={(e) => {
             e.preventDefault()
+            e.stopPropagation()
             const data = new FormData(e.currentTarget)
             const due = new Date(String(data.get('dueDate')))
             if (Number.isNaN(due.getTime())) return
@@ -233,7 +237,7 @@ function TaskUpdateCard({
             district={task.district}
             facility={task.facility ?? ''}
           />
-          <button type="submit" className="primary-btn">
+          <button type="button" className="primary-btn" onClick={() => formRef.current?.requestSubmit()}>
             Save updates
           </button>
           {saved && <p className="meet-saved">Updates saved to the dashboard.</p>}

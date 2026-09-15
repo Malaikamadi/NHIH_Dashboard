@@ -115,7 +115,7 @@ export function HubBrief({
         <a href="#hub-log" className={`brief-pipe-card is-${pipe.kind}`}>
           <span className="brief-pipe-kicker">
             <Icon name={pipeIcon(pipe.kind)} size={14} />
-            Hub log
+            Hub incident log
           </span>
           <strong>{logKindLabel(pipe.kind)}</strong>
           <p>{pipe.title}</p>

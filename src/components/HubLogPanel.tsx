@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { DISTRICTS, LOG_KINDS, districtLabel, logKindLabel } from '../data/catalog'
 import { useOps } from '../store/OpsContext'
 import type { DistrictId, HubLogEntry, HubLogKind } from '../types'
@@ -31,7 +31,7 @@ export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput
     <section className="paper activity-card" id="hub-log">
       <header className="paper-h">
         <div>
-          <h2>Hub log</h2>
+          <h2>Hub incident log</h2>
           <p>Grouped by incident type — extracts, late reporting, and incidents</p>
         </div>
       </header>
@@ -41,6 +41,7 @@ export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput
           className="hub-log-form"
           onSubmit={(e) => {
             e.preventDefault()
+            e.stopPropagation()
             const form = e.currentTarget
             const data = new FormData(form)
             const title = String(data.get('title')).trim()
@@ -203,11 +204,15 @@ function HubLogFields({ entry }: { entry?: HubLogEntry }) {
 function HubLogEditForm({ entry }: { entry: HubLogEntry }) {
   const { updateHubLog } = useOps()
   const [saved, setSaved] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
   return (
     <form
+      id={`edit-log-${entry.id}`}
+      ref={formRef}
       className="hub-log-form is-edit"
       onSubmit={(e) => {
         e.preventDefault()
+        e.stopPropagation()
         const data = new FormData(e.currentTarget)
         const title = String(data.get('title')).trim()
         if (!title) return
@@ -225,7 +230,7 @@ function HubLogEditForm({ entry }: { entry: HubLogEntry }) {
     >
       <HubLogFields entry={entry} />
       <div className="meeting-composer-actions">
-        <button type="submit" className="primary-btn sm">
+        <button type="button" className="primary-btn sm" onClick={() => formRef.current?.requestSubmit()}>
           Save updates
         </button>
         {saved && <p className="meet-saved">Log saved.</p>}

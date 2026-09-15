@@ -145,11 +145,11 @@ function MeetingTools({
           className="meeting-tool-form"
           onSubmit={(e) => {
             e.preventDefault()
+            e.stopPropagation()
             const next = agenda.trim()
             updateMeeting(meeting.id, { agenda: next })
             setAgenda(next)
             setSaved('agenda')
-            setPanel(null)
           }}
         >
           <textarea
@@ -165,6 +165,7 @@ function MeetingTools({
           <button type="submit" className="complete-btn">
             Save agenda
           </button>
+          {saved === 'agenda' && <p className="meet-saved">Agenda saved</p>}
         </form>
       )}
 
@@ -173,6 +174,7 @@ function MeetingTools({
           className="meeting-tool-form"
           onSubmit={(e) => {
             e.preventDefault()
+            e.stopPropagation()
             const form = e.currentTarget
             const data = new FormData(form)
             addActionItem({
@@ -185,7 +187,6 @@ function MeetingTools({
               ...placeFromForm(data),
             })
             form.reset()
-            setPanel(null)
           }}
         >
           <input name="title" required placeholder="Action point" aria-label="Action point" />
@@ -217,11 +218,11 @@ function MeetingTools({
           className="meeting-tool-form"
           onSubmit={(e) => {
             e.preventDefault()
+            e.stopPropagation()
             const next = notes.trim()
             updateMeeting(meeting.id, { notes: next })
             setNotes(next)
             setSaved('minutes')
-            setPanel(null)
           }}
         >
           <textarea
@@ -237,6 +238,7 @@ function MeetingTools({
           <button type="submit" className="complete-btn">
             Save minutes
           </button>
+          {saved === 'minutes' && <p className="meet-saved">Minutes saved</p>}
         </form>
       )}
     </div>

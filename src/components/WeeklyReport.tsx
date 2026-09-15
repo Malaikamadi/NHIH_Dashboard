@@ -45,7 +45,7 @@ export function WeeklyReportModal({ onClose }: Props) {
         <header className="report-h">
           <div>
             <div className="hdr-kicker">Weekly operations report</div>
-            <h2>Team performance, hub log, meetings, and minutes</h2>
+            <h2>Team performance, hub incident log, meetings, and minutes</h2>
             <p className="muted">{report?.rangeLabel ?? 'Loading from the operations API'}</p>
           </div>
           <div className="report-actions">
@@ -104,12 +104,12 @@ export function WeeklyReportModal({ onClose }: Props) {
               </div>
               <div>
                 <strong>{report.performance.hubLog}</strong>
-                <span>Hub log</span>
+                <span>Hub incident log</span>
               </div>
             </section>
 
             <section>
-              <h3>Hub log</h3>
+              <h3>Hub incident log</h3>
               {report.hubLog.length === 0 ? (
                 <p className="muted">No extract, late-reporting, or incident entries this week.</p>
               ) : (
