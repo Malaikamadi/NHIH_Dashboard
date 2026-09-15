@@ -7,6 +7,8 @@ import { MeetingForm } from './MeetingForm'
 import { PlaceFields, placeFromForm } from './PlaceFields'
 import { TaskUpdatePanel } from './TaskUpdatePanel'
 import { useOps } from '../store/OpsContext'
+import { hubHasWork } from '../utils/hub'
+import { readHubCache } from '../store/cache'
 import type { ActionItem, ActionStatus, Meeting, Priority, TaskStatus } from '../types'
 import { meetingStatus, taskStatusLabel, weeksActivities, weeksMeetings } from '../utils/metrics'
 import { toDatetimeLocal } from '../utils/time'
@@ -28,10 +30,14 @@ const STATUSES: TaskStatus[] = [
 const PRIORITIES: Priority[] = ['critical', 'high', 'medium', 'low']
 
 export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
-  const { state, addTask, addActionItem, removeMeeting, removeActivity, resetDemo } = useOps()
+  const { state, addTask, addActionItem, removeMeeting, removeActivity, resetDemo, restoreFromBrowser } =
+    useOps()
   const lead = state.members.find((m) => m.role === 'Team Lead')?.id ?? 'm1'
   const [tab, setTab] = useState<'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log'>('task')
   const [saved, setSaved] = useState('')
+  const [restoring, setRestoring] = useState(false)
+  const browserBackup = readHubCache()
+  const hasBrowserBackup = hubHasWork(browserBackup)
   const todayMeetings = weeksMeetings(state.meetings)
   const weekActivities = weeksActivities(state.activities)
   const deskActions = [...state.actionItems].sort(
@@ -298,21 +304,46 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
           </section>
         )}
 
-        <button
-          type="button"
-          className="ghost-btn danger-text"
-          onClick={() => {
-            if (
-              window.confirm(
-                'Clear all hub tasks, meetings, activities, actions, and incident log? This cannot be undone.',
+        <div className="meeting-composer-actions" style={{ marginTop: 12 }}>
+          <button
+            type="button"
+            className="primary-btn sm"
+            disabled={!hasBrowserBackup || restoring}
+            onClick={async () => {
+              setRestoring(true)
+              const ok = await restoreFromBrowser()
+              setRestoring(false)
+              setSaved(
+                ok
+                  ? 'Restored hub work from this browser backup.'
+                  : 'No browser backup found on this device.',
               )
-            ) {
-              resetDemo()
-            }
-          }}
-        >
-          Clear hub data
-        </button>
+            }}
+          >
+            {restoring ? 'Restoring…' : 'Restore from this browser'}
+          </button>
+          <button
+            type="button"
+            className="ghost-btn danger-text"
+            onClick={() => {
+              if (
+                window.confirm(
+                  'Clear all hub tasks, meetings, activities, actions, and incident log? This cannot be undone.',
+                )
+              ) {
+                resetDemo()
+              }
+            }}
+          >
+            Clear hub data
+          </button>
+        </div>
+        {!hasBrowserBackup && (
+          <p className="admin-help">
+            No local backup in this browser. The full copy is still on Vercel Blob, but that store is
+            inactive — reactivate billing for store <code>nhih-ops</code>, then we can pull it back.
+          </p>
+        )}
       </aside>
   )
 

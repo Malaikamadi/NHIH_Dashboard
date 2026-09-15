@@ -336,6 +336,7 @@ interface OpsContextValue {
   removeActionItem: (id: string) => void
   removeHubLog: (id: string) => void
   resetDemo: () => void
+  restoreFromBrowser: () => Promise<boolean>
 }
 
 const OpsContext = createContext<OpsContextValue | null>(null)
@@ -573,6 +574,19 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
     void resetDemoApi().then(hydrate).catch(refresh)
   }, [hydrate, refresh])
 
+  const restoreFromBrowser = useCallback(async () => {
+    const cached = readHubCache()
+    if (!cached || !hubHasWork(cached)) return false
+    try {
+      hydrate(await restoreHub(cached))
+      setConnected(true)
+      return true
+    } catch {
+      hydrate(cached)
+      return true
+    }
+  }, [hydrate])
+
   const value = useMemo(
     () => ({
       state,
@@ -594,6 +608,7 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
       removeActionItem,
       removeHubLog,
       resetDemo,
+      restoreFromBrowser,
     }),
     [
       state,
@@ -615,6 +630,7 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
       removeActionItem,
       removeHubLog,
       resetDemo,
+      restoreFromBrowser,
     ],
   )
 

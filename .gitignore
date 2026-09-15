@@ -8,3 +8,4 @@ dist
 /data
 .vercel
 .env*
+.env*.local
