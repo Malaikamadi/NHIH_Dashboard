@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { fetchWeeklyReport, fetchWeeklyReportHtml } from '../api'
 import type { WeeklyReport as WeeklyReportData } from '../utils/report'
-import { downloadReport, printReport, reportFileName } from '../utils/report'
+import { downloadReport, printReport } from '../utils/download'
+import { reportFileName } from '../utils/report'
 import { agendaLines } from '../utils/metrics'
 import { Icon } from './Icons'
 

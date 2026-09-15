@@ -1,4 +1,4 @@
-import { app } from '../server/app'
+import { app } from './app'
 
 type NodeReq = {
   method?: string
@@ -16,10 +16,6 @@ type NodeRes = {
 function headerValue(value: string | string[] | undefined): string | undefined {
   if (value == null) return undefined
   return Array.isArray(value) ? value.join(',') : value
-}
-
-export const config = {
-  maxDuration: 30,
 }
 
 export default async function handler(req: NodeReq, res: NodeRes) {

@@ -14,5 +14,5 @@
     "resolveJsonModule": true,
     "types": ["node"]
   },
-  "include": ["server/**/*.ts", "api/**/*.ts", "src/types.ts", "src/data/seed.ts", "src/data/catalog.ts", "src/utils/time.ts", "src/utils/metrics.ts", "src/utils/report.ts"]
+  "include": ["server/**/*.ts", "src/types.ts", "src/data/seed.ts", "src/data/catalog.ts", "src/utils/time.ts", "src/utils/metrics.ts", "src/utils/report.ts"]
 }
