@@ -7,7 +7,7 @@ import { MeetingSession } from '../components/MeetingActions'
 import { HubBrief } from '../components/HubBrief'
 import { PlaceLine } from '../components/PlaceFields'
 import { WeeklyReportModal } from '../components/WeeklyReport'
-import { activityKindLabel, districtLabel, placeLine } from '../data/catalog'
+import { placeLine } from '../data/catalog'
 import { useOps } from '../store/OpsContext'
 import type { DistrictId, PeriodId, ViewId } from '../types'
 import {
@@ -241,6 +241,15 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
           onClick={() => openSpotlight('meetings')}
         />
         <StatusCard
+          tone={metrics.liveActivities ? 'ok' : 'info'}
+          label="Activities Today"
+          value={metrics.activitiesToday}
+          hint={metrics.liveActivities ? `${metrics.liveActivities} happening now` : 'None happening now'}
+          values={dueSeries}
+          active={spotlight === 'activities'}
+          onClick={() => openSpotlight('activities')}
+        />
+        <StatusCard
           tone={metrics.dueToday ? 'warn' : 'info'}
           label="Tasks Due Today"
           value={metrics.dueToday}
@@ -312,7 +321,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
                   Clear filter
                 </button>
               )}
-              {spotlight !== 'meetings' && (
+              {spotlight !== 'meetings' && spotlight !== 'activities' && (
                 <label className="search">
                   <Icon name="search" size={14} />
                   <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search tasks" />
@@ -335,6 +344,26 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
                 {meetings.length === 0 && (
                   <div className="data-row meet-row">
                     <span className="muted table-empty">No meetings on the board today.</span>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : spotlight === 'activities' ? (
+            <>
+              <div className="data-table">
+                <div className="data-head activity-row">
+                  <span>Activity</span>
+                  <span>Type / place</span>
+                  <span>Time</span>
+                  <span>Attending</span>
+                  <span>Status</span>
+                </div>
+                {activities.map((activity) => (
+                  <ActivitySession key={activity.id} activity={activity} now={now} readOnly />
+                ))}
+                {activities.length === 0 && (
+                  <div className="data-row activity-row">
+                    <span className="muted table-empty">No team activities on the board today.</span>
                   </div>
                 )}
               </div>
@@ -392,6 +421,8 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
           <div className="table-foot">
             {spotlight === 'meetings'
               ? `Showing ${meetings.length} meetings`
+              : spotlight === 'activities'
+                ? `Showing ${activities.length} activities`
               : `Showing ${tasks.length} open tasks`}
             <button type="button" className="link-btn" onClick={() => onOpenView('workload')}>
               View team load
@@ -412,7 +443,7 @@ function Mini({
   label,
   value,
 }: {
-  icon: 'calendar' | 'clipboard' | 'clock' | 'alert'
+  icon: 'calendar' | 'clipboard' | 'clock' | 'alert' | 'users'
   tone: 'info' | 'warn' | 'danger' | 'ok'
   label: string
   value: number

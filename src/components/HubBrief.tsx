@@ -17,14 +17,17 @@ import { Icon } from './Icons'
 export function HubBrief({
   now,
   onOpenMeetings,
+  onOpenActivities,
   onOpenOverdue,
 }: {
   now: Date
   onOpenMeetings: () => void
+  onOpenActivities?: () => void
   onOpenOverdue?: () => void
 }) {
   const { state } = useOps()
   const today = todaysMeetings(state.meetings, now)
+  const activities = todaysActivities(state.hubLog ? state.activities : state.activities, now)
   const focus = currentOrNextMeeting(state.meetings, now)
   const live = Boolean(focus && meetingStatus(focus, now) === 'live')
   const overdue = overdueTasks(state.tasks, now).length
