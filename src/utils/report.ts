@@ -144,6 +144,17 @@ export function buildWeeklyReport(state: OpsState, now = new Date()): WeeklyRepo
         })),
       }
     }),
+    activities: weekActivities.map((item) => ({
+      id: item.id,
+      title: item.title,
+      kind: activityKindLabel(item.kind, item.kindOther),
+      when: `${formatDate(item.startTime)} · ${formatTimeRange(item.startTime, item.endTime)} · ${meetingStatus(item, now)}`,
+      place: item.facility
+        ? `${districtLabel(item.district)} · ${item.facility}`
+        : districtLabel(item.district),
+      attendees: item.participantIds.map((id) => memberName(state.members, id)).join(', '),
+      notes: item.notes?.trim() ?? '',
+    })),
   }
 }
 
@@ -188,6 +199,13 @@ export function reportToHtml(report: WeeklyReport): string {
     })
     .join('')
 
+  const activityBlocks = report.activities
+    .map(
+      (item) =>
+        `<section class="meeting"><h3>${esc(item.title)}</h3><p class="meta">${esc(item.kind)} · ${esc(item.when)}</p><p class="meta">${esc(item.place)}</p><p class="meta">Attending: ${esc(item.attendees || 'Not listed')}</p>${item.notes ? `<p class="minutes">${esc(item.notes)}</p>` : ''}</section>`,
+    )
+    .join('')
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -228,6 +246,7 @@ export function reportToHtml(report: WeeklyReport): string {
     <div class="kpi"><strong>${report.performance.overdue}</strong><span>Still overdue</span></div>
     <div class="kpi"><strong>${report.performance.inProgress}</strong><span>In progress</span></div>
     <div class="kpi"><strong>${report.performance.meetings}</strong><span>Meetings this week</span></div>
+    <div class="kpi"><strong>${report.performance.activities}</strong><span>Activities this week</span></div>
     <div class="kpi"><strong>${report.performance.openActions}</strong><span>Open action items</span></div>
     <div class="kpi"><strong>${report.performance.hubLog}</strong><span>Hub log entries</span></div>
   </div>
@@ -247,6 +266,9 @@ export function reportToHtml(report: WeeklyReport): string {
 
   <h2>Meetings and minutes</h2>
   ${meetingBlocks || '<p class="mute">No meetings recorded in this period.</p>'}
+
+  <h2>Team activities</h2>
+  ${activityBlocks || '<p class="mute">No trainings, field visits, or other activities recorded in this period.</p>'}
 </body>
 </html>`
 }

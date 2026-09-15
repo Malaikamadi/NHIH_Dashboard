@@ -95,6 +95,10 @@ export function WeeklyReportModal({ onClose }: Props) {
                 <span>Meetings</span>
               </div>
               <div>
+                <strong>{report.performance.activities}</strong>
+                <span>Activities</span>
+              </div>
+              <div>
                 <strong>{report.performance.openActions}</strong>
                 <span>Open actions</span>
               </div>
@@ -195,6 +199,34 @@ export function WeeklyReportModal({ onClose }: Props) {
                   </article>
                 ))}
               </div>
+            </section>
+
+            <section>
+              <h3>Team activities</h3>
+              {report.activities.length === 0 ? (
+                <p className="muted">No trainings, field visits, or other activities this week.</p>
+              ) : (
+                <div className="data-table">
+                  <div className="data-head report-log-head">
+                    <span>Activity</span>
+                    <span>Type</span>
+                    <span>When</span>
+                    <span>Place / attendees</span>
+                  </div>
+                  {report.activities.map((item) => (
+                    <div key={item.id} className="data-row report-log-head">
+                      <strong>{item.title}</strong>
+                      <span>{item.kind}</span>
+                      <span>{item.when}</span>
+                      <span>
+                        {item.place}
+                        {item.attendees ? ` · ${item.attendees}` : ''}
+                        {item.notes ? ` · ${item.notes}` : ''}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
           </>
         )}

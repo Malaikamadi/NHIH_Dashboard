@@ -568,7 +568,7 @@ button { cursor: pointer; }
 
 .gcard-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -738,6 +738,10 @@ button { cursor: pointer; }
 .meet-head,
 .meet-row {
   grid-template-columns: 1.6fr 1.1fr 0.8fr 0.8fr;
+  align-items: center;
+}
+.activity-row {
+  grid-template-columns: 1.4fr 1.2fr 1fr 0.7fr 0.7fr;
   align-items: center;
 }
 .meet-head { align-items: center; }
@@ -1181,6 +1185,12 @@ button { cursor: pointer; }
 .admin-h { display: flex; justify-content: space-between; align-items: center; }
 .admin-h h2 { margin: 0; }
 .admin-help { color: var(--muted); font-size: 13px; }
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0;
+}
 .admin-tabs.compact { margin: 0; }
 .task-update { display: grid; gap: 12px; }
 .task-update-tools {
