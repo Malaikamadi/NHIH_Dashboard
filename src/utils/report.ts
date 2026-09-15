@@ -1,4 +1,4 @@
-import { districtLabel, logKindLabel, placeLine } from '../data/catalog'
+import { activityKindLabel, districtLabel, logKindLabel, placeLine } from '../data/catalog'
 import type { OpsState } from '../types'
 import {
   agendaLines,
@@ -46,6 +46,16 @@ export interface WeeklyReportMeeting {
   actions: WeeklyReportAction[]
 }
 
+export interface WeeklyReportActivity {
+  id: string
+  title: string
+  kind: string
+  when: string
+  place: string
+  attendees: string
+  notes: string
+}
+
 export interface WeeklyReport {
   generatedAt: string
   rangeLabel: string
@@ -56,12 +66,14 @@ export interface WeeklyReport {
     inProgress: number
     onTime: number
     meetings: number
+    activities: number
     openActions: number
     hubLog: number
   }
   people: WeeklyReportPerson[]
   hubLog: WeeklyReportLog[]
   meetings: WeeklyReportMeeting[]
+  activities: WeeklyReportActivity[]
 }
 
 export function buildWeeklyReport(state: OpsState, now = new Date()): WeeklyReport {
@@ -70,6 +82,9 @@ export function buildWeeklyReport(state: OpsState, now = new Date()): WeeklyRepo
   const closed = state.tasks.filter((t) => t.completedAt && isInRange(t.completedAt, start, end))
   const meetings = state.meetings
     .filter((m) => isInRange(m.startTime, start, end))
+    .sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime))
+  const weekActivities = [...(state.activities ?? [])]
+    .filter((item) => isInRange(item.startTime, start, end))
     .sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime))
   const people = memberWorkloads(state, now).map((row) => ({
     name: row.member.name,
@@ -105,6 +120,7 @@ export function buildWeeklyReport(state: OpsState, now = new Date()): WeeklyRepo
       inProgress: metrics.inProgress,
       onTime: closed.filter((t) => completedOnTime(t)).length,
       meetings: meetings.length,
+      activities: weekActivities.length,
       openActions: state.actionItems.filter((a) => a.status !== 'completed').length,
       hubLog: hubLog.length,
     },

@@ -7,6 +7,7 @@ import {
   meetingStatus,
   overdueTasks,
   pipeStatus,
+  todaysActivities,
   todaysMeetings,
 } from '../utils/metrics'
 import { countdown, formatTime } from '../utils/time'
@@ -27,7 +28,7 @@ export function HubBrief({
 }) {
   const { state } = useOps()
   const today = todaysMeetings(state.meetings, now)
-  const activities = todaysActivities(state.hubLog ? state.activities : state.activities, now)
+  const activities = todaysActivities(state.activities, now)
   const focus = currentOrNextMeeting(state.meetings, now)
   const live = Boolean(focus && meetingStatus(focus, now) === 'live')
   const overdue = overdueTasks(state.tasks, now).length
@@ -56,6 +57,10 @@ export function HubBrief({
             <strong>{today.length}</strong>
             <span>Meetings</span>
           </div>
+          <button type="button" onClick={onOpenActivities} disabled={!onOpenActivities}>
+            <strong>{activities.length}</strong>
+            <span>Activities</span>
+          </button>
           <div>
             <strong>{dueToday}</strong>
             <span>Due today</span>
