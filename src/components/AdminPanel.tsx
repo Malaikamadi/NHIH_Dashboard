@@ -7,7 +7,7 @@ import { PlaceFields, placeFromForm } from './PlaceFields'
 import { TaskUpdatePanel } from './TaskUpdatePanel'
 import { useOps } from '../store/OpsContext'
 import type { Meeting, Priority, TaskStatus } from '../types'
-import { meetingStatus, todaysActivities, todaysMeetings } from '../utils/metrics'
+import { meetingStatus, todaysActivities, weeksMeetings } from '../utils/metrics'
 
 interface Props {
   open: boolean
@@ -31,7 +31,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
   const lead = state.members.find((m) => m.role === 'Team Lead')?.id ?? 'm1'
   const [tab, setTab] = useState<'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log'>('task')
   const [saved, setSaved] = useState('')
-  const todayMeetings = todaysMeetings(state.meetings)
+  const todayMeetings = weeksMeetings(state.meetings)
   const todayActivities = todaysActivities(state.activities)
 
   if (!open) return null
@@ -178,10 +178,10 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
 
         {tab === 'meeting' && (
           <section className="admin-live">
-            <h3>Today's meetings</h3>
+            <h3>This week's meetings</h3>
             <div className="admin-list">
               {todayMeetings.length === 0 && (
-                <p className="muted">No meetings on the board today.</p>
+                <p className="muted">No meetings on the board this week.</p>
               )}
               {todayMeetings.map((meeting) => (
                 <div key={meeting.id} className="admin-item admin-meeting">

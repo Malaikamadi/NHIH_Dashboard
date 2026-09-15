@@ -3,7 +3,7 @@ import { ACTIVITY_KINDS, DISTRICTS, activityKindLabel, districtLabel } from '../
 import { useOps } from '../store/OpsContext'
 import type { ActivityKind, DistrictId, MeetingStatus, TeamActivity } from '../types'
 import { meetingStatus } from '../utils/metrics'
-import { formatTimeRange, nowIso, toDatetimeLocal } from '../utils/time'
+import { formatDate, formatTimeRange, nowIso, toDatetimeLocal } from '../utils/time'
 import { StatusPill } from './Header'
 
 function defaultStart(): Date {
@@ -226,7 +226,9 @@ export function ActivitySession({
       <div className="data-row meet-row activity-row">
         <strong>{activity.title}</strong>
         <span>{place.join(' · ')}</span>
-        <span>{formatTimeRange(activity.startTime, activity.endTime)}</span>
+        <span>
+          {formatDate(activity.startTime)} · {formatTimeRange(activity.startTime, activity.endTime)}
+        </span>
         <span>{activity.participantIds.length} attending</span>
         <StatusPill status={status === 'live' ? 'ongoing' : status} />
       </div>

@@ -9,24 +9,31 @@ import { Icon } from './Icons'
 export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput?: boolean }) {
   const { state, addHubLog } = useOps()
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [typeFilter, setTypeFilter] = useState<HubLogKind | 'all'>('all')
   const authorId =
     state.members.find((m) => m.role === 'Operations Manager')?.id ??
     state.members.find((m) => m.role === 'Team Lead')?.id ??
     state.members[0]?.id ??
     ''
   const entries = useMemo(() => {
-    if (!allowInput) return todaysHubLog(state.hubLog, now)
-    return [...(state.hubLog ?? [])]
-      .sort((a, b) => +new Date(b.at) - +new Date(a.at))
-      .slice(0, 24)
-  }, [allowInput, state.hubLog, now])
+    const list = allowInput
+      ? [...(state.hubLog ?? [])].sort((a, b) => +new Date(b.at) - +new Date(a.at)).slice(0, 40)
+      : todaysHubLog(state.hubLog, now)
+    return typeFilter === 'all' ? list : list.filter((entry) => entry.kind === typeFilter)
+  }, [allowInput, state.hubLog, now, typeFilter])
+
+  const groups = LOG_KINDS.map((kind) => ({
+    id: kind.id,
+    label: kind.label,
+    items: entries.filter((entry) => entry.kind === kind.id),
+  })).filter((group) => group.items.length > 0)
 
   return (
     <section className="paper activity-card" id="hub-log">
       <header className="paper-h">
         <div>
           <h2>Hub log</h2>
-          <p>Extracts, late reporting, and incidents — not meeting minutes</p>
+          <p>Grouped by incident type — extracts, late reporting, and incidents</p>
         </div>
       </header>
 
@@ -58,70 +65,96 @@ export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput
         </form>
       )}
 
-      <ul className="activity hub-log">
-        {entries.length === 0 && (
+      <div className="log-type-tabs" role="tablist" aria-label="Incident type">
+        <button
+          type="button"
+          className={typeFilter === 'all' ? 'is-on' : ''}
+          onClick={() => setTypeFilter('all')}
+        >
+          All types
+        </button>
+        {LOG_KINDS.map((kind) => (
+          <button
+            key={kind.id}
+            type="button"
+            className={typeFilter === kind.id ? 'is-on' : ''}
+            onClick={() => setTypeFilter(kind.id)}
+          >
+            {kind.label}
+          </button>
+        ))}
+      </div>
+
+      {entries.length === 0 && (
+        <ul className="activity hub-log">
           <li>
             <span className="activity-time">Today</span>
             <span className="activity-dot">
               <Icon name="clipboard" size={14} />
             </span>
             <div>
-              <strong>No pipe events yet</strong>
+              <strong>No {typeFilter === 'all' ? 'pipe events' : logKindLabel(typeFilter).toLowerCase()} yet</strong>
               <p>
                 {allowInput
-                  ? 'Log a failed extract, late reporting, or incident as it happens.'
-                  : 'Nothing logged yet today.'}
+                  ? 'Choose an incident type, then log what happened.'
+                  : 'Nothing logged for this type yet today.'}
               </p>
             </div>
           </li>
-        )}
-        {entries.map((entry) => (
-          <li key={entry.id} className={`tone-${logTone(entry.kind)}`}>
-            <span className="activity-time">
-              {formatTime(entry.at)}
-              {allowInput ? ` · ${formatDate(entry.at)}` : ''}
-            </span>
-            <span className="activity-dot">
-              <Icon
-                name={
-                  entry.kind === 'extract_restored'
-                    ? 'check'
-                    : entry.kind === 'extract_failed' || entry.kind === 'incident'
-                      ? 'alert'
-                      : 'clipboard'
-                }
-                size={14}
-              />
-            </span>
-            <div>
-              {editingId === entry.id && allowInput ? (
-                <HubLogEditForm
-                  entry={entry}
-                  onDone={() => setEditingId(null)}
-                  onCancel={() => setEditingId(null)}
-                />
-              ) : (
-                <>
-                  <strong>
-                    {logKindLabel(entry.kind)} · {entry.title}
-                  </strong>
-                  <p>
-                    {districtLabel(entry.district)}
-                    {entry.facility ? ` · ${entry.facility}` : ''}
-                    {entry.detail ? ` · ${entry.detail}` : ''}
-                    {` · ${memberName(state.members, entry.authorId)}`}
-                  </p>
-                  {allowInput && (
-                    <button type="button" className="link-btn" onClick={() => setEditingId(entry.id)}>
-                      Edit
-                    </button>
+        </ul>
+      )}
+
+      {groups.map((group) => (
+        <div key={group.id} className="hub-log-group">
+          <h3>{group.label}</h3>
+          <ul className="activity hub-log">
+            {group.items.map((entry) => (
+              <li key={entry.id} className={`tone-${logTone(entry.kind)}`}>
+                <span className="activity-time">
+                  {formatTime(entry.at)}
+                  {allowInput ? ` · ${formatDate(entry.at)}` : ''}
+                </span>
+                <span className="activity-dot">
+                  <Icon
+                    name={
+                      entry.kind === 'extract_restored'
+                        ? 'check'
+                        : entry.kind === 'extract_failed' || entry.kind === 'incident'
+                          ? 'alert'
+                          : 'clipboard'
+                    }
+                    size={14}
+                  />
+                </span>
+                <div>
+                  {editingId === entry.id && allowInput ? (
+                    <HubLogEditForm
+                      entry={entry}
+                      onDone={() => setEditingId(null)}
+                      onCancel={() => setEditingId(null)}
+                    />
+                  ) : (
+                    <>
+                      <strong>{entry.title}</strong>
+                      <p>
+                        {districtLabel(entry.district)}
+                        {entry.facility ? ` · ${entry.facility}` : ''}
+                        {entry.detail ? ` · ${entry.detail}` : ''}
+                        {` · ${memberName(state.members, entry.authorId)}`}
+                      </p>
+                      {allowInput && (
+                        <button type="button" className="link-btn" onClick={() => setEditingId(entry.id)}>
+                          Edit
+                        </button>
+                      )}
+                    </>
                   )}
-                </>
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
     </section>
   )
 }
@@ -131,8 +164,8 @@ function HubLogFields({ entry }: { entry?: HubLogEntry }) {
     <>
       <div className="admin-split">
         <label>
-          Kind
-          <select name="kind" defaultValue={entry?.kind ?? 'late_reporting'}>
+          Incident type
+          <select name="kind" defaultValue={entry?.kind ?? 'incident'} required>
             {LOG_KINDS.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.label}

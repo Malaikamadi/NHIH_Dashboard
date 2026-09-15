@@ -221,6 +221,48 @@ button { cursor: pointer; }
   background: color-mix(in srgb, var(--ok) 16%, var(--paper));
   color: var(--ok);
 }
+.meet-chip.is-soon {
+  background: color-mix(in srgb, var(--warn) 18%, var(--paper));
+  color: var(--warn);
+}
+.alert-wrap { position: relative; }
+.icon-btn.has-alert { color: var(--warn); }
+.alert-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: min(320px, 70vw);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 12px;
+  z-index: 30;
+  display: grid;
+  gap: 8px;
+}
+.alert-menu strong {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.alert-menu p { margin: 0; font-size: 13px; display: grid; gap: 2px; }
+.alert-menu em { font-style: normal; font-size: 11px; font-weight: 800; color: var(--warn); text-transform: uppercase; }
+.alert-menu p span { color: var(--muted); font-size: 12px; }
+.soon-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--warn) 14%, var(--paper));
+  border: 1px solid color-mix(in srgb, var(--warn) 35%, var(--line));
+  color: var(--ink);
+}
+.soon-banner strong { display: block; }
+.soon-banner span { color: var(--muted); font-size: 13px; }
+.soon-banner .ghost-btn { margin-left: auto; }
 
 .pulse {
   width: 8px;
@@ -688,7 +730,59 @@ button { cursor: pointer; }
   color: inherit;
 }
 
-.table-tools { display: flex; gap: 10px; align-items: center; }
+.table-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: flex-end; }
+.day-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.day-picks button,
+.log-type-tabs button {
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.day-picks button.is-on,
+.log-type-tabs button.is-on {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.day-pick-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.day-pick-date input {
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: inherit;
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+.log-type-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+.hub-log-group { display: grid; gap: 8px; margin-top: 10px; }
+.hub-log-group h3 {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
 .search {
   display: flex;
   align-items: center;

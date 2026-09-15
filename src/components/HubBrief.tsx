@@ -5,12 +5,12 @@ import {
   dueTodayTasks,
   hotspotDistrict,
   meetingStatus,
+  openTodayActivities,
+  openWeekMeetings,
   overdueTasks,
   pipeStatus,
-  todaysActivities,
-  todaysMeetings,
 } from '../utils/metrics'
-import { countdown, formatTime } from '../utils/time'
+import { countdown, formatDate, formatTime } from '../utils/time'
 import { useOps } from '../store/OpsContext'
 import { StatusPill } from './Header'
 import { Icon } from './Icons'
@@ -27,8 +27,8 @@ export function HubBrief({
   onOpenOverdue?: () => void
 }) {
   const { state } = useOps()
-  const today = todaysMeetings(state.meetings, now)
-  const activities = todaysActivities(state.activities, now)
+  const today = openWeekMeetings(state.meetings, now)
+  const activities = openTodayActivities(state.activities, now)
   const focus = currentOrNextMeeting(state.meetings, now)
   const live = Boolean(focus && meetingStatus(focus, now) === 'live')
   const overdue = overdueTasks(state.tasks, now).length
@@ -43,19 +43,19 @@ export function HubBrief({
           <span className={`brief-kicker ${live ? 'is-live' : ''}`}>
             {live ? 'Live meeting' : focus ? 'Next meeting' : 'Meetings'}
           </span>
-          <strong>{focus ? focus.title : 'No remaining meetings today'}</strong>
+          <strong>{focus ? focus.title : 'No remaining meetings this week'}</strong>
           <span className="muted">
             {focus
-              ? `${formatTime(focus.startTime)} – ${formatTime(focus.endTime)} · ${
+              ? `${formatDate(focus.startTime)} · ${formatTime(focus.startTime)} – ${formatTime(focus.endTime)} · ${
                   live ? `${countdown(focus.endTime, now)} remaining` : `starts in ${countdown(focus.startTime, now)}`
                 }`
-              : 'Add a meeting to put the hub day on the board'}
+              : 'Add a meeting to put the hub week on the board'}
           </span>
         </button>
         <div className="brief-stats">
           <div>
             <strong>{today.length}</strong>
-            <span>Meetings</span>
+            <span>This week</span>
           </div>
           <button type="button" onClick={onOpenActivities} disabled={!onOpenActivities}>
             <strong>{activities.length}</strong>
@@ -83,7 +83,9 @@ export function HubBrief({
               const status = meetingStatus(meeting, now)
               return (
                 <li key={meeting.id} className={`agenda-item is-${status}`}>
-                  <span>{formatTime(meeting.startTime)}</span>
+                  <span>
+                    {formatDate(meeting.startTime)} · {formatTime(meeting.startTime)}
+                  </span>
                   <em>{meeting.title}</em>
                   <StatusPill status={status === 'live' ? 'ongoing' : status} />
                 </li>

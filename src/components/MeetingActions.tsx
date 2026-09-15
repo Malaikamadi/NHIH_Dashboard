@@ -3,7 +3,7 @@ import { PlaceFields, placeFromForm } from './PlaceFields'
 import { useOps } from '../store/OpsContext'
 import type { Meeting, MeetingStatus } from '../types'
 import { agendaLines, meetingStatus } from '../utils/metrics'
-import { addDays, formatTimeRange, nowIso, toDatetimeLocal } from '../utils/time'
+import { addDays, formatDate, formatTimeRange, nowIso, toDatetimeLocal } from '../utils/time'
 import { StatusPill } from './Header'
 
 function defaultDeadline(): string {
@@ -247,7 +247,9 @@ export function MeetingSession({
     <article className="meet-block">
       <div className="data-row meet-row">
         <strong>{meeting.title}</strong>
-        <span>{formatTimeRange(meeting.startTime, meeting.endTime)}</span>
+        <span>
+          {formatDate(meeting.startTime)} · {formatTimeRange(meeting.startTime, meeting.endTime)}
+        </span>
         <span>{meeting.participantIds.length} people</span>
         <StatusPill status={status === 'live' ? 'ongoing' : status} />
       </div>

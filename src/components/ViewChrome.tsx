@@ -31,7 +31,7 @@ export function ViewChrome({ progress, paused, onTogglePause }: Props) {
       <strong className={live ? 'is-live' : ''}>
         {next
           ? `${live ? 'Live' : 'Next'}: ${next.title} · ${countdown(live ? next.endTime : next.startTime, now)}`
-          : 'No remaining meetings'}
+          : 'No remaining meetings this week'}
       </strong>
     </footer>
   )

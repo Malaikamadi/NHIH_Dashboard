@@ -14,7 +14,17 @@ import type {
   TeamMember,
   WorkloadLevel,
 } from '../types'
-import { addDays, endOfDay, isInRange, isSameDay, startOfDay, startOfMonth, startOfYear } from './time'
+import {
+  addDays,
+  endOfDay,
+  endOfWeek,
+  isInRange,
+  isSameDay,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+  startOfYear,
+} from './time'
 
 export const PERIODS: PeriodId[] = ['Daily', 'Weekly', 'Monthly', 'Yearly']
 
@@ -83,20 +93,59 @@ export function todaysMeetings(meetings: Meeting[], now = new Date()): Meeting[]
     .sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime))
 }
 
+export function weeksMeetings(meetings: Meeting[], now = new Date()): Meeting[] {
+  const start = startOfWeek(now)
+  const end = endOfWeek(now)
+  return meetings
+    .filter((meeting) => isInRange(meeting.startTime, start, end))
+    .sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime))
+}
+
+export function openWeekMeetings(meetings: Meeting[], now = new Date()): Meeting[] {
+  return weeksMeetings(meetings, now).filter((meeting) => meetingStatus(meeting, now) !== 'completed')
+}
+
 export function todaysActivities(activities: TeamActivity[] | undefined, now = new Date()): TeamActivity[] {
   return [...(activities ?? [])]
     .filter((item) => isSameDay(new Date(item.startTime), now))
     .sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime))
 }
 
+export function openTodayActivities(activities: TeamActivity[] | undefined, now = new Date()): TeamActivity[] {
+  return todaysActivities(activities, now).filter((item) => meetingStatus(item, now) !== 'completed')
+}
+
 export function currentOrNextMeeting(
   meetings: Meeting[],
   now = new Date(),
 ): Meeting | undefined {
-  const today = todaysMeetings(meetings, now)
+  const open = openWeekMeetings(meetings, now)
   return (
-    today.find((m) => meetingStatus(m, now) === 'live') ??
-    today.find((m) => meetingStatus(m, now) === 'upcoming')
+    open.find((m) => meetingStatus(m, now) === 'live') ??
+    open.find((m) => meetingStatus(m, now) === 'upcoming')
+  )
+}
+
+export function startingSoon(
+  meetings: Meeting[],
+  activities: TeamActivity[] | undefined,
+  now = new Date(),
+  minutes = 30,
+): { id: string; kind: 'meeting' | 'activity'; title: string; startTime: string }[] {
+  const t = now.getTime()
+  const until = t + minutes * 60_000
+  const pick = (
+    items: { id: string; title: string; startTime: string }[],
+    kind: 'meeting' | 'activity',
+  ) =>
+    items
+      .filter((item) => {
+        const start = new Date(item.startTime).getTime()
+        return start > t && start <= until
+      })
+      .map((item) => ({ id: item.id, kind, title: item.title, startTime: item.startTime }))
+  return [...pick(meetings, 'meeting'), ...pick(activities ?? [], 'activity')].sort(
+    (a, b) => +new Date(a.startTime) - +new Date(b.startTime),
   )
 }
 
@@ -128,6 +177,7 @@ export function workloadLevel(active: number, overdue: number): WorkloadLevel {
 
 export interface TeamMetrics {
   meetingsToday: number
+  meetingsThisWeek: number
   activitiesToday: number
   dueToday: number
   completedToday: number
@@ -146,10 +196,11 @@ export function teamMetrics(state: OpsState, now = new Date()): TeamMetrics {
   const tasks = state.tasks
   const total = tasks.length
   const completed = tasks.filter((t) => displayStatus(t, now) === 'completed')
-  const today = todaysMeetings(state.meetings, now)
-  const activities = todaysActivities(state.activities, now)
+  const today = openWeekMeetings(state.meetings, now)
+  const activities = openTodayActivities(state.activities, now)
   return {
-    meetingsToday: today.length,
+    meetingsToday: todaysMeetings(state.meetings, now).filter((m) => meetingStatus(m, now) !== 'completed').length,
+    meetingsThisWeek: today.length,
     activitiesToday: activities.length,
     dueToday: tasks.filter((t) => isDueToday(t, now) && displayStatus(t, now) !== 'completed').length,
     completedToday: tasks.filter((t) => wasCompletedToday(t, now)).length,
@@ -222,8 +273,12 @@ export function priorityTasks(tasks: Task[], now = new Date(), limit = 6): Task[
 }
 
 export function dueTodayTasks(tasks: Task[], now = new Date()): Task[] {
+  return dueOnDayTasks(tasks, now, now)
+}
+
+export function dueOnDayTasks(tasks: Task[], day: Date, now = new Date()): Task[] {
   return tasks
-    .filter((t) => isDueToday(t, now) && displayStatus(t, now) !== 'completed')
+    .filter((t) => isSameDay(new Date(t.dueDate), day) && displayStatus(t, now) !== 'completed')
     .sort((a, b) => +new Date(a.dueDate) - +new Date(b.dueDate))
 }
 

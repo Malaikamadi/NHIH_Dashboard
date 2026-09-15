@@ -26,6 +26,32 @@ export function addDays(base: Date, days: number): Date {
   return d
 }
 
+export function startOfWeek(date: Date): Date {
+  const d = startOfDay(date)
+  const weekday = d.getDay()
+  return addDays(d, weekday === 0 ? -6 : 1 - weekday)
+}
+
+export function endOfWeek(date: Date): Date {
+  return endOfDay(addDays(startOfWeek(date), 6))
+}
+
+export function weekDays(date: Date): Date[] {
+  const start = startOfWeek(date)
+  return Array.from({ length: 7 }, (_, index) => addDays(start, index))
+}
+
+export function toDateInput(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+export function parseDateInput(value: string, fallback = new Date()): Date {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (!match) return startOfDay(fallback)
+  return startOfDay(new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])))
+}
+
 export function startOfMonth(date: Date): Date {
   const d = startOfDay(date)
   d.setDate(1)

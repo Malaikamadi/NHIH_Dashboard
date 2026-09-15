@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useOps } from '../store/OpsContext'
 import type { TaskStatus } from '../types'
-import { currentOrNextMeeting, meetingStatus } from '../utils/metrics'
-import { formatClock, formatLongDate } from '../utils/time'
+import { currentOrNextMeeting, meetingStatus, startingSoon } from '../utils/metrics'
+import { countdown, formatClock, formatLongDate, formatTime } from '../utils/time'
 import mohsLogo from '../assets/mohs-logo.jpg'
 import { Icon } from './Icons'
 
@@ -15,14 +15,24 @@ interface Props {
 export function Header({ onMenu, theme, onToggleTheme }: Props) {
   const { state, connected } = useOps()
   const [now, setNow] = useState(() => new Date())
+  const [alertsOpen, setAlertsOpen] = useState(false)
+  const alertRef = useRef<HTMLDivElement>(null)
   const operator = state.members.find((m) => m.role === 'Operations Manager')
+  const soon = startingSoon(state.meetings, state.activities, now)
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 1000)
     return () => window.clearInterval(id)
   }, [])
 
-  const alerts = state.events.length
+  useEffect(() => {
+    if (!alertsOpen) return
+    const onClick = (event: MouseEvent) => {
+      if (!alertRef.current?.contains(event.target as Node)) setAlertsOpen(false)
+    }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [alertsOpen])
 
   return (
     <header className="topbar">
@@ -47,7 +57,7 @@ export function Header({ onMenu, theme, onToggleTheme }: Props) {
           <strong>{formatClock(now)}</strong>
           <span>{formatLongDate(now)}</span>
         </div>
-        <LiveMeetingChip now={now} />
+        <LiveMeetingChip now={now} soonCount={soon.length} />
       </div>
 
       <div className="topbar-right">
@@ -63,13 +73,31 @@ export function Header({ onMenu, theme, onToggleTheme }: Props) {
         >
           <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={18} />
         </button>
-        <button type="button" className="icon-btn" aria-label="Notifications">
-          <Icon name="bell" size={18} />
-          {alerts > 0 && <em>{Math.min(alerts, 9)}</em>}
-        </button>
-        <button type="button" className="icon-btn" aria-label="Messages">
-          <Icon name="mail" size={18} />
-        </button>
+        <div className="alert-wrap" ref={alertRef}>
+          <button
+            type="button"
+            className={`icon-btn ${soon.length ? 'has-alert' : ''}`}
+            aria-label="Upcoming alerts"
+            aria-expanded={alertsOpen}
+            onClick={() => setAlertsOpen((open) => !open)}
+          >
+            <Icon name="bell" size={18} />
+            {soon.length > 0 && <em>{Math.min(soon.length, 9)}</em>}
+          </button>
+          {alertsOpen && (
+            <div className="alert-menu">
+              <strong>Starting within 30 minutes</strong>
+              {soon.length === 0 && <p className="muted">No meetings or activities in the next 30 minutes.</p>}
+              {soon.map((item) => (
+                <p key={item.id}>
+                  <em>{item.kind === 'meeting' ? 'Meeting' : 'Activity'}</em>
+                  {item.title}
+                  <span>Starts in {countdown(item.startTime, now)} · {formatTime(item.startTime)}</span>
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
         <span className="topbar-user">
           <span className="avatar">{operator?.initials ?? 'PM'}</span>
           <span>{operator?.name ?? 'Prince Mafinda'}</span>
@@ -79,15 +107,16 @@ export function Header({ onMenu, theme, onToggleTheme }: Props) {
   )
 }
 
-function LiveMeetingChip({ now }: { now: Date }) {
+function LiveMeetingChip({ now, soonCount }: { now: Date; soonCount: number }) {
   const { state } = useOps()
   const focus = currentOrNextMeeting(state.meetings, now)
   if (!focus) return null
   const live = meetingStatus(focus, now) === 'live'
+  const soon = !live && soonCount > 0 && startingSoon([focus], [], now).length > 0
   return (
-    <span className={`meet-chip ${live ? 'is-live' : ''}`}>
+    <span className={`meet-chip ${live ? 'is-live' : ''} ${soon ? 'is-soon' : ''}`}>
       <Icon name="calendar" size={14} />
-      {live ? 'Live' : 'Next'} · {focus.title}
+      {live ? 'Live' : soon ? `In ${countdown(focus.startTime, now)}` : 'Next'} · {focus.title}
     </span>
   )
 }

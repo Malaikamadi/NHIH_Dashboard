@@ -13,11 +13,13 @@ import type { DistrictId, PeriodId, ViewId } from '../types'
 import {
   districtWorkload,
   displayStatus,
-  dueTodayTasks,
+  dueOnDayTasks,
   hotspotDistrict,
   memberById,
   memberIndex,
   memberName,
+  openTodayActivities,
+  openWeekMeetings,
   overdueTasks,
   PERIOD_CLOSED_LABEL,
   PERIOD_COPY,
@@ -26,12 +28,11 @@ import {
   periodCompletionRate,
   periodSeries,
   priorityBand,
+  startingSoon,
   statusBreakdown,
   teamMetrics,
-  todaysActivities,
-  todaysMeetings,
 } from '../utils/metrics'
-import { formatDate } from '../utils/time'
+import { countdown, formatDate, isSameDay, parseDateInput, toDateInput, weekDays } from '../utils/time'
 
 type Spotlight = 'meetings' | 'activities' | 'due' | 'progress' | 'overdue' | null
 
@@ -43,6 +44,8 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
   const [spotlight, setSpotlight] = useState<Spotlight>(null)
   const [reportOpen, setReportOpen] = useState(false)
   const [districtFilter, setDistrictFilter] = useState<DistrictId | null>(null)
+  const [dueDay, setDueDay] = useState(() => new Date())
+  const [dismissedSoon, setDismissedSoon] = useState<string[]>([])
   const detailRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
@@ -57,13 +60,17 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
   const dueSeries = series.map((d) => d.due)
   const closedInPeriod = periodClosedCount(state.tasks, period, now)
   const periodRate = periodCompletionRate(state.tasks, period, now)
-  const meetings = todaysMeetings(state.meetings, now)
-  const activities = todaysActivities(state.activities, now)
+  const meetings = openWeekMeetings(state.meetings, now)
+  const activities = openTodayActivities(state.activities, now)
+  const soon = startingSoon(state.meetings, state.activities, now).filter(
+    (item) => !dismissedSoon.includes(item.id),
+  )
+  const dueDays = weekDays(now)
   const districts = districtWorkload(state.tasks, now)
   const hotspot = hotspotDistrict(state.tasks, now)
   const tasks = useMemo(() => {
     let list = state.tasks.filter((t) => displayStatus(t, now) !== 'completed')
-    if (spotlight === 'due') list = dueTodayTasks(state.tasks, now)
+    if (spotlight === 'due') list = dueOnDayTasks(state.tasks, dueDay, now)
     if (spotlight === 'progress') {
       list = list.filter((t) => {
         const status = displayStatus(t, now)
@@ -82,7 +89,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
         )
       })
       .sort((a, b) => +new Date(a.dueDate) - +new Date(b.dueDate))
-  }, [state.tasks, now, query, spotlight, districtFilter])
+  }, [state.tasks, now, query, spotlight, districtFilter, dueDay])
 
   const openSpotlight = (next: Spotlight) => {
     setDistrictFilter(null)
@@ -97,11 +104,11 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
     selectedDistrict
       ? selectedDistrict.label
       : spotlight === 'meetings'
-      ? "Today's Meetings"
+      ? "This week's meetings"
       : spotlight === 'activities'
         ? "Today's Activities"
         : spotlight === 'due'
-        ? 'Tasks Due Today'
+        ? `Tasks due · ${formatDate(dueDay.toISOString())}`
         : spotlight === 'progress'
           ? 'In Progress'
           : spotlight === 'overdue'
@@ -114,11 +121,13 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
         ? `${selectedDistrict.label} still open`
         : `${selectedDistrict.open} open ${selectedDistrict.open === 1 ? 'item' : 'items'}`
       : spotlight === 'meetings'
-        ? 'Agenda, minutes, and actions from today’s huddles'
+        ? 'Live and upcoming huddles this week — completed meetings drop off automatically'
         : spotlight === 'activities'
           ? 'Trainings, field visits, and other events the team is attending'
         : spotlight === 'due'
-          ? 'Still open and due today'
+          ? isSameDay(dueDay, now)
+            ? 'Still open and due today'
+            : `Still open and due ${formatDate(dueDay.toISOString())}`
           : spotlight === 'progress'
             ? 'Active and under review'
             : spotlight === 'overdue'
@@ -129,6 +138,20 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
 
   return (
     <div className="view light-dash">
+      {soon.map((item) => (
+        <aside key={item.id} className="soon-banner">
+          <Icon name="bell" size={16} />
+          <div>
+            <strong>
+              {item.kind === 'meeting' ? 'Meeting' : 'Activity'} starts in {countdown(item.startTime, now)}
+            </strong>
+            <span>{item.title}</span>
+          </div>
+          <button type="button" className="ghost-btn" onClick={() => setDismissedSoon((ids) => [...ids, item.id])}>
+            Dismiss
+          </button>
+        </aside>
+      ))}
       <HubBrief
         now={now}
         onOpenMeetings={() => {
@@ -197,7 +220,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
           />
 
           <div className="mini-stats">
-            <Mini icon="calendar" tone="info" label="Meetings today" value={metrics.meetingsToday} />
+            <Mini icon="calendar" tone="info" label="Meetings this week" value={metrics.meetingsThisWeek} />
             <Mini icon="users" tone={metrics.liveActivities ? 'ok' : 'info'} label="Activities today" value={metrics.activitiesToday} />
             <Mini icon="clipboard" tone={metrics.dueToday ? 'warn' : 'info'} label="Due today" value={metrics.dueToday} />
             <Mini icon="clock" tone="info" label="In progress" value={metrics.inProgress} />
@@ -233,9 +256,9 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
       <div className="gcard-row">
         <StatusCard
           tone={metrics.liveMeetings ? 'ok' : 'info'}
-          label="Meetings Today"
-          value={metrics.meetingsToday}
-          hint={metrics.liveMeetings ? `${metrics.liveMeetings} live now` : 'None live'}
+          label="Meetings this week"
+          value={metrics.meetingsThisWeek}
+          hint={metrics.liveMeetings ? `${metrics.liveMeetings} live now` : 'Upcoming only'}
           values={completedSeries}
           active={spotlight === 'meetings'}
           onClick={() => openSpotlight('meetings')}
@@ -256,7 +279,10 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
           hint={`${metrics.highPriorityDue} high priority`}
           values={dueSeries}
           active={spotlight === 'due'}
-          onClick={() => openSpotlight('due')}
+          onClick={() => {
+            setDueDay(new Date())
+            openSpotlight('due')
+          }}
         />
         <StatusCard
           tone="info"
@@ -309,6 +335,28 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
               <p>{tableHint}</p>
             </div>
             <div className="table-tools">
+              {spotlight === 'due' && (
+                <div className="day-picks" aria-label="Due day">
+                  {dueDays.map((day) => (
+                    <button
+                      key={toDateInput(day)}
+                      type="button"
+                      className={isSameDay(day, dueDay) ? 'is-on' : ''}
+                      onClick={() => setDueDay(day)}
+                    >
+                      {isSameDay(day, now) ? 'Today' : day.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })}
+                    </button>
+                  ))}
+                  <label className="day-pick-date">
+                    <span>Pick day</span>
+                    <input
+                      type="date"
+                      value={toDateInput(dueDay)}
+                      onChange={(e) => setDueDay(parseDateInput(e.target.value, dueDay))}
+                    />
+                  </label>
+                </div>
+              )}
               {(spotlight || districtFilter) && (
                 <button
                   type="button"
@@ -343,7 +391,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
                 ))}
                 {meetings.length === 0 && (
                   <div className="data-row meet-row">
-                    <span className="muted table-empty">No meetings on the board today.</span>
+                    <span className="muted table-empty">No remaining meetings this week.</span>
                   </div>
                 )}
               </div>
@@ -363,7 +411,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
                 ))}
                 {activities.length === 0 && (
                   <div className="data-row activity-row">
-                    <span className="muted table-empty">No team activities on the board today.</span>
+                    <span className="muted table-empty">No remaining activities today.</span>
                   </div>
                 )}
               </div>
@@ -380,7 +428,11 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
               </div>
               {tasks.length === 0 && (
                 <div className="data-row">
-                  <span className="muted table-empty">No live tasks yet. Prince can add them from the operator desk.</span>
+                  <span className="muted table-empty">
+                    {spotlight === 'due'
+                      ? `No open tasks due ${formatDate(dueDay.toISOString())}.`
+                      : 'No live tasks yet. Prince can add them from the operator desk.'}
+                  </span>
                 </div>
               )}
               {tasks.map((task) => {
@@ -420,7 +472,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
           )}
           <div className="table-foot">
             {spotlight === 'meetings'
-              ? `Showing ${meetings.length} meetings`
+              ? `Showing ${meetings.length} remaining meetings this week`
               : spotlight === 'activities'
                 ? `Showing ${activities.length} activities`
               : `Showing ${tasks.length} open tasks`}
