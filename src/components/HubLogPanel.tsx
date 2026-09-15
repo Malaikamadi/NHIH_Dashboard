@@ -5,7 +5,7 @@ import { memberName, todaysHubLog } from '../utils/metrics'
 import { formatTime } from '../utils/time'
 import { Icon } from './Icons'
 
-export function HubLogPanel({ now }: { now: Date }) {
+export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput?: boolean }) {
   const { state, addHubLog } = useOps()
   const today = todaysHubLog(state.hubLog, now)
   const authorId =
@@ -23,6 +23,7 @@ export function HubLogPanel({ now }: { now: Date }) {
         </div>
       </header>
 
+      {allowInput && (
       <form
         className="hub-log-form"
         onSubmit={(e) => {
@@ -81,6 +82,7 @@ export function HubLogPanel({ now }: { now: Date }) {
           Log event
         </button>
       </form>
+      )}
 
       <ul className="activity hub-log">
         {today.length === 0 && (
@@ -91,7 +93,7 @@ export function HubLogPanel({ now }: { now: Date }) {
             </span>
             <div>
               <strong>No pipe events yet</strong>
-              <p>Log a failed extract, late reporting, or incident as it happens.</p>
+              <p>{allowInput ? 'Log a failed extract, late reporting, or incident as it happens.' : 'Nothing logged yet today.'}</p>
             </div>
           </li>
         )}

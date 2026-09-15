@@ -8,5 +8,8 @@
       "maxDuration": 30,
       "includeFiles": "api/package.json"
     }
-  }
+  },
+  "rewrites": [
+    { "source": "/desk", "destination": "/index.html" }
+  ]
 }

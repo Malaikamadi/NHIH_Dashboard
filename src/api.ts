@@ -1,18 +1,30 @@
+import { getOperatorCode, setOperatorCode } from './access'
 import type { ActionItem, HubLogEntry, Meeting, OpsState, Task } from './types'
 import type { WeeklyReport } from './utils/report'
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init?.headers ?? {}),
-    },
-  })
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(init?.headers as Record<string, string> | undefined),
+  }
+  const code = getOperatorCode()
+  if (code) headers['X-Operator-Code'] = code
+  const res = await fetch(path, { ...init, headers })
   if (!res.ok) {
     throw new Error(`${res.status} ${path}`)
   }
   return res.json() as Promise<T>
+}
+
+export async function unlockOperator(code: string): Promise<boolean> {
+  const res = await fetch('/api/operator/unlock', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code }),
+  })
+  if (!res.ok) return false
+  setOperatorCode(code)
+  return true
 }
 
 export function fetchState(): Promise<OpsState> {

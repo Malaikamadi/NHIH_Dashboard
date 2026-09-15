@@ -27,7 +27,15 @@ function AgendaList({ agenda }: { agenda?: string }) {
   )
 }
 
-function MeetingTools({ meeting, now }: { meeting: Meeting; now?: Date }) {
+function MeetingTools({
+  meeting,
+  now,
+  readOnly,
+}: {
+  meeting: Meeting
+  now?: Date
+  readOnly?: boolean
+}) {
   const { state, updateMeeting, addActionItem } = useOps()
   const status: MeetingStatus = meetingStatus(meeting, now)
   const [panel, setPanel] = useState<'action' | 'agenda' | 'minutes' | null>(null)
@@ -70,6 +78,15 @@ function MeetingTools({ meeting, now }: { meeting: Meeting; now?: Date }) {
   const defaultOwner = meeting.participantIds[0] ?? leadId ?? state.members[0]?.id ?? ''
   const hasMinutes = Boolean((meeting.notes ?? '').trim())
   const hasAgenda = agendaLines(meeting.agenda).length > 0
+
+  if (readOnly) {
+    return (
+      <div className="meeting-actions">
+        {hasAgenda && <AgendaList agenda={meeting.agenda} />}
+        {hasMinutes && <p className="meet-minutes">{meeting.notes}</p>}
+      </div>
+    )
+  }
 
   return (
     <div className="meeting-actions">
@@ -219,9 +236,11 @@ function MeetingTools({ meeting, now }: { meeting: Meeting; now?: Date }) {
 export function MeetingSession({
   meeting,
   now,
+  readOnly,
 }: {
   meeting: Meeting
   now?: Date
+  readOnly?: boolean
 }) {
   const status = meetingStatus(meeting, now)
   return (
@@ -232,7 +251,7 @@ export function MeetingSession({
         <span>{meeting.participantIds.length} people</span>
         <StatusPill status={status === 'live' ? 'ongoing' : status} />
       </div>
-      <MeetingTools meeting={meeting} now={now} />
+      <MeetingTools meeting={meeting} now={now} readOnly={readOnly} />
     </article>
   )
 }

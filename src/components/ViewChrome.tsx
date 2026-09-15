@@ -2,15 +2,11 @@ import { useEffect, useState } from 'react'
 import { currentOrNextMeeting, meetingStatus } from '../utils/metrics'
 import { countdown, formatTime } from '../utils/time'
 import { useOps } from '../store/OpsContext'
-import type { ViewId } from '../types'
 
 interface Props {
-  active: ViewId
   progress: number
   paused: boolean
-  onSelect: (id: ViewId) => void
   onTogglePause: () => void
-  onOpenAdmin: () => void
 }
 
 export function ViewChrome({ progress, paused, onTogglePause }: Props) {

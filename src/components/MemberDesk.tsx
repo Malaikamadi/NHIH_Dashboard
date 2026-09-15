@@ -1,13 +1,10 @@
 import { useEffect, useMemo } from 'react'
-import { PlaceFields, PlaceLine, placeFromForm } from './PlaceFields'
+import { PlaceLine } from './PlaceFields'
 import { useOps } from '../store/OpsContext'
-import type { Priority, TeamMember } from '../types'
+import type { TeamMember } from '../types'
 import { displayStatus } from '../utils/metrics'
 import { formatDue } from '../utils/time'
 import { PriorityMark, StatusPill } from './Header'
-import { TaskActions } from './TaskActions'
-
-const PRIORITIES: Priority[] = ['critical', 'high', 'medium', 'low']
 
 export function MemberDesk({
   member,
@@ -16,7 +13,7 @@ export function MemberDesk({
   member: TeamMember
   onClose: () => void
 }) {
-  const { state, addTask } = useOps()
+  const { state } = useOps()
   const now = useMemo(() => new Date(), [state.tasks])
   const mine = state.tasks.filter((t) => t.assignedTo === member.id)
   const open = mine
@@ -47,58 +44,8 @@ export function MemberDesk({
           </button>
         </header>
         <p className="admin-help">
-          {open.length} open · {done.length} completed. Add work below or mark a task complete.
+          {open.length} open · {done.length} completed. Updates are entered on the operator desk.
         </p>
-
-        <form
-          className="admin-form"
-          onSubmit={(e) => {
-            e.preventDefault()
-            const form = e.currentTarget
-            const data = new FormData(form)
-            addTask({
-              title: String(data.get('title')),
-              description: String(data.get('description') || ''),
-              assignedTo: member.id,
-              assignedBy: member.id,
-              priority: String(data.get('priority')) as Priority,
-              dueDate: new Date(String(data.get('dueDate'))).toISOString(),
-              status: 'not_started',
-              progress: 0,
-              ...placeFromForm(data),
-            })
-            form.reset()
-          }}
-        >
-          <label>
-            New task
-            <input name="title" required placeholder="What needs to get done" />
-          </label>
-          <label>
-            Notes
-            <textarea name="description" rows={2} placeholder="Optional detail" />
-          </label>
-          <div className="admin-split">
-            <label>
-              Priority
-              <select name="priority" defaultValue="medium">
-                {PRIORITIES.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Due
-              <input name="dueDate" type="datetime-local" required />
-            </label>
-          </div>
-          <PlaceFields />
-          <button type="submit" className="primary-btn">
-            Add task
-          </button>
-        </form>
 
         <section className="admin-live">
           <h3>Open tasks</h3>
@@ -118,7 +65,6 @@ export function MemberDesk({
                   </div>
                 </div>
                 {task.description && <p className="muted">{task.description}</p>}
-                <TaskActions task={task} />
               </article>
             ))}
           </div>

@@ -2,11 +2,12 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { streamSSE } from 'hono/streaming'
-import type { ZodType } from 'zod'
+import { z } from 'zod'
 import { buildWeeklyReport, reportToHtml } from '../src/utils/report'
 import { uid } from '../src/utils/time'
 import * as repo from './db'
 import { HttpError } from './errors'
+import { isValidOperatorCode } from './operator'
 import { broadcast, clientCount, subscribe } from './hub'
 import {
   actionCreate,
@@ -27,8 +28,20 @@ api.use(
   cors({
     origin: '*',
     allowMethods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'X-Operator-Code'],
   }),
 )
+
+api.use('*', async (c, next) => {
+  if (c.req.method === 'GET' || c.req.method === 'OPTIONS') return next()
+  const path = c.req.path
+  if (path === '/operator/unlock' || path.endsWith('/operator/unlock')) return next()
+  const given = c.req.header('x-operator-code') ?? ''
+  if (!isValidOperatorCode(given)) {
+    throw new HttpError(401, 'Operator access required')
+  }
+  return next()
+})
 
 async function push(state?: Awaited<ReturnType<typeof repo.getState>>) {
   const next = state ?? (await repo.getState())
@@ -36,7 +49,7 @@ async function push(state?: Awaited<ReturnType<typeof repo.getState>>) {
   return next
 }
 
-async function readBody<T>(c: { req: { json: () => Promise<unknown> } }, schema: ZodType<T>): Promise<T> {
+async function readBody<T>(c: { req: { json: () => Promise<unknown> } }, schema: z.ZodType<T>): Promise<T> {
   let raw: unknown
   try {
     raw = await c.req.json()
@@ -67,6 +80,12 @@ api.get('/health', async (c) =>
     at: new Date().toISOString(),
   }),
 )
+
+api.post('/operator/unlock', async (c) => {
+  const body = await readBody(c, z.object({ code: z.string().trim().min(1, 'Access code is required') }))
+  if (!isValidOperatorCode(body.code)) throw new HttpError(401, 'Invalid access code')
+  return c.json({ ok: true })
+})
 
 api.get('/state', async (c) => c.json(await repo.getState()))
 

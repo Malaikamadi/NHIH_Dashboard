@@ -13,12 +13,11 @@ const ACTION_STATUS: Record<ActionStatus, 'open' | 'in_progress' | 'completed'> 
 }
 
 export function ActionItemsView() {
-  const { state, convertActionToTask } = useOps()
+  const { state } = useOps()
   const now = useMemo(() => new Date(), [state.actionItems, state.tasks])
   const items = openActionItems(state.actionItems)
   const open = items.filter((i) => i.status !== 'completed').length
   const converted = items.filter((i) => i.convertedToTaskId).length
-  const leadId = state.members.find((m) => m.role === 'Team Lead')?.id ?? 'm1'
 
   return (
     <div className="view actions-view">
@@ -79,13 +78,7 @@ export function ActionItemsView() {
                   {item.convertedToTaskId ? (
                     <span className="pill pill-completed">On board</span>
                   ) : (
-                    <button
-                      type="button"
-                      className="convert-btn"
-                      onClick={() => convertActionToTask(item.id, leadId)}
-                    >
-                      Convert to task
-                    </button>
+                    <span className="muted">Not converted</span>
                   )}
                 </div>
               </div>

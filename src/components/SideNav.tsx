@@ -13,10 +13,9 @@ interface Props {
   collapsed: boolean
   active: ViewId
   onSelect: (id: ViewId) => void
-  onOpenAdmin: () => void
 }
 
-export function SideNav({ collapsed, active, onSelect, onOpenAdmin }: Props) {
+export function SideNav({ collapsed, active, onSelect }: Props) {
   return (
     <aside className={`sidenav ${collapsed ? 'is-collapsed' : ''}`}>
       <div className="sidenav-brand">
@@ -48,10 +47,7 @@ export function SideNav({ collapsed, active, onSelect, onOpenAdmin }: Props) {
         ))}
       </nav>
 
-      <button type="button" className="sidenav-desk" onClick={onOpenAdmin} title="Command desk">
-        <Icon name="settings" size={18} />
-        {!collapsed && <span>Command desk</span>}
-      </button>
+      {!collapsed && <p className="sidenav-note">Live board · view only</p>}
     </aside>
   )
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { AdminPanel } from './components/AdminPanel'
 import { Header } from './components/Header'
+import { OperatorDesk } from './components/OperatorDesk'
 import { SideNav } from './components/SideNav'
 import { ViewChrome } from './components/ViewChrome'
 import { OpsProvider } from './store/OpsContext'
@@ -13,6 +13,10 @@ import { WorkloadView } from './views/WorkloadView'
 const VIEW_ORDER: ViewId[] = ['today', 'performance', 'workload', 'actions']
 const ROTATE_MS = 25000
 
+function isDeskPath(): boolean {
+  return window.location.pathname.replace(/\/+$/, '') === '/desk'
+}
+
 function initialView(): ViewId {
   const value = new URLSearchParams(window.location.search).get('view')
   return VIEW_ORDER.includes(value as ViewId) ? (value as ViewId) : 'today'
@@ -21,11 +25,8 @@ function initialView(): ViewId {
 function Board() {
   const params = new URLSearchParams(window.location.search)
   const [view, setView] = useState<ViewId>(initialView)
-  const [paused, setPaused] = useState(
-    () => params.get('rotate') !== '1',
-  )
+  const [paused, setPaused] = useState(() => params.get('rotate') !== '1')
   const [progress, setProgress] = useState(0)
-  const [admin, setAdmin] = useState(() => params.get('admin') === '1')
   const [collapsed, setCollapsed] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const fromUrl = new URLSearchParams(window.location.search).get('theme')
@@ -58,7 +59,7 @@ function Board() {
   }
 
   useEffect(() => {
-    if (paused || admin) return
+    if (paused) return
     const id = window.setInterval(() => {
       const p = (Date.now() - started.current) / ROTATE_MS
       if (p >= 1) {
@@ -69,7 +70,7 @@ function Board() {
       }
     }, 80)
     return () => window.clearInterval(id)
-  }, [paused, admin, view])
+  }, [paused, view])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -84,8 +85,6 @@ function Board() {
       if (event.key >= '1' && event.key <= '4') {
         selectView(VIEW_ORDER[Number(event.key) - 1])
       }
-      if (event.key === 'a' || event.key === 'A') setAdmin((v) => !v)
-      if (event.key === 'Escape') setAdmin(false)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -93,16 +92,10 @@ function Board() {
 
   return (
     <div className={`shell ${collapsed ? 'is-collapsed' : ''}`}>
-      <SideNav
-        collapsed={collapsed}
-        active={view}
-        onSelect={selectView}
-        onOpenAdmin={() => setAdmin(true)}
-      />
+      <SideNav collapsed={collapsed} active={view} onSelect={selectView} />
       <div className="workspace">
         <Header
           onMenu={() => setCollapsed((v) => !v)}
-          onOpenAdmin={() => setAdmin(true)}
           theme={theme}
           onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
         />
@@ -113,23 +106,27 @@ function Board() {
           {view === 'actions' && <ActionItemsView />}
         </main>
         <ViewChrome
-          active={view}
           progress={progress}
-          paused={paused || admin}
-          onSelect={selectView}
+          paused={paused}
           onTogglePause={() => setPaused((p) => !p)}
-          onOpenAdmin={() => setAdmin(true)}
         />
       </div>
-      <AdminPanel open={admin} onClose={() => setAdmin(false)} />
     </div>
   )
 }
 
 export default function App() {
+  const [desk, setDesk] = useState(isDeskPath)
+
+  useEffect(() => {
+    const onPop = () => setDesk(isDeskPath())
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+
   return (
     <OpsProvider>
-      <Board />
+      {desk ? <OperatorDesk /> : <Board />}
     </OpsProvider>
   )
 }

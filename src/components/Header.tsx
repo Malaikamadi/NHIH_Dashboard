@@ -8,12 +8,11 @@ import { Icon } from './Icons'
 
 interface Props {
   onMenu: () => void
-  onOpenAdmin: () => void
   theme: 'light' | 'dark'
   onToggleTheme: () => void
 }
 
-export function Header({ onMenu, onOpenAdmin, theme, onToggleTheme }: Props) {
+export function Header({ onMenu, theme, onToggleTheme }: Props) {
   const { state, connected } = useOps()
   const [now, setNow] = useState(() => new Date())
   const operator = state.members.find((m) => m.role === 'Operations Manager')
@@ -71,13 +70,10 @@ export function Header({ onMenu, onOpenAdmin, theme, onToggleTheme }: Props) {
         <button type="button" className="icon-btn" aria-label="Messages">
           <Icon name="mail" size={18} />
         </button>
-        <button type="button" className="topbar-user" onClick={onOpenAdmin}>
+        <span className="topbar-user">
           <span className="avatar">{operator?.initials ?? 'PM'}</span>
           <span>{operator?.name ?? 'Prince Mafinda'}</span>
-        </button>
-        <button type="button" className="icon-btn" onClick={onOpenAdmin} aria-label="Settings">
-          <Icon name="settings" size={18} />
-        </button>
+        </span>
       </div>
     </header>
   )

@@ -41,7 +41,7 @@ export function WorkloadView() {
       <section className="panel">
         <header className="panel-h">
           <h2>Workload Distribution</h2>
-          <span className="panel-note">Click a name to view and add tasks</span>
+          <span className="panel-note">Click a name to view assigned work</span>
         </header>
         <div className="workload-grid">
           {rows.map((row) => (

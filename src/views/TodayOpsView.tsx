@@ -2,11 +2,8 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Avatar, PriorityMark, StatusPill } from '../components/Header'
 import { Icon } from '../components/Icons'
 import { HubLogPanel } from '../components/HubLogPanel'
-import { MeetingForm } from '../components/MeetingForm'
 import { MeetingSession } from '../components/MeetingActions'
 import { HubBrief } from '../components/HubBrief'
-import { TaskActions } from '../components/TaskActions'
-import { TaskForm } from '../components/TaskForm'
 import { PlaceLine } from '../components/PlaceFields'
 import { WeeklyReportModal } from '../components/WeeklyReport'
 import { placeLine } from '../data/catalog'
@@ -43,8 +40,6 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
   const [query, setQuery] = useState('')
   const [spotlight, setSpotlight] = useState<Spotlight>(null)
   const [reportOpen, setReportOpen] = useState(false)
-  const [addingMeeting, setAddingMeeting] = useState(false)
-  const [addingTask, setAddingTask] = useState(false)
   const [districtFilter, setDistrictFilter] = useState<DistrictId | null>(null)
   const detailRef = useRef<HTMLElement | null>(null)
 
@@ -115,7 +110,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
         ? `${selectedDistrict.label} still open`
         : `${selectedDistrict.open} open ${selectedDistrict.open === 1 ? 'item' : 'items'}`
       : spotlight === 'meetings'
-        ? 'Add a meeting, then set the agenda, minutes, and actions'
+        ? 'Agenda, minutes, and actions from today’s huddles'
         : spotlight === 'due'
           ? 'Still open and due today'
           : spotlight === 'progress'
@@ -303,23 +298,6 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
                   Clear filter
                 </button>
               )}
-              {spotlight === 'meetings' ? (
-                <button
-                  type="button"
-                  className="primary-btn sm"
-                  onClick={() => setAddingMeeting((open) => !open)}
-                >
-                  <Icon name="plus" size={14} /> Add meeting
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="primary-btn sm"
-                  onClick={() => setAddingTask((open) => !open)}
-                >
-                  <Icon name="plus" size={14} /> Add task
-                </button>
-              )}
               {spotlight !== 'meetings' && (
                 <label className="search">
                   <Icon name="search" size={14} />
@@ -330,12 +308,6 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
           </header>
           {spotlight === 'meetings' ? (
             <>
-              {(addingMeeting || meetings.length === 0) && (
-                <MeetingForm
-                  onAdded={() => setAddingMeeting(false)}
-                  onCancel={meetings.length === 0 ? undefined : () => setAddingMeeting(false)}
-                />
-              )}
               <div className="data-table">
                 <div className="data-head meet-head">
                   <span>Meeting</span>
@@ -344,28 +316,24 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
                   <span>Status</span>
                 </div>
                 {meetings.map((meeting) => (
-                  <MeetingSession key={meeting.id} meeting={meeting} now={now} />
+                  <MeetingSession key={meeting.id} meeting={meeting} now={now} readOnly />
                 ))}
                 {meetings.length === 0 && (
                   <div className="data-row meet-row">
-                    <span className="muted">No meetings yet. Add one above to start the board.</span>
+                    <span className="muted">No meetings on the board today.</span>
                   </div>
                 )}
               </div>
             </>
           ) : (
             <>
-              {addingTask && (
-                <TaskForm onAdded={() => setAddingTask(false)} onCancel={() => setAddingTask(false)} />
-              )}
-              <div className="data-table">
+              <div className="data-table is-view">
               <div className="data-head">
                 <span>Task</span>
                 <span>Assigned</span>
                 <span>Priority</span>
                 <span>Due</span>
                 <span>Status</span>
-                <span>Update</span>
               </div>
               {tasks.map((task) => {
                 const owner = memberById(state.members, task.assignedTo)
@@ -391,8 +359,10 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
                     </span>
                     <PriorityMark priority={priorityBand(task.priority)} />
                     <span>{formatDate(task.dueDate)}</span>
-                    <StatusPill status={displayStatus(task, now)} />
-                    <TaskActions task={task} />
+                    <span className="status-stack">
+                      <StatusPill status={displayStatus(task, now)} />
+                      <em className="muted">{task.progress}%</em>
+                    </span>
                   </div>
                 )
               })}

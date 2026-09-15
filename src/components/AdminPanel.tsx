@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { PlaceFields, PlaceLine, placeFromForm } from './PlaceFields'
+import { HubLogPanel } from './HubLogPanel'
 import { MeetingActions } from './MeetingActions'
 import { MeetingForm } from './MeetingForm'
 import { TaskActions } from './TaskActions'
@@ -10,6 +11,7 @@ import { meetingStatus, todaysMeetings } from '../utils/metrics'
 interface Props {
   open: boolean
   onClose: () => void
+  variant?: 'drawer' | 'page'
 }
 
 const STATUSES: TaskStatus[] = [
@@ -22,42 +24,47 @@ const STATUSES: TaskStatus[] = [
 
 const PRIORITIES: Priority[] = ['critical', 'high', 'medium', 'low']
 
-export function AdminPanel({ open, onClose }: Props) {
+export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
   const { state, addTask, updateTask, addActionItem, convertActionToTask, resetDemo } =
     useOps()
   const lead = state.members.find((m) => m.role === 'Team Lead')?.id ?? 'm1'
-  const [tab, setTab] = useState<'task' | 'meeting' | 'action'>('task')
+  const [tab, setTab] = useState<'task' | 'meeting' | 'action' | 'log'>('task')
   const todayMeetings = todaysMeetings(state.meetings)
 
   if (!open) return null
 
-  return (
-    <div className="admin-scrim" onClick={onClose}>
-      <aside className="admin" onClick={(e) => e.stopPropagation()}>
+  const body = (
+      <aside className={`admin ${variant === 'page' ? 'is-page' : ''}`} onClick={(e) => e.stopPropagation()}>
         <header className="admin-h">
           <div>
-            <div className="hdr-kicker">Operator controls</div>
-            <h2>Command desk</h2>
+            <div className="hdr-kicker">Operator desk</div>
+            <h2>Enter hub work</h2>
           </div>
           <button type="button" className="ghost-btn" onClick={onClose}>
-            Close
+            {variant === 'page' ? 'View dashboard' : 'Close'}
           </button>
         </header>
 
         <p className="admin-help">
-          Changes land on the TV board immediately, including other screens on this network tab
-          group. Press 1–4 to jump views, space to pause rotation.
+          This is the only place to add tasks, meetings, agenda, minutes, and the hub log. The
+          dashboard stays view-only for the rest of the team.
         </p>
 
         <div className="admin-tabs">
-          {(['task', 'meeting', 'action'] as const).map((id) => (
+          {(['task', 'meeting', 'action', 'log'] as const).map((id) => (
             <button
               key={id}
               type="button"
               className={tab === id ? 'is-active' : ''}
               onClick={() => setTab(id)}
             >
-              {id === 'task' ? 'Assign task' : id === 'meeting' ? 'Add meeting' : 'Action item'}
+              {id === 'task'
+                ? 'Assign task'
+                : id === 'meeting'
+                  ? 'Add meeting'
+                  : id === 'action'
+                    ? 'Action item'
+                    : 'Hub log'}
             </button>
           ))}
         </div>
@@ -233,6 +240,8 @@ export function AdminPanel({ open, onClose }: Props) {
           </form>
         )}
 
+        {tab === 'log' && <HubLogPanel now={new Date()} allowInput />}
+
         <section className="admin-live">
           <h3>Open work</h3>
           <div className="admin-list">
@@ -285,6 +294,13 @@ export function AdminPanel({ open, onClose }: Props) {
           Clear board
         </button>
       </aside>
+  )
+
+  if (variant === 'page') return body
+
+  return (
+    <div className="admin-scrim" onClick={onClose}>
+      {body}
     </div>
   )
 }
