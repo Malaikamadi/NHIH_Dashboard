@@ -43,7 +43,7 @@ export function OperatorDesk() {
           <div className="hdr-kicker">Restricted</div>
           <h1>Operator desk</h1>
           <p>
-            Prince Mafinda, Operations Manager, enters tasks, meetings, agenda, minutes, and the
+            Prince Mafinda, Operations Manager, enters tasks, meetings, team activities, agenda, minutes, and the
             hub log here. The dashboard is view-only for everyone else.
           </p>
           <form

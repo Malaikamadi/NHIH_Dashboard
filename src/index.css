@@ -505,7 +505,7 @@ button { cursor: pointer; }
 
 .mini-stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
   margin-top: 8px;
 }
@@ -1230,7 +1230,7 @@ button { cursor: pointer; }
   padding: 8px;
   border-radius: 10px;
 }
-.admin-tabs button { flex: 1; background: var(--icon-bg); border: 0; padding: 8px; border-radius: 10px; }
+.admin-tabs button { flex: 1 1 110px; background: var(--icon-bg); border: 0; padding: 8px; border-radius: 10px; }
 .admin-tabs button.is-active { background: var(--accent); color: #fff; }
 .admin-form { display: grid; gap: 10px; }
 .admin-form label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); text-transform: uppercase; }
@@ -1346,6 +1346,10 @@ button { cursor: pointer; }
 }
 .operator-lock h1 { margin: 0; }
 .operator-lock p { color: var(--muted); margin: 0; line-height: 1.45; }
+
+@media (max-width: 1400px) {
+  .gcard-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 
 @media (max-width: 1200px) {
   .hero-row, .gcard-row, .bottom-row, .perf-grid, .people-stats, .workload-grid, .report-kpis, .hub-brief, .hub-brief-stack.has-pipe { grid-template-columns: 1fr; }
