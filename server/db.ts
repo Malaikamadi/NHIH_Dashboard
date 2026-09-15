@@ -3,7 +3,7 @@ import type { ActionItem, HubLogEntry, Meeting, OpsState, Task, TeamActivity } f
 import { hubHasWork } from '../src/utils/hub'
 import { HttpError } from './errors'
 import * as ops from './ops'
-import { readSnapshot, SEED_VERSION, storageKind, writeSnapshot, type Snapshot } from './persist'
+import { readSnapshot, SEED_VERSION, storageKind, storageStatus, writeSnapshot, type Snapshot } from './persist'
 
 let memory: Snapshot | null = null
 let loading: Promise<Snapshot> | null = null
@@ -198,4 +198,8 @@ export async function tickOverdue(): Promise<OpsState | null> {
 
 export function persistence(): 'blob' | 'kv' | 'file' {
   return storageKind()
+}
+
+export function persistenceStatus() {
+  return storageStatus()
 }

@@ -397,6 +397,10 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
     )
   }, [adoptServerState, refresh])
 
+  useEffect(() => {
+    if (hubHasWork(state)) writeHubCache(state)
+  }, [state])
+
   const addTask = useCallback<OpsContextValue['addTask']>(
     (input) => {
       const task: Task = {

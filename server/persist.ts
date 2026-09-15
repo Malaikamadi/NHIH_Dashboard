@@ -22,6 +22,8 @@ export type SnapshotRead =
   | { ok: false; missing: true }
   | { ok: false; missing: false; error: string }
 
+let blobBroken = false
+
 function kvConfig() {
   const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
   const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
@@ -29,13 +31,39 @@ function kvConfig() {
   return { url: url.replace(/\/$/, ''), token }
 }
 
-function blobEnabled(): boolean {
+function blobConfigured(): boolean {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID)
+}
+
+function blobEnabled(): boolean {
+  return blobConfigured() && !blobBroken
 }
 
 export function storageKind(): 'blob' | 'kv' | 'file' {
   if (blobEnabled()) return 'blob'
-  return kvConfig() ? 'kv' : 'file'
+  if (kvConfig()) return 'kv'
+  return 'file'
+}
+
+export function storageStatus(): {
+  kind: 'blob' | 'kv' | 'file'
+  blobConfigured: boolean
+  blobBroken: boolean
+  kvConfigured: boolean
+} {
+  return {
+    kind: storageKind(),
+    blobConfigured: blobConfigured(),
+    blobBroken,
+    kvConfigured: Boolean(kvConfig()),
+  }
+}
+
+function markBlobBroken(reason: string): void {
+  if (!blobBroken) {
+    blobBroken = true
+    console.error(`[persist] Vercel Blob unavailable, falling back to ${kvConfig() ? 'kv' : 'file'}: ${reason}`)
+  }
 }
 
 async function redis(command: unknown[]): Promise<unknown> {
@@ -62,22 +90,25 @@ function parseSnapshot(text: string): Snapshot {
   if (!parsed || typeof parsed !== 'object' || !parsed.state) {
     throw new Error('Invalid hub snapshot')
   }
-  return parsed
+  return {
+    version: typeof parsed.version === 'string' ? parsed.version : SEED_VERSION,
+    state: parsed.state,
+  }
 }
 
 async function readBlob(): Promise<SnapshotRead> {
   try {
     const result = await get(BLOB_PATH, { access: 'private', useCache: false })
-    if (result.statusCode === 404) return { ok: false, missing: true }
+    if (!result) return { ok: false, missing: true }
     if (result.statusCode === 304) {
       return { ok: false, missing: false, error: 'blob not modified and no local copy' }
     }
-    if (result.statusCode !== 200 || !result.stream) {
-      return { ok: false, missing: false, error: `blob status ${result.statusCode}` }
+    if (result.statusCode === 200 && result.stream) {
+      const text = await new Response(result.stream).text()
+      if (!text) return { ok: false, missing: true }
+      return { ok: true, snapshot: parseSnapshot(text) }
     }
-    const text = await new Response(result.stream).text()
-    if (!text) return { ok: false, missing: true }
-    return { ok: true, snapshot: parseSnapshot(text) }
+    return { ok: false, missing: false, error: `blob status ${String(result.statusCode)}` }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     if (/not found|404/i.test(message)) return { ok: false, missing: true }
@@ -95,25 +126,24 @@ async function writeBlob(snapshot: Snapshot): Promise<void> {
   })
 }
 
-export async function readSnapshot(): Promise<SnapshotRead> {
-  if (blobEnabled()) return readBlob()
-  const kv = kvConfig()
-  if (kv) {
-    try {
-      const result = await redis(['GET', KEY])
-      if (!result) return { ok: false, missing: true }
-      const snapshot =
-        typeof result === 'string' ? parseSnapshot(result) : (result as Snapshot)
-      if (!snapshot?.state) return { ok: false, missing: true }
-      return { ok: true, snapshot }
-    } catch (error) {
-      return {
-        ok: false,
-        missing: false,
-        error: error instanceof Error ? error.message : String(error),
-      }
+async function readKv(): Promise<SnapshotRead> {
+  try {
+    const result = await redis(['GET', KEY])
+    if (!result) return { ok: false, missing: true }
+    const snapshot =
+      typeof result === 'string' ? parseSnapshot(result) : (result as Snapshot)
+    if (!snapshot?.state) return { ok: false, missing: true }
+    return { ok: true, snapshot }
+  } catch (error) {
+    return {
+      ok: false,
+      missing: false,
+      error: error instanceof Error ? error.message : String(error),
     }
   }
+}
+
+function readFileStore(): SnapshotRead {
   if (!existsSync(LOCAL_FILE)) return { ok: false, missing: true }
   try {
     return { ok: true, snapshot: parseSnapshot(readFileSync(LOCAL_FILE, 'utf8')) }
@@ -126,18 +156,53 @@ export async function readSnapshot(): Promise<SnapshotRead> {
   }
 }
 
-export async function writeSnapshot(snapshot: Snapshot): Promise<void> {
-  if (blobEnabled()) {
-    await writeBlob(snapshot)
-    return
-  }
-  const kv = kvConfig()
-  if (kv) {
-    await redis(['SET', KEY, JSON.stringify(snapshot)])
-    return
-  }
+function writeFileStore(snapshot: Snapshot): void {
   mkdirSync(path.dirname(LOCAL_FILE), { recursive: true })
   writeFileSync(LOCAL_FILE, JSON.stringify(snapshot), 'utf8')
+}
+
+export async function readSnapshot(): Promise<SnapshotRead> {
+  if (blobEnabled()) {
+    const blob = await readBlob()
+    if (blob.ok) return blob
+    if (!blob.missing) {
+      markBlobBroken(blob.error)
+    }
+  }
+
+  if (kvConfig()) {
+    const kv = await readKv()
+    if (kv.ok || !kv.missing) return kv
+  }
+
+  return readFileStore()
+}
+
+export async function writeSnapshot(snapshot: Snapshot): Promise<void> {
+  if (blobEnabled()) {
+    try {
+      await writeBlob(snapshot)
+      if (kvConfig()) {
+        try {
+          await redis(['SET', KEY, JSON.stringify(snapshot)])
+        } catch {
+          /* optional mirror */
+        }
+      }
+      writeFileStore(snapshot)
+      return
+    } catch (error) {
+      markBlobBroken(error instanceof Error ? error.message : String(error))
+    }
+  }
+
+  if (kvConfig()) {
+    await redis(['SET', KEY, JSON.stringify(snapshot)])
+    writeFileStore(snapshot)
+    return
+  }
+
+  writeFileStore(snapshot)
 }
 
 export function preferExisting(current: Snapshot | null, incoming: Snapshot): Snapshot {

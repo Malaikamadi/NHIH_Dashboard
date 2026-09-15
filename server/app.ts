@@ -94,6 +94,7 @@ api.get('/health', async (c) =>
     ok: true,
     service: 'nhih-ops-api',
     storage: repo.persistence(),
+    storageStatus: repo.persistenceStatus(),
     clients: clientCount(),
     at: new Date().toISOString(),
   }),
