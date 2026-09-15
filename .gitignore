@@ -7,5 +7,3 @@ dist
 .verify
 data
 .vercel
-api/[...path].js
-api/index.js

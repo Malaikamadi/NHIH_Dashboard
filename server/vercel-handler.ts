@@ -18,22 +18,34 @@ function headerValue(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value.join(',') : value
 }
 
+function requestPath(req: NodeReq): string {
+  const candidates = [
+    req.url,
+    headerValue(req.headers['x-forwarded-uri']),
+    headerValue(req.headers['x-invoke-path']),
+  ].filter((value): value is string => Boolean(value))
+
+  const normalized = candidates.map((value) => {
+    if (value.startsWith('http')) {
+      const parsed = new URL(value)
+      return parsed.pathname + parsed.search
+    }
+    return value.startsWith('/') ? value : `/${value}`
+  })
+
+  return (
+    normalized.find((value) => value.startsWith('/api/') && value.split('/').filter(Boolean).length > 1) ||
+    normalized[0] ||
+    '/'
+  )
+}
+
 export default async function handler(req: NodeReq, res: NodeRes) {
   try {
     const proto = headerValue(req.headers['x-forwarded-proto']) || 'https'
     const host =
       headerValue(req.headers['x-forwarded-host']) || headerValue(req.headers.host) || 'localhost'
-    const rawUrl = req.url || '/'
-    const originalPath =
-      headerValue(req.headers['x-invoke-path']) ||
-      headerValue(req.headers['x-forwarded-uri']) ||
-      rawUrl
-    const path = originalPath.startsWith('http')
-      ? new URL(originalPath).pathname + new URL(originalPath).search
-      : originalPath.startsWith('/')
-        ? originalPath
-        : rawUrl
-    const url = `${proto}://${host}${path}`
+    const url = `${proto}://${host}${requestPath(req)}`
     const method = req.method || 'GET'
     const headers = new Headers()
     for (const [key, value] of Object.entries(req.headers)) {

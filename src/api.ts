@@ -39,7 +39,7 @@ export function createTask(task: Task): Promise<OpsState> {
 }
 
 export function patchTask(id: string, patch: Partial<Task>): Promise<OpsState> {
-  return request<OpsState>(`/api/tasks/${id}`, {
+  return request<OpsState>(`/api/task?id=${encodeURIComponent(id)}`, {
     method: 'PATCH',
     body: JSON.stringify(patch),
   })
@@ -60,14 +60,14 @@ export function createActionItem(item: ActionItem): Promise<OpsState> {
 }
 
 export function convertAction(actionId: string, assignedBy: string): Promise<OpsState> {
-  return request<OpsState>(`/api/actions/${actionId}/convert`, {
+  return request<OpsState>('/api/convert', {
     method: 'POST',
-    body: JSON.stringify({ assignedBy }),
+    body: JSON.stringify({ actionId, assignedBy }),
   })
 }
 
 export function patchActionItem(id: string, patch: Partial<ActionItem>): Promise<OpsState> {
-  return request<OpsState>(`/api/actions/${id}`, {
+  return request<OpsState>(`/api/action?id=${encodeURIComponent(id)}`, {
     method: 'PATCH',
     body: JSON.stringify(patch),
   })
@@ -78,7 +78,7 @@ export function resetDemo(): Promise<OpsState> {
 }
 
 export function patchMeeting(id: string, patch: Partial<Meeting>): Promise<OpsState> {
-  return request<OpsState>(`/api/meetings/${id}`, {
+  return request<OpsState>(`/api/meeting?id=${encodeURIComponent(id)}`, {
     method: 'PATCH',
     body: JSON.stringify(patch),
   })
@@ -92,12 +92,12 @@ export function createHubLog(entry: HubLogEntry): Promise<OpsState> {
 }
 
 export function fetchWeeklyReport(): Promise<WeeklyReport> {
-  return request<WeeklyReport>('/api/reports/weekly')
+  return request<WeeklyReport>('/api/report')
 }
 
 export async function fetchWeeklyReportHtml(): Promise<string> {
-  const res = await fetch('/api/reports/weekly?format=html')
-  if (!res.ok) throw new Error(`${res.status} /api/reports/weekly`)
+  const res = await fetch('/api/report?format=html')
+  if (!res.ok) throw new Error(`${res.status} /api/report`)
   return res.text()
 }
 

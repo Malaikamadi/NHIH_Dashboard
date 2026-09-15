@@ -102,6 +102,15 @@ api.post('/operator/unlock', async (c) => {
 
 api.get('/state', async (c) => c.json(await repo.getState()))
 
+api.get('/report', async (c) => {
+  const report = buildWeeklyReport(await repo.getState())
+  if (c.req.query('format') === 'html') {
+    c.header('Content-Disposition', `inline; filename="NHIH-weekly-ops-report.html"`)
+    return c.html(reportToHtml(report))
+  }
+  return c.json(report)
+})
+
 api.get('/reports/weekly', async (c) => {
   const report = buildWeeklyReport(await repo.getState())
   if (c.req.query('format') === 'html') {
@@ -144,6 +153,13 @@ api.post('/tasks', async (c) => {
   )
 })
 
+api.patch('/task', async (c) => {
+  const id = c.req.query('id')
+  if (!id) throw new HttpError(400, 'Task id is required')
+  const patch = await readBody(c, taskPatch)
+  return c.json(await push(await repo.updateTask(id, patch)))
+})
+
 api.patch('/tasks/:id', async (c) => {
   const patch = await readBody(c, taskPatch)
   return c.json(await push(await repo.updateTask(c.req.param('id'), patch)))
@@ -159,6 +175,13 @@ api.post('/meetings', async (c) => {
       }),
     ),
   )
+})
+
+api.patch('/meeting', async (c) => {
+  const id = c.req.query('id')
+  if (!id) throw new HttpError(400, 'Meeting id is required')
+  const patch = await readBody(c, meetingPatch)
+  return c.json(await push(await repo.updateMeeting(id, patch)))
 })
 
 api.patch('/meetings/:id', async (c) => {
@@ -178,9 +201,27 @@ api.post('/actions', async (c) => {
   )
 })
 
+api.post('/convert', async (c) => {
+  const body = await readBody(
+    c,
+    z.object({
+      actionId: z.string().min(1),
+      assignedBy: z.string().min(1).optional().default('m1'),
+    }),
+  )
+  return c.json(await push(await repo.convertAction(body.actionId, body.assignedBy || 'm1')))
+})
+
 api.post('/actions/:id/convert', async (c) => {
   const body = await readBody(c, convertBody).catch(() => ({ assignedBy: 'm1' }))
   return c.json(await push(await repo.convertAction(c.req.param('id'), body.assignedBy || 'm1')))
+})
+
+api.patch('/action', async (c) => {
+  const id = c.req.query('id')
+  if (!id) throw new HttpError(400, 'Action id is required')
+  const patch = await readBody(c, actionPatch)
+  return c.json(await push(await repo.updateActionItem(id, patch)))
 })
 
 api.patch('/actions/:id', async (c) => {

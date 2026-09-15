@@ -2402,1137 +2402,6 @@ var streamSSE = (c, cb, onError) => {
   return c.newResponse(stream2.responseReadable);
 };
 
-// src/data/catalog.ts
-var WORK_TYPES = [
-  { id: "extract", label: "Extract" },
-  { id: "dhis2_completeness", label: "DHIS2 completeness" },
-  { id: "data_quality", label: "Data quality" },
-  { id: "hio_field_visit", label: "HIO field visit" },
-  { id: "analysis_request", label: "Analysis request" },
-  { id: "facility_followup", label: "Facility follow-up" }
-];
-var DISTRICTS = [
-  { id: "national", label: "National / Hub" },
-  { id: "western_urban", label: "Western Area Urban" },
-  { id: "western_rural", label: "Western Area Rural" },
-  { id: "bo", label: "Bo" },
-  { id: "bombali", label: "Bombali" },
-  { id: "bonthe", label: "Bonthe" },
-  { id: "falaba", label: "Falaba" },
-  { id: "kailahun", label: "Kailahun" },
-  { id: "kambia", label: "Kambia" },
-  { id: "karene", label: "Karene" },
-  { id: "kenema", label: "Kenema" },
-  { id: "koinadugu", label: "Koinadugu" },
-  { id: "kono", label: "Kono" },
-  { id: "moyamba", label: "Moyamba" },
-  { id: "port_loko", label: "Port Loko" },
-  { id: "pujehun", label: "Pujehun" },
-  { id: "tonkolili", label: "Tonkolili" }
-];
-var LOG_KINDS = [
-  { id: "extract_failed", label: "Extract failed" },
-  { id: "extract_restored", label: "Extract restored" },
-  { id: "late_reporting", label: "Late reporting" },
-  { id: "incident", label: "Incident" },
-  { id: "note", label: "Hub note" }
-];
-var WORK_TYPE_LABEL = Object.fromEntries(
-  WORK_TYPES.map((item) => [item.id, item.label])
-);
-var DISTRICT_LABEL = Object.fromEntries(
-  DISTRICTS.map((item) => [item.id, item.label])
-);
-var LOG_KIND_LABEL = Object.fromEntries(
-  LOG_KINDS.map((item) => [item.id, item.label])
-);
-function workTypeLabel(id) {
-  return WORK_TYPE_LABEL[id] ?? id;
-}
-function districtLabel(id) {
-  return DISTRICT_LABEL[id] ?? id;
-}
-function logKindLabel(id) {
-  return LOG_KIND_LABEL[id] ?? id;
-}
-function placeLine(workKind2, district, facility) {
-  const base = `${workTypeLabel(workKind2)} \xB7 ${districtLabel(district)}`;
-  return facility?.trim() ? `${base} \xB7 ${facility.trim()}` : base;
-}
-
-// src/utils/time.ts
-function nowIso() {
-  return (/* @__PURE__ */ new Date()).toISOString();
-}
-function startOfDay(date5) {
-  const d = new Date(date5);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-function atTime(base, hours, minutes) {
-  const d = new Date(base);
-  d.setHours(hours, minutes, 0, 0);
-  return d;
-}
-function addDays(base, days) {
-  const d = new Date(base);
-  d.setDate(d.getDate() + days);
-  return d;
-}
-function startOfMonth(date5) {
-  const d = startOfDay(date5);
-  d.setDate(1);
-  return d;
-}
-function startOfYear(date5) {
-  const d = startOfDay(date5);
-  d.setMonth(0, 1);
-  return d;
-}
-function isInRange(iso2, start, end) {
-  const t = new Date(iso2).getTime();
-  return t >= start.getTime() && t <= end.getTime();
-}
-function formatRange(start, end) {
-  const sameYear = start.getFullYear() === end.getFullYear();
-  const from = start.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: sameYear ? void 0 : "numeric"
-  });
-  const to = end.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric"
-  });
-  return `${from} \u2013 ${to}`;
-}
-function isSameDay(a, b) {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-}
-function formatTime(iso2) {
-  return new Date(iso2).toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit"
-  });
-}
-function formatTimeRange(startIso, endIso) {
-  return `${formatTime(startIso)} \u2013 ${formatTime(endIso)}`;
-}
-function formatDate(iso2) {
-  return new Date(iso2).toLocaleDateString([], {
-    weekday: "short",
-    month: "short",
-    day: "numeric"
-  });
-}
-function uid(prefix) {
-  return `${prefix}-${Math.random().toString(36).slice(2, 8)}${Date.now().toString(36).slice(-4)}`;
-}
-
-// src/utils/metrics.ts
-function memberById(members2, id) {
-  return members2.find((m) => m.id === id);
-}
-function memberName(members2, id) {
-  return memberById(members2, id)?.name ?? "Unassigned";
-}
-function displayStatus(task, now = /* @__PURE__ */ new Date()) {
-  if (task.status === "completed") return "completed";
-  if (new Date(task.dueDate).getTime() < now.getTime()) return "overdue";
-  return task.status === "overdue" ? "in_progress" : task.status;
-}
-function meetingStatus(meeting, now = /* @__PURE__ */ new Date()) {
-  const start = new Date(meeting.startTime).getTime();
-  const end = new Date(meeting.endTime).getTime();
-  const t = now.getTime();
-  if (t < start) return "upcoming";
-  if (t <= end) return "live";
-  return "completed";
-}
-function agendaLines(agenda) {
-  return (agenda ?? "").split(/\r?\n/).map((line) => line.replace(/^([-*•]|\d+[.)])\s+/, "").trim()).filter(Boolean);
-}
-function todaysMeetings(meetings, now = /* @__PURE__ */ new Date()) {
-  return meetings.filter((m) => isSameDay(new Date(m.startTime), now)).sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime));
-}
-function isDueToday(task, now = /* @__PURE__ */ new Date()) {
-  return isSameDay(new Date(task.dueDate), now);
-}
-function wasCompletedToday(task, now = /* @__PURE__ */ new Date()) {
-  return Boolean(task.completedAt && isSameDay(new Date(task.completedAt), now));
-}
-function completedThisWeek(task, now = /* @__PURE__ */ new Date()) {
-  if (!task.completedAt) return false;
-  return new Date(task.completedAt).getTime() >= addDays(startOfDay(now), -6).getTime();
-}
-function completedOnTime(task) {
-  if (task.status !== "completed" || !task.completedAt) return false;
-  return new Date(task.completedAt).getTime() <= new Date(task.dueDate).getTime();
-}
-function workloadLevel(active, overdue) {
-  const score = active + overdue * 1.5;
-  if (score >= 6) return "overloaded";
-  if (score >= 4) return "heavy";
-  if (score >= 2) return "balanced";
-  return "light";
-}
-function teamMetrics(state, now = /* @__PURE__ */ new Date()) {
-  const tasks = state.tasks;
-  const total = tasks.length;
-  const completed = tasks.filter((t) => displayStatus(t, now) === "completed");
-  const today = todaysMeetings(state.meetings, now);
-  return {
-    meetingsToday: today.length,
-    dueToday: tasks.filter((t) => isDueToday(t, now) && displayStatus(t, now) !== "completed").length,
-    completedToday: tasks.filter((t) => wasCompletedToday(t, now)).length,
-    inProgress: tasks.filter((t) => {
-      const s = displayStatus(t, now);
-      return s === "in_progress" || s === "under_review";
-    }).length,
-    overdue: tasks.filter((t) => displayStatus(t, now) === "overdue").length,
-    completionRate: total === 0 ? 0 : Math.round(completed.length / total * 100),
-    completedWeek: tasks.filter((t) => completedThisWeek(t, now)).length,
-    onTime: tasks.filter((t) => completedOnTime(t)).length,
-    total,
-    liveMeetings: today.filter((m) => meetingStatus(m, now) === "live").length,
-    highPriorityDue: tasks.filter((t) => {
-      const s = displayStatus(t, now);
-      return isDueToday(t, now) && s !== "completed" && (t.priority === "high" || t.priority === "critical");
-    }).length
-  };
-}
-function memberWorkloads(state, now = /* @__PURE__ */ new Date()) {
-  return state.members.map((member) => {
-    const assigned = state.tasks.filter((t) => t.assignedTo === member.id);
-    const overdue = assigned.filter((t) => displayStatus(t, now) === "overdue").length;
-    const completed = assigned.filter((t) => displayStatus(t, now) === "completed").length;
-    const active = assigned.filter((t) => {
-      const s = displayStatus(t, now);
-      return s !== "completed";
-    }).length;
-    return {
-      member,
-      active,
-      completed,
-      overdue,
-      assigned: assigned.length,
-      level: workloadLevel(active, overdue)
-    };
-  });
-}
-function periodBounds(period, now = /* @__PURE__ */ new Date()) {
-  const end = now;
-  if (period === "Daily") return { start: startOfDay(now), end };
-  if (period === "Weekly") return { start: addDays(startOfDay(now), -6), end };
-  if (period === "Monthly") return { start: startOfMonth(now), end };
-  return { start: startOfYear(now), end };
-}
-
-// src/utils/report.ts
-function buildWeeklyReport(state, now = /* @__PURE__ */ new Date()) {
-  const { start, end } = periodBounds("Weekly", now);
-  const metrics = teamMetrics(state, now);
-  const closed = state.tasks.filter((t) => t.completedAt && isInRange(t.completedAt, start, end));
-  const meetings = state.meetings.filter((m) => isInRange(m.startTime, start, end)).sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime));
-  const people = memberWorkloads(state, now).map((row) => ({
-    name: row.member.name,
-    role: row.member.role,
-    closed: state.tasks.filter(
-      (t) => t.assignedTo === row.member.id && t.completedAt && isInRange(t.completedAt, start, end)
-    ).length,
-    open: row.active,
-    overdue: row.overdue
-  }));
-  const hubLog = [...state.hubLog ?? []].filter((entry) => isInRange(entry.at, start, end)).sort((a, b) => +new Date(a.at) - +new Date(b.at)).map((entry) => ({
-    at: `${formatDate(entry.at)} \xB7 ${formatTime(entry.at)}`,
-    kind: logKindLabel(entry.kind),
-    title: entry.title,
-    place: entry.facility ? `${districtLabel(entry.district)} \xB7 ${entry.facility}` : districtLabel(entry.district),
-    detail: entry.detail,
-    author: memberName(state.members, entry.authorId)
-  }));
-  return {
-    generatedAt: now.toISOString(),
-    rangeLabel: formatRange(start, end),
-    performance: {
-      completionRate: metrics.completionRate,
-      closed: closed.length,
-      overdue: metrics.overdue,
-      inProgress: metrics.inProgress,
-      onTime: closed.filter((t) => completedOnTime(t)).length,
-      meetings: meetings.length,
-      openActions: state.actionItems.filter((a) => a.status !== "completed").length,
-      hubLog: hubLog.length
-    },
-    people,
-    hubLog,
-    meetings: meetings.map((meeting) => {
-      const actions = state.actionItems.filter((a) => a.meetingId === meeting.id);
-      return {
-        id: meeting.id,
-        title: meeting.title,
-        when: `${formatDate(meeting.startTime)} \xB7 ${formatTimeRange(meeting.startTime, meeting.endTime)} \xB7 ${meetingStatus(meeting, now)}`,
-        attendees: meeting.participantIds.map((id) => memberName(state.members, id)).join(", "),
-        agenda: meeting.agenda?.trim() ?? "",
-        notes: meeting.notes?.trim() ?? "",
-        actions: actions.map((item) => ({
-          title: item.title,
-          place: placeLine(item.workKind, item.district, item.facility),
-          owner: memberName(state.members, item.assignedTo),
-          status: item.status.replace("_", " "),
-          deadline: formatDate(item.deadline)
-        }))
-      };
-    })
-  };
-}
-function reportToHtml(report) {
-  const peopleRows = report.people.map(
-    (p) => `<tr><td>${esc(p.name)}</td><td>${esc(p.role)}</td><td>${p.closed}</td><td>${p.open}</td><td>${p.overdue}</td></tr>`
-  ).join("");
-  const hubLogRows = report.hubLog.map(
-    (entry) => `<tr><td>${esc(entry.at)}</td><td>${esc(entry.kind)}</td><td>${esc(entry.title)}</td><td>${esc(entry.place)}</td><td>${esc(entry.detail || "\u2014")}</td><td>${esc(entry.author)}</td></tr>`
-  ).join("");
-  const meetingBlocks = report.meetings.map((m) => {
-    const actions = m.actions.length ? `<table><thead><tr><th>Action</th><th>Type / place</th><th>Owner</th><th>Status</th><th>Deadline</th></tr></thead><tbody>${m.actions.map(
-      (a) => `<tr><td>${esc(a.title)}</td><td>${esc(a.place)}</td><td>${esc(a.owner)}</td><td>${esc(a.status)}</td><td>${esc(a.deadline)}</td></tr>`
-    ).join("")}</tbody></table>` : '<p class="mute">No action items recorded.</p>';
-    const minutes = m.notes ? `<p class="minutes">${esc(m.notes)}</p>` : '<p class="mute">Minutes not captured for this session.</p>';
-    const items = agendaLines(m.agenda);
-    const agenda = items.length ? `<ol class="agenda">${items.map((item) => `<li>${esc(item)}</li>`).join("")}</ol>` : '<p class="mute">Agenda not set for this session.</p>';
-    return `<section class="meeting"><h3>${esc(m.title)}</h3><p class="meta">${esc(m.when)}</p><p class="meta">Attendees: ${esc(m.attendees)}</p><h4>Agenda</h4>${agenda}<h4>Minutes</h4>${minutes}<h4>Action items</h4>${actions}</section>`;
-  }).join("");
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>NHIH Weekly Operations Report \xB7 ${esc(report.rangeLabel)}</title>
-  <style>
-    body { font-family: Inter, "Segoe UI", sans-serif; color: #1f2933; background: #fff; margin: 0; padding: 32px; }
-    h1 { font-size: 22px; margin: 0 0 4px; }
-    h2 { font-size: 16px; margin: 28px 0 10px; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; }
-    h3 { font-size: 15px; margin: 0 0 4px; }
-    h4 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #6b7280; margin: 12px 0 6px; }
-    .kicker { color: #1f4e79; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
-    .mute, .meta { color: #6b7280; font-size: 13px; margin: 2px 0; }
-    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0 8px; }
-    .kpi { border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; }
-    .kpi strong { display: block; font-size: 22px; }
-    .kpi span { color: #6b7280; font-size: 12px; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
-    th { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #6b7280; }
-    .meeting { border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px; margin: 12px 0; }
-    .minutes { white-space: pre-wrap; line-height: 1.45; font-size: 14px; }
-    .agenda { margin: 0; padding-left: 18px; }
-    .agenda li { margin: 2px 0; }
-    @media print { body { padding: 16px; } .kpis { break-inside: avoid; } .meeting { break-inside: avoid; } }
-  </style>
-</head>
-<body>
-  <div class="kicker">NHIH Team Operations</div>
-  <h1>Weekly operations report</h1>
-  <p class="meta">${esc(report.rangeLabel)} \xB7 Generated ${esc(new Date(report.generatedAt).toLocaleString())}</p>
-
-  <h2>Team performance</h2>
-  <div class="kpis">
-    <div class="kpi"><strong>${report.performance.completionRate}%</strong><span>Completion rate</span></div>
-    <div class="kpi"><strong>${report.performance.closed}</strong><span>Tasks closed this week</span></div>
-    <div class="kpi"><strong>${report.performance.onTime}</strong><span>Closed on time</span></div>
-    <div class="kpi"><strong>${report.performance.overdue}</strong><span>Still overdue</span></div>
-    <div class="kpi"><strong>${report.performance.inProgress}</strong><span>In progress</span></div>
-    <div class="kpi"><strong>${report.performance.meetings}</strong><span>Meetings this week</span></div>
-    <div class="kpi"><strong>${report.performance.openActions}</strong><span>Open action items</span></div>
-    <div class="kpi"><strong>${report.performance.hubLog}</strong><span>Hub log entries</span></div>
-  </div>
-
-  <h2>Hub log</h2>
-  ${hubLogRows ? `<table><thead><tr><th>When</th><th>Kind</th><th>What happened</th><th>Where</th><th>Detail</th><th>Logged by</th></tr></thead><tbody>${hubLogRows}</tbody></table>` : '<p class="mute">No extract, late-reporting, or incident entries this week.</p>'}
-
-  <h2>Individual performance</h2>
-  <table>
-    <thead><tr><th>Name</th><th>Role</th><th>Closed this week</th><th>Open</th><th>Overdue</th></tr></thead>
-    <tbody>${peopleRows}</tbody>
-  </table>
-
-  <h2>Meetings and minutes</h2>
-  ${meetingBlocks || '<p class="mute">No meetings recorded in this period.</p>'}
-</body>
-</html>`;
-}
-function esc(value) {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
-// src/data/seed.ts
-var MEMBERS = [
-  { id: "m1", name: "Regina Daniels", role: "Coordinator", initials: "RD" },
-  { id: "m2", name: "Ibrahim Sorie", role: "Team Lead", initials: "IS" },
-  { id: "m3", name: "Prince Mafinda", role: "Operations Manager", initials: "PM" },
-  { id: "m4", name: "Maliaka Madi", role: "Data Engineer", initials: "MM" },
-  { id: "m5", name: "Joseph Koroma", role: "Data Engineer", initials: "JK" },
-  { id: "m6", name: "Les Kamara", role: "Data Engineer", initials: "LK" },
-  { id: "m7", name: "Daniel Jah", role: "Data Analyst", initials: "DJ" },
-  { id: "m8", name: "Ishmael Kamara", role: "HMIS Officer", initials: "IK" },
-  { id: "m9", name: "Sallay", role: "HIO", initials: "SA" },
-  { id: "m10", name: "Karim SB Momoh", role: "HMIS", initials: "KM" },
-  { id: "m11", name: "Ahmed Saidu", role: "HMIS", initials: "AS" }
-];
-function iso(date5) {
-  return date5.toISOString();
-}
-function ago(minutes, now) {
-  return iso(new Date(now.getTime() - minutes * 6e4));
-}
-function buildSeed(now = /* @__PURE__ */ new Date()) {
-  const lead = "m2";
-  const meetings = [
-    {
-      id: "mtg-standup",
-      title: "Daily Standup",
-      startTime: iso(atTime(now, 8, 45)),
-      endTime: iso(atTime(now, 9, 10)),
-      participantIds: MEMBERS.map((m) => m.id),
-      rolling: true,
-      agenda: "Overnight extract status\nWestern Area completeness / late PHUs\nBlockers\nToday\u2019s owners and due times",
-      notes: "Standup closed on DHIS2 completeness for Western Area and overnight extract lag. Maliaka owns the warehouse retry. Ishmael will flag late facilities before the 10:00 review. No blocker on the immunization rebuild."
-    },
-    {
-      id: "mtg-dhis2",
-      title: "DHIS2 Completeness Review",
-      startTime: iso(atTime(now, 10, 0)),
-      endTime: iso(atTime(now, 10, 45)),
-      participantIds: ["m2", "m3", "m4", "m8", "m10", "m11"],
-      rolling: true,
-      agenda: "Completeness by district\nLate PHUs \u2014 Western Area Urban\nMaternity register extract\nWeekly league table",
-      notes: "Western Area Urban still 86% complete. Karim to call three late PHUs. Decision: freeze the weekly league table until Ahmed confirms the maternity register extract."
-    },
-    {
-      id: "mtg-hio",
-      title: "HIO Coordination Huddle",
-      startTime: iso(atTime(now, 13, 0)),
-      endTime: iso(atTime(now, 13, 30)),
-      participantIds: ["m1", "m2", "m8", "m9"],
-      rolling: true,
-      agenda: "Kenema field-visit notes\nUnmatched facility codes\nHIO coverage roster",
-      notes: ""
-    },
-    {
-      id: "mtg-ops",
-      title: "Hub Operations Sync",
-      startTime: iso(atTime(now, 14, 30)),
-      endTime: iso(atTime(now, 15, 20)),
-      participantIds: ["m1", "m2", "m3", "m6", "m7"],
-      rolling: true,
-      agenda: "Engineer load vs overdue extracts\nImmunization catch-up\nMonday executive brief",
-      notes: ""
-    },
-    {
-      id: "mtg-analytics",
-      title: "Analytics Delivery Briefing",
-      startTime: iso(atTime(now, 16, 0)),
-      endTime: iso(atTime(now, 16, 40)),
-      participantIds: ["m2", "m3", "m7", "m8", "m10"],
-      rolling: true,
-      agenda: "Weekly census workbook\nOvernight KPI snapshot\nDistrict completeness tile",
-      notes: ""
-    },
-    {
-      id: "mtg-wed-qa",
-      title: "Wednesday Data Quality Review",
-      startTime: iso(atTime(addDays(now, -1), 15, 0)),
-      endTime: iso(atTime(addDays(now, -1), 15, 40)),
-      participantIds: ["m2", "m5", "m7", "m8", "m11"],
-      agenda: "Null organisation-unit mapping\nMaternity extract confirmation\nCompleteness target for the week",
-      notes: "Null organisation-unit codes traced to the Friday metadata sync. Joseph patched the mapping. Completeness target stays 95% for this week."
-    }
-  ];
-  const tasks = [
-    {
-      id: "t1",
-      title: "Retry overnight DHIS2 warehouse extract",
-      description: "Last night\u2019s aggregate pull stalled at 02:14. Restore before the completeness review.",
-      assignedTo: "m4",
-      assignedBy: lead,
-      priority: "critical",
-      dueDate: iso(atTime(now, 12, 0)),
-      status: "in_progress",
-      progress: 68,
-      createdAt: iso(atTime(now, 7, 40)),
-      workKind: "extract",
-      district: "national"
-    },
-    {
-      id: "t2",
-      title: "Call late PHUs \u2014 Western Area Urban",
-      description: "Three facilities have not submitted this week\u2019s outpatient dataset.",
-      assignedTo: "m10",
-      assignedBy: "m8",
-      priority: "high",
-      dueDate: iso(atTime(now, 11, 30)),
-      status: "in_progress",
-      progress: 40,
-      createdAt: iso(atTime(now, 8, 50)),
-      workKind: "facility_followup",
-      district: "western_urban"
-    },
-    {
-      id: "t3",
-      title: "Confirm maternity register extract",
-      description: "Verify organisation-unit mapping after Wednesday\u2019s metadata patch.",
-      assignedTo: "m11",
-      assignedBy: lead,
-      priority: "high",
-      dueDate: iso(atTime(now, 13, 0)),
-      status: "under_review",
-      progress: 82,
-      createdAt: iso(addDays(atTime(now, 16, 0), -1)),
-      workKind: "extract",
-      district: "national"
-    },
-    {
-      id: "t4",
-      title: "Close unmatched facility codes",
-      description: "Resolve leftover codes flagged by HIOs last week.",
-      assignedTo: "m9",
-      assignedBy: "m1",
-      priority: "critical",
-      dueDate: iso(atTime(addDays(now, -1), 17, 0)),
-      status: "overdue",
-      progress: 45,
-      createdAt: iso(addDays(atTime(now, 11, 0), -5)),
-      workKind: "facility_followup",
-      district: "western_urban"
-    },
-    {
-      id: "t5",
-      title: "Publish weekly census workbook",
-      description: "Refresh occupancy and admissions tiles for the 16:00 briefing.",
-      assignedTo: "m7",
-      assignedBy: "m3",
-      priority: "high",
-      dueDate: iso(atTime(now, 15, 45)),
-      status: "in_progress",
-      progress: 55,
-      createdAt: iso(addDays(atTime(now, 9, 0), -1)),
-      workKind: "analysis_request",
-      district: "national"
-    },
-    {
-      id: "t6",
-      title: "HIO site notes \u2014 Kenema capture",
-      description: "Log data-capture issues from the last Kenema field visit into the dictionary.",
-      assignedTo: "m9",
-      assignedBy: "m1",
-      priority: "medium",
-      dueDate: iso(atTime(now, 17, 0)),
-      status: "in_progress",
-      progress: 30,
-      createdAt: iso(addDays(atTime(now, 14, 0), -2)),
-      workKind: "hio_field_visit",
-      district: "kenema"
-    },
-    {
-      id: "t7",
-      title: "Patch null organisation-unit mapping",
-      description: "Apply the Wednesday QA fix in production and re-run tests.",
-      assignedTo: "m5",
-      assignedBy: "m4",
-      priority: "high",
-      dueDate: iso(atTime(now, 14, 0)),
-      status: "in_progress",
-      progress: 72,
-      createdAt: iso(addDays(atTime(now, 16, 20), -1)),
-      workKind: "data_quality",
-      district: "national"
-    },
-    {
-      id: "t8",
-      title: "Prepare Monday executive brief outline",
-      description: "One-page note: completeness, incidents, and overdue follow-up.",
-      assignedTo: "m3",
-      assignedBy: lead,
-      priority: "medium",
-      dueDate: iso(atTime(addDays(now, 1), 10, 0)),
-      status: "not_started",
-      progress: 0,
-      createdAt: iso(atTime(now, 9, 5)),
-      workKind: "analysis_request",
-      district: "national"
-    },
-    {
-      id: "t9",
-      title: "Rebuild immunization catch-up extract",
-      description: "Source-system lag after the weekend outage.",
-      assignedTo: "m6",
-      assignedBy: "m3",
-      priority: "high",
-      dueDate: iso(atTime(addDays(now, -2), 16, 0)),
-      status: "overdue",
-      progress: 22,
-      createdAt: iso(addDays(atTime(now, 9, 0), -4)),
-      workKind: "extract",
-      district: "national"
-    },
-    {
-      id: "t10",
-      title: "Circulate standup action log",
-      description: "Owners and due times from the 08:45 standup.",
-      assignedTo: "m1",
-      assignedBy: lead,
-      priority: "high",
-      dueDate: iso(atTime(now, 10, 0)),
-      status: "completed",
-      progress: 100,
-      createdAt: iso(atTime(now, 8, 20)),
-      completedAt: iso(atTime(now, 9, 18)),
-      workKind: "analysis_request",
-      district: "national"
-    },
-    {
-      id: "t11",
-      title: "Post overnight KPI snapshot",
-      description: "Share completeness and extract status in the hub channel.",
-      assignedTo: "m7",
-      assignedBy: "m6",
-      priority: "medium",
-      dueDate: iso(atTime(now, 9, 0)),
-      status: "completed",
-      progress: 100,
-      createdAt: iso(addDays(atTime(now, 17, 0), -1)),
-      completedAt: iso(atTime(now, 8, 12)),
-      workKind: "extract",
-      district: "national"
-    },
-    {
-      id: "t12",
-      title: "Week-start capacity plan",
-      description: "Balance engineer vs HMIS follow-up after two late extracts.",
-      assignedTo: lead,
-      assignedBy: "m3",
-      priority: "medium",
-      dueDate: iso(atTime(now, 11, 0)),
-      status: "completed",
-      progress: 100,
-      createdAt: iso(addDays(atTime(now, 18, 0), -1)),
-      completedAt: iso(atTime(now, 8, 30)),
-      workKind: "analysis_request",
-      district: "national"
-    }
-  ];
-  const weekClosed = [
-    ["t-w1", "m5", 1, 16, "Fix null organisation-unit codes", "data_quality", "national"],
-    ["t-w2", "m8", 1, 14, "Verify maternity register extract", "extract", "national"],
-    ["t-w3", "m1", 2, 12, "Issue HIO coverage roster", "hio_field_visit", "national"],
-    ["t-w4", "m6", 2, 17, "Close Tuesday census QA", "data_quality", "national"],
-    ["t-w5", "m11", 3, 15, "Confirm pharmacy stock feed", "extract", "national"],
-    ["t-w6", "m4", 3, 18, "Approve overnight extract hotfix", "extract", "national"],
-    ["t-w7", "m9", 4, 16, "File Bo unmatched codes", "facility_followup", "bo"],
-    ["t-w8", "m7", 5, 11, "Refresh district completeness tile", "dhis2_completeness", "national"]
-  ].map(([id, assignedTo, daysAgo, hour, title, workKind2, district]) => ({
-    id,
-    title,
-    description: "Closed earlier this week.",
-    assignedTo,
-    assignedBy: lead,
-    priority: "medium",
-    dueDate: iso(atTime(addDays(now, -daysAgo), hour, 0)),
-    status: "completed",
-    progress: 100,
-    createdAt: iso(addDays(atTime(now, 9, 0), -daysAgo - 1)),
-    completedAt: iso(atTime(addDays(now, -daysAgo), Math.max(hour - 1, 9), 15)),
-    workKind: workKind2,
-    district
-  }));
-  const actionItems = [
-    {
-      id: "a1",
-      meetingId: "mtg-standup",
-      meetingTitle: "Daily Standup",
-      title: "Retry warehouse extract if not green by 12:00",
-      assignedTo: "m4",
-      deadline: iso(atTime(now, 12, 0)),
-      status: "in_progress",
-      convertedToTaskId: "t1",
-      workKind: "extract",
-      district: "national"
-    },
-    {
-      id: "a2",
-      meetingId: "mtg-standup",
-      meetingTitle: "Daily Standup",
-      title: "Flag late Western Area facilities before the DHIS2 review",
-      assignedTo: "m8",
-      deadline: iso(atTime(now, 10, 0)),
-      status: "open",
-      workKind: "dhis2_completeness",
-      district: "western_urban"
-    },
-    {
-      id: "a3",
-      meetingId: "mtg-dhis2",
-      meetingTitle: "DHIS2 Completeness Review",
-      title: "Call three late PHUs in Western Area Urban",
-      assignedTo: "m10",
-      deadline: iso(atTime(now, 11, 30)),
-      status: "in_progress",
-      convertedToTaskId: "t2",
-      workKind: "facility_followup",
-      district: "western_urban"
-    },
-    {
-      id: "a4",
-      meetingId: "mtg-wed-qa",
-      meetingTitle: "Wednesday Data Quality Review",
-      title: "Confirm maternity register extract after metadata patch",
-      assignedTo: "m11",
-      deadline: iso(atTime(now, 13, 0)),
-      status: "in_progress",
-      convertedToTaskId: "t3",
-      workKind: "extract",
-      district: "national"
-    },
-    {
-      id: "a5",
-      meetingId: "mtg-hio",
-      meetingTitle: "HIO Coordination Huddle",
-      title: "Bring Kenema capture issues into the data dictionary",
-      assignedTo: "m9",
-      deadline: iso(atTime(now, 17, 0)),
-      status: "open",
-      workKind: "hio_field_visit",
-      district: "kenema"
-    },
-    {
-      id: "a6",
-      meetingId: "mtg-ops",
-      meetingTitle: "Hub Operations Sync",
-      title: "Rebalance engineer load if the immunization extract is still overdue",
-      assignedTo: lead,
-      deadline: iso(atTime(now, 15, 0)),
-      status: "open",
-      workKind: "extract",
-      district: "national"
-    }
-  ];
-  const hubLog = [
-    {
-      id: "log1",
-      at: iso(atTime(now, 2, 14)),
-      kind: "extract_failed",
-      title: "DHIS2 warehouse extract stalled",
-      detail: "Aggregate pull stopped at 02:14. Retry is with Maliaka before the 10:00 completeness review.",
-      district: "national",
-      authorId: "m4"
-    },
-    {
-      id: "log2",
-      at: iso(atTime(now, 8, 52)),
-      kind: "late_reporting",
-      title: "Three PHUs still outstanding in Western Area Urban",
-      detail: "This week\u2019s outpatient dataset is missing. Karim is calling facilities before the DHIS2 review.",
-      district: "western_urban",
-      authorId: "m8"
-    },
-    {
-      id: "log3",
-      at: iso(atTime(now, 7, 40)),
-      kind: "incident",
-      title: "Maternity register extract mapping mismatch",
-      detail: "Organisation-unit codes after Wednesday\u2019s metadata patch. Weekly league table frozen until confirmed.",
-      district: "national",
-      facility: "Maternity register",
-      authorId: "m11"
-    },
-    {
-      id: "log4",
-      at: iso(atTime(addDays(now, -1), 16, 10)),
-      kind: "extract_restored",
-      title: "Wednesday metadata patch applied",
-      detail: "Joseph restored the organisation-unit mapping. Maternity extract still needs a confirmation run.",
-      district: "national",
-      authorId: "m5"
-    }
-  ];
-  const events = [
-    {
-      id: "e1",
-      at: ago(8, now),
-      message: "DHIS2 Completeness Review \xB7 live now",
-      tone: "info"
-    },
-    {
-      id: "e2",
-      at: ago(22, now),
-      message: "Regina Daniels completed \xB7 Circulate standup action log",
-      tone: "success"
-    },
-    {
-      id: "e3",
-      at: ago(48, now),
-      message: "Minutes updated \xB7 Daily Standup",
-      tone: "info"
-    },
-    {
-      id: "e4",
-      at: ago(70, now),
-      message: "New task assigned \xB7 Retry overnight DHIS2 warehouse extract",
-      tone: "danger"
-    },
-    {
-      id: "e5",
-      at: ago(95, now),
-      message: "Daniel Jah completed \xB7 Post overnight KPI snapshot",
-      tone: "success"
-    },
-    {
-      id: "e6",
-      at: ago(140, now),
-      message: "Overdue \xB7 Rebuild immunization catch-up extract",
-      tone: "warn"
-    },
-    {
-      id: "e7",
-      at: nowIso(),
-      message: "Hub board online \xB7 live operations feed connected",
-      tone: "info"
-    }
-  ];
-  return {
-    members: MEMBERS,
-    tasks: [...tasks, ...weekClosed],
-    meetings,
-    actionItems,
-    events,
-    hubLog
-  };
-}
-
-// server/errors.ts
-var HttpError = class extends Error {
-  constructor(status, message) {
-    super(message);
-    this.status = status;
-    this.name = "HttpError";
-  }
-};
-
-// server/ops.ts
-function pushEvent(state, message, tone) {
-  return {
-    ...state,
-    events: [{ id: uid("e"), at: nowIso(), message, tone }, ...state.events].slice(0, 12)
-  };
-}
-function rollMeeting(meeting, now) {
-  if (!meeting.rolling) return meeting;
-  const start = new Date(meeting.startTime);
-  const end = new Date(meeting.endTime);
-  return {
-    ...meeting,
-    startTime: atTime(now, start.getHours(), start.getMinutes()).toISOString(),
-    endTime: atTime(now, end.getHours(), end.getMinutes()).toISOString()
-  };
-}
-function viewState(state, now = /* @__PURE__ */ new Date()) {
-  return {
-    ...state,
-    meetings: state.meetings.map((meeting) => rollMeeting(meeting, now)),
-    hubLog: state.hubLog ?? []
-  };
-}
-function tickOverdue(state, now = /* @__PURE__ */ new Date()) {
-  const due = state.tasks.filter((task) => {
-    const derived = displayStatus(task, now);
-    return task.status !== "completed" && derived === "overdue" && task.status !== "overdue";
-  });
-  if (due.length === 0) return state;
-  const ids = new Set(due.map((task) => task.id));
-  return pushEvent(
-    {
-      ...state,
-      tasks: state.tasks.map((task) => ids.has(task.id) ? { ...task, status: "overdue" } : task)
-    },
-    `${due.length} overdue ${due.length === 1 ? "task requires" : "tasks require"} attention`,
-    "danger"
-  );
-}
-function addTask(state, task) {
-  return pushEvent(
-    { ...state, tasks: [task, ...state.tasks] },
-    `New task assigned \xB7 ${task.title}`,
-    task.priority === "critical" ? "danger" : "info"
-  );
-}
-function updateTask(state, id, patch) {
-  const current = state.tasks.find((task) => task.id === id);
-  if (!current) throw new HttpError(404, "Task not found");
-  const next = { ...current, ...patch };
-  if (patch.status === "completed") {
-    next.progress = 100;
-    next.completedAt = next.completedAt ?? nowIso();
-  }
-  let following = {
-    ...state,
-    tasks: state.tasks.map((task) => task.id === id ? next : task)
-  };
-  if (current.status !== next.status && next.status === "completed") {
-    following = pushEvent(
-      following,
-      `${memberName(state.members, next.assignedTo)} completed \xB7 ${next.title}`,
-      "success"
-    );
-  } else if (current.status !== next.status) {
-    following = pushEvent(
-      following,
-      `Status change \xB7 ${next.title}`,
-      next.status === "overdue" ? "danger" : "info"
-    );
-  } else if (current.assignedTo !== next.assignedTo) {
-    following = pushEvent(following, `Reassigned \xB7 ${next.title}`, "info");
-  }
-  return following;
-}
-function addMeeting(state, meeting) {
-  return pushEvent(
-    { ...state, meetings: [...state.meetings, meeting] },
-    `Meeting added \xB7 ${meeting.title}`,
-    "info"
-  );
-}
-function updateMeeting(state, id, patch) {
-  const current = state.meetings.find((meeting) => meeting.id === id);
-  if (!current) throw new HttpError(404, "Meeting not found");
-  const next = { ...current, ...patch };
-  let following = {
-    ...state,
-    meetings: state.meetings.map((meeting) => meeting.id === id ? next : meeting)
-  };
-  if (patch.startTime && patch.startTime !== current.startTime) {
-    following = pushEvent(following, `Meeting started \xB7 ${next.title}`, "info");
-  } else if (patch.endTime && patch.endTime !== current.endTime) {
-    following = pushEvent(following, `Meeting ended \xB7 ${next.title}`, "success");
-  } else if (patch.notes !== void 0 && patch.notes !== current.notes) {
-    following = pushEvent(following, `Minutes updated \xB7 ${next.title}`, "info");
-  } else if (patch.agenda !== void 0 && patch.agenda !== current.agenda) {
-    following = pushEvent(following, `Agenda updated \xB7 ${next.title}`, "info");
-  }
-  return following;
-}
-function addActionItem(state, item) {
-  return pushEvent(
-    { ...state, actionItems: [item, ...state.actionItems] },
-    `Action item created \xB7 ${item.title}`,
-    "info"
-  );
-}
-function updateActionItem(state, id, patch) {
-  const current = state.actionItems.find((item) => item.id === id);
-  if (!current) throw new HttpError(404, "Action item not found");
-  const next = { ...current, ...patch };
-  return {
-    ...state,
-    actionItems: state.actionItems.map((item) => item.id === id ? next : item)
-  };
-}
-function convertAction(state, actionId, assignedBy) {
-  const item = state.actionItems.find((entry) => entry.id === actionId);
-  if (!item) throw new HttpError(404, "Action item not found");
-  if (item.convertedToTaskId) throw new HttpError(409, "Action item already converted");
-  const task = {
-    id: uid("t"),
-    title: item.title,
-    description: `Converted from meeting action \xB7 ${item.meetingTitle}`,
-    assignedTo: item.assignedTo,
-    assignedBy,
-    priority: "high",
-    dueDate: item.deadline,
-    status: "not_started",
-    progress: 0,
-    createdAt: nowIso(),
-    fromActionItemId: actionId,
-    workKind: item.workKind,
-    district: item.district,
-    facility: item.facility
-  };
-  return pushEvent(
-    {
-      ...state,
-      tasks: [task, ...state.tasks],
-      actionItems: state.actionItems.map(
-        (entry) => entry.id === actionId ? { ...entry, convertedToTaskId: task.id, status: "in_progress" } : entry
-      )
-    },
-    `Action converted to task \xB7 ${task.title}`,
-    "success"
-  );
-}
-function addHubLog(state, entry) {
-  const prefix = entry.kind === "extract_failed" ? "Extract failed" : entry.kind === "extract_restored" ? "Extract restored" : entry.kind === "late_reporting" ? "Late reporting" : entry.kind === "incident" ? "Incident" : "Hub note";
-  return pushEvent(
-    { ...state, hubLog: [entry, ...state.hubLog ?? []].slice(0, 40) },
-    `${prefix} \xB7 ${entry.title}`,
-    entry.kind === "extract_failed" || entry.kind === "incident" ? "danger" : "info"
-  );
-}
-
-// server/persist.ts
-var import_node_fs = require("node:fs");
-var import_node_path = __toESM(require("node:path"), 1);
-var SEED_VERSION = "meet-agenda-1";
-var KEY = "nhih-ops-state";
-var LOCAL_FILE = process.env.VERCEL ? import_node_path.default.join("/tmp", "ops-state.json") : import_node_path.default.join(process.cwd(), "data", "ops-state.json");
-function kvConfig() {
-  const url2 = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
-  if (!url2 || !token) return null;
-  return { url: url2.replace(/\/$/, ""), token };
-}
-function storageKind() {
-  return kvConfig() ? "kv" : "file";
-}
-async function redis(command) {
-  const kv = kvConfig();
-  if (!kv) throw new Error("KV is not configured");
-  const res = await fetch(kv.url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${kv.token}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(command),
-    cache: "no-store"
-  });
-  if (!res.ok) {
-    throw new Error(`KV command failed (${res.status})`);
-  }
-  const body = await res.json();
-  return body.result ?? null;
-}
-async function readSnapshot() {
-  const kv = kvConfig();
-  if (kv) {
-    const result = await redis(["GET", KEY]);
-    if (!result) return null;
-    return typeof result === "string" ? JSON.parse(result) : result;
-  }
-  if (!(0, import_node_fs.existsSync)(LOCAL_FILE)) return null;
-  try {
-    return JSON.parse((0, import_node_fs.readFileSync)(LOCAL_FILE, "utf8"));
-  } catch {
-    return null;
-  }
-}
-async function writeSnapshot(snapshot2) {
-  const kv = kvConfig();
-  if (kv) {
-    await redis(["SET", KEY, JSON.stringify(snapshot2)]);
-    return;
-  }
-  (0, import_node_fs.mkdirSync)(import_node_path.default.dirname(LOCAL_FILE), { recursive: true });
-  (0, import_node_fs.writeFileSync)(LOCAL_FILE, JSON.stringify(snapshot2), "utf8");
-}
-
-// server/db.ts
-var cacheProcess = !process.env.VERCEL;
-var memory = null;
-var loading = null;
-async function loadFromStore() {
-  const stored = await readSnapshot();
-  if (!stored || stored.version !== SEED_VERSION) {
-    const next = { version: SEED_VERSION, state: buildSeed() };
-    await writeSnapshot(next);
-    return next;
-  }
-  return {
-    version: stored.version,
-    state: { ...stored.state, hubLog: stored.state.hubLog ?? [] }
-  };
-}
-async function snapshot() {
-  if (cacheProcess && memory) return memory;
-  if (!loading) {
-    loading = loadFromStore().finally(() => {
-      loading = null;
-    });
-  }
-  const next = await loading;
-  memory = next;
-  return next;
-}
-async function commit(state) {
-  memory = { version: SEED_VERSION, state };
-  await writeSnapshot(memory);
-  return viewState(state);
-}
-async function getState() {
-  const current = await snapshot();
-  const ticked = tickOverdue(current.state);
-  if (ticked !== current.state) return commit(ticked);
-  return viewState(ticked);
-}
-async function resetState() {
-  memory = null;
-  return commit(buildSeed());
-}
-async function addTask2(task) {
-  const current = await snapshot();
-  return commit(addTask(current.state, task));
-}
-async function updateTask2(id, patch) {
-  const current = await snapshot();
-  return commit(updateTask(current.state, id, patch));
-}
-async function addMeeting2(meeting) {
-  const current = await snapshot();
-  return commit(addMeeting(current.state, meeting));
-}
-async function updateMeeting2(id, patch) {
-  const current = await snapshot();
-  return commit(updateMeeting(current.state, id, patch));
-}
-async function addActionItem2(item) {
-  const current = await snapshot();
-  return commit(addActionItem(current.state, item));
-}
-async function updateActionItem2(id, patch) {
-  const current = await snapshot();
-  return commit(updateActionItem(current.state, id, patch));
-}
-async function convertAction2(actionId, assignedBy) {
-  const current = await snapshot();
-  return commit(convertAction(current.state, actionId, assignedBy));
-}
-async function addHubLog2(entry) {
-  const current = await snapshot();
-  return commit(addHubLog(current.state, entry));
-}
-function persistence() {
-  return storageKind();
-}
-
-// server/hub.ts
-var clients = /* @__PURE__ */ new Set();
-function subscribe(send) {
-  clients.add(send);
-  return () => {
-    clients.delete(send);
-  };
-}
-function broadcast(state) {
-  for (const send of clients) {
-    try {
-      send(state);
-    } catch {
-      clients.delete(send);
-    }
-  }
-}
-function clientCount() {
-  return clients.size;
-}
-
 // node_modules/zod/v4/classic/external.js
 var external_exports = {};
 __export(external_exports, {
@@ -4126,7 +2995,7 @@ __export(util_exports, {
   createTransparentProxy: () => createTransparentProxy,
   defineLazy: () => defineLazy,
   defineLazyInternal: () => defineLazyInternal,
-  esc: () => esc2,
+  esc: () => esc,
   escapeRegex: () => escapeRegex,
   explicitlyAborted: () => explicitlyAborted,
   extend: () => extend,
@@ -4301,7 +3170,7 @@ function randomString(length = 10) {
   }
   return str;
 }
-function esc2(str) {
+function esc(str) {
   return JSON.stringify(str);
 }
 function slugify(input2) {
@@ -7090,7 +5959,7 @@ var $ZodObjectJIT = /* @__PURE__ */ $constructor("$ZodObjectJIT", (inst, def) =>
       if (key === "__proto__")
         continue;
       const id = ids[key];
-      const k = typeof key === "symbol" ? `syms[${syms.indexOf(key)}]` : esc2(key);
+      const k = typeof key === "symbol" ? `syms[${syms.indexOf(key)}]` : esc(key);
       const isPresent = `${k} in input`;
       const schema = shape[key];
       const optin = schema?._zod?.optin;
@@ -16544,16 +15413,16 @@ function generateStringFormatCheck(doc, ctx, def, accessor) {
       doc.write(`if (${accessor} !== ${accessor}.toUpperCase()) return INVALID;`);
       break;
     case "includes":
-      doc.write(`if (!${accessor}.includes(${esc2(def.includes)})) return INVALID;`);
+      doc.write(`if (!${accessor}.includes(${esc(def.includes)})) return INVALID;`);
       break;
     case "starts_with": {
       const prefix = def.prefix;
-      doc.write(`if (${accessor}.slice(0, ${prefix.length}) !== ${esc2(prefix)}) return INVALID;`);
+      doc.write(`if (${accessor}.slice(0, ${prefix.length}) !== ${esc(prefix)}) return INVALID;`);
       break;
     }
     case "ends_with": {
       const suffix = def.suffix;
-      doc.write(`if (${accessor}.slice(-${suffix.length}) !== ${esc2(suffix)}) return INVALID;`);
+      doc.write(`if (${accessor}.slice(-${suffix.length}) !== ${esc(suffix)}) return INVALID;`);
       break;
     }
     default: {
@@ -16759,8 +15628,8 @@ function generateObjectCheck(doc, ctx, schema, accessor, buildsValue = true) {
   const keys = Object.keys(shape);
   const symbolKeys = Object.getOwnPropertySymbols(shape);
   const allKeys = symbolKeys.length ? [...keys, ...symbolKeys] : keys;
-  const keyExpr = (k) => typeof k === "symbol" ? addConstant(ctx, k) : esc2(k);
-  const propKey = (k) => typeof k === "symbol" ? `[${keyExpr(k)}]` : esc2(k);
+  const keyExpr = (k) => typeof k === "symbol" ? addConstant(ctx, k) : esc(k);
+  const propKey = (k) => typeof k === "symbol" ? `[${keyExpr(k)}]` : esc(k);
   const propShape = shape;
   if (keys.includes("__proto__")) {
     throw new ZodCompileUnsupportedError('object shape key "__proto__"');
@@ -16804,7 +15673,7 @@ function generateObjectCheck(doc, ctx, schema, accessor, buildsValue = true) {
   if (catchall) {
     const catchallType = catchall._zod.def.type;
     if (catchallType === "never") {
-      const condition = keys.map((k) => `k !== ${esc2(k)}`).join(" && ") || "true";
+      const condition = keys.map((k) => `k !== ${esc(k)}`).join(" && ") || "true";
       doc.write(`for (const k in ${accessor}) {`);
       doc.indented((d) => {
         d.write(`if (${condition}) return INVALID;`);
@@ -17066,7 +15935,7 @@ function generateLiteralCheck(doc, ctx, schema, accessor) {
     return accessor;
   }
   if (typeof value === "string") {
-    doc.write(`if (${accessor} !== ${esc2(value)}) return INVALID;`);
+    doc.write(`if (${accessor} !== ${esc(value)}) return INVALID;`);
   } else if (typeof value === "number" || typeof value === "boolean") {
     doc.write(`if (${accessor} !== ${value}) return INVALID;`);
   } else if (value === null) {
@@ -17267,7 +16136,7 @@ function generateDiscriminatedUnionCheck(doc, ctx, def, accessor) {
   }
   const discVar = newVar(ctx);
   const outputVar = newVar(ctx);
-  doc.write(`const ${discVar} = ${accessor}?.[${esc2(def.discriminator)}];`);
+  doc.write(`const ${discVar} = ${accessor}?.[${esc(def.discriminator)}];`);
   doc.write(`let ${outputVar};`);
   let firstBranch = true;
   const claimed = /* @__PURE__ */ new Set();
@@ -17297,7 +16166,7 @@ function generateDiscriminatedUnionCheck(doc, ctx, def, accessor) {
 }
 function literalEquality(ctx, accessor, value) {
   if (typeof value === "string")
-    return `${accessor} === ${esc2(value)}`;
+    return `${accessor} === ${esc(value)}`;
   if (typeof value === "number") {
     if (Number.isNaN(value))
       return `Number.isNaN(${accessor})`;
@@ -17411,7 +16280,7 @@ function generateRecordCheck(doc, ctx, schema, accessor) {
 }
 function literalPropertyKey(ctx, key) {
   if (typeof key === "string")
-    return esc2(key);
+    return esc(key);
   return addConstant(ctx, key);
 }
 function generateMapCheck(doc, ctx, schema, accessor) {
@@ -22399,6 +21268,1149 @@ function date4(params) {
   return _coercedDate(ZodDate, params);
 }
 
+// src/data/catalog.ts
+var WORK_TYPES = [
+  { id: "extract", label: "Extract" },
+  { id: "dhis2_completeness", label: "DHIS2 completeness" },
+  { id: "data_quality", label: "Data quality" },
+  { id: "hio_field_visit", label: "HIO field visit" },
+  { id: "analysis_request", label: "Analysis request" },
+  { id: "facility_followup", label: "Facility follow-up" }
+];
+var DISTRICTS = [
+  { id: "national", label: "National / Hub" },
+  { id: "western_urban", label: "Western Area Urban" },
+  { id: "western_rural", label: "Western Area Rural" },
+  { id: "bo", label: "Bo" },
+  { id: "bombali", label: "Bombali" },
+  { id: "bonthe", label: "Bonthe" },
+  { id: "falaba", label: "Falaba" },
+  { id: "kailahun", label: "Kailahun" },
+  { id: "kambia", label: "Kambia" },
+  { id: "karene", label: "Karene" },
+  { id: "kenema", label: "Kenema" },
+  { id: "koinadugu", label: "Koinadugu" },
+  { id: "kono", label: "Kono" },
+  { id: "moyamba", label: "Moyamba" },
+  { id: "port_loko", label: "Port Loko" },
+  { id: "pujehun", label: "Pujehun" },
+  { id: "tonkolili", label: "Tonkolili" }
+];
+var LOG_KINDS = [
+  { id: "extract_failed", label: "Extract failed" },
+  { id: "extract_restored", label: "Extract restored" },
+  { id: "late_reporting", label: "Late reporting" },
+  { id: "incident", label: "Incident" },
+  { id: "note", label: "Hub note" }
+];
+var WORK_TYPE_LABEL = Object.fromEntries(
+  WORK_TYPES.map((item) => [item.id, item.label])
+);
+var DISTRICT_LABEL = Object.fromEntries(
+  DISTRICTS.map((item) => [item.id, item.label])
+);
+var LOG_KIND_LABEL = Object.fromEntries(
+  LOG_KINDS.map((item) => [item.id, item.label])
+);
+function workTypeLabel(id) {
+  return WORK_TYPE_LABEL[id] ?? id;
+}
+function districtLabel(id) {
+  return DISTRICT_LABEL[id] ?? id;
+}
+function logKindLabel(id) {
+  return LOG_KIND_LABEL[id] ?? id;
+}
+function placeLine(workKind2, district, facility) {
+  const base = `${workTypeLabel(workKind2)} \xB7 ${districtLabel(district)}`;
+  return facility?.trim() ? `${base} \xB7 ${facility.trim()}` : base;
+}
+
+// src/utils/time.ts
+function nowIso() {
+  return (/* @__PURE__ */ new Date()).toISOString();
+}
+function startOfDay(date5) {
+  const d = new Date(date5);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+function atTime(base, hours, minutes) {
+  const d = new Date(base);
+  d.setHours(hours, minutes, 0, 0);
+  return d;
+}
+function addDays(base, days) {
+  const d = new Date(base);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+function startOfMonth(date5) {
+  const d = startOfDay(date5);
+  d.setDate(1);
+  return d;
+}
+function startOfYear(date5) {
+  const d = startOfDay(date5);
+  d.setMonth(0, 1);
+  return d;
+}
+function isInRange(iso2, start, end) {
+  const t = new Date(iso2).getTime();
+  return t >= start.getTime() && t <= end.getTime();
+}
+function formatRange(start, end) {
+  const sameYear = start.getFullYear() === end.getFullYear();
+  const from = start.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: sameYear ? void 0 : "numeric"
+  });
+  const to = end.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+  return `${from} \u2013 ${to}`;
+}
+function isSameDay(a, b) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+function formatTime(iso2) {
+  return new Date(iso2).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+function formatTimeRange(startIso, endIso) {
+  return `${formatTime(startIso)} \u2013 ${formatTime(endIso)}`;
+}
+function formatDate(iso2) {
+  return new Date(iso2).toLocaleDateString([], {
+    weekday: "short",
+    month: "short",
+    day: "numeric"
+  });
+}
+function uid(prefix) {
+  return `${prefix}-${Math.random().toString(36).slice(2, 8)}${Date.now().toString(36).slice(-4)}`;
+}
+
+// src/utils/metrics.ts
+function memberById(members2, id) {
+  return members2.find((m) => m.id === id);
+}
+function memberName(members2, id) {
+  return memberById(members2, id)?.name ?? "Unassigned";
+}
+function displayStatus(task, now = /* @__PURE__ */ new Date()) {
+  if (task.status === "completed") return "completed";
+  if (new Date(task.dueDate).getTime() < now.getTime()) return "overdue";
+  return task.status === "overdue" ? "in_progress" : task.status;
+}
+function meetingStatus(meeting, now = /* @__PURE__ */ new Date()) {
+  const start = new Date(meeting.startTime).getTime();
+  const end = new Date(meeting.endTime).getTime();
+  const t = now.getTime();
+  if (t < start) return "upcoming";
+  if (t <= end) return "live";
+  return "completed";
+}
+function agendaLines(agenda) {
+  return (agenda ?? "").split(/\r?\n/).map((line) => line.replace(/^([-*•]|\d+[.)])\s+/, "").trim()).filter(Boolean);
+}
+function todaysMeetings(meetings, now = /* @__PURE__ */ new Date()) {
+  return meetings.filter((m) => isSameDay(new Date(m.startTime), now)).sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime));
+}
+function isDueToday(task, now = /* @__PURE__ */ new Date()) {
+  return isSameDay(new Date(task.dueDate), now);
+}
+function wasCompletedToday(task, now = /* @__PURE__ */ new Date()) {
+  return Boolean(task.completedAt && isSameDay(new Date(task.completedAt), now));
+}
+function completedThisWeek(task, now = /* @__PURE__ */ new Date()) {
+  if (!task.completedAt) return false;
+  return new Date(task.completedAt).getTime() >= addDays(startOfDay(now), -6).getTime();
+}
+function completedOnTime(task) {
+  if (task.status !== "completed" || !task.completedAt) return false;
+  return new Date(task.completedAt).getTime() <= new Date(task.dueDate).getTime();
+}
+function workloadLevel(active, overdue) {
+  const score = active + overdue * 1.5;
+  if (score >= 6) return "overloaded";
+  if (score >= 4) return "heavy";
+  if (score >= 2) return "balanced";
+  return "light";
+}
+function teamMetrics(state, now = /* @__PURE__ */ new Date()) {
+  const tasks = state.tasks;
+  const total = tasks.length;
+  const completed = tasks.filter((t) => displayStatus(t, now) === "completed");
+  const today = todaysMeetings(state.meetings, now);
+  return {
+    meetingsToday: today.length,
+    dueToday: tasks.filter((t) => isDueToday(t, now) && displayStatus(t, now) !== "completed").length,
+    completedToday: tasks.filter((t) => wasCompletedToday(t, now)).length,
+    inProgress: tasks.filter((t) => {
+      const s = displayStatus(t, now);
+      return s === "in_progress" || s === "under_review";
+    }).length,
+    overdue: tasks.filter((t) => displayStatus(t, now) === "overdue").length,
+    completionRate: total === 0 ? 0 : Math.round(completed.length / total * 100),
+    completedWeek: tasks.filter((t) => completedThisWeek(t, now)).length,
+    onTime: tasks.filter((t) => completedOnTime(t)).length,
+    total,
+    liveMeetings: today.filter((m) => meetingStatus(m, now) === "live").length,
+    highPriorityDue: tasks.filter((t) => {
+      const s = displayStatus(t, now);
+      return isDueToday(t, now) && s !== "completed" && (t.priority === "high" || t.priority === "critical");
+    }).length
+  };
+}
+function memberWorkloads(state, now = /* @__PURE__ */ new Date()) {
+  return state.members.map((member) => {
+    const assigned = state.tasks.filter((t) => t.assignedTo === member.id);
+    const overdue = assigned.filter((t) => displayStatus(t, now) === "overdue").length;
+    const completed = assigned.filter((t) => displayStatus(t, now) === "completed").length;
+    const active = assigned.filter((t) => {
+      const s = displayStatus(t, now);
+      return s !== "completed";
+    }).length;
+    return {
+      member,
+      active,
+      completed,
+      overdue,
+      assigned: assigned.length,
+      level: workloadLevel(active, overdue)
+    };
+  });
+}
+function periodBounds(period, now = /* @__PURE__ */ new Date()) {
+  const end = now;
+  if (period === "Daily") return { start: startOfDay(now), end };
+  if (period === "Weekly") return { start: addDays(startOfDay(now), -6), end };
+  if (period === "Monthly") return { start: startOfMonth(now), end };
+  return { start: startOfYear(now), end };
+}
+
+// src/utils/report.ts
+function buildWeeklyReport(state, now = /* @__PURE__ */ new Date()) {
+  const { start, end } = periodBounds("Weekly", now);
+  const metrics = teamMetrics(state, now);
+  const closed = state.tasks.filter((t) => t.completedAt && isInRange(t.completedAt, start, end));
+  const meetings = state.meetings.filter((m) => isInRange(m.startTime, start, end)).sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime));
+  const people = memberWorkloads(state, now).map((row) => ({
+    name: row.member.name,
+    role: row.member.role,
+    closed: state.tasks.filter(
+      (t) => t.assignedTo === row.member.id && t.completedAt && isInRange(t.completedAt, start, end)
+    ).length,
+    open: row.active,
+    overdue: row.overdue
+  }));
+  const hubLog = [...state.hubLog ?? []].filter((entry) => isInRange(entry.at, start, end)).sort((a, b) => +new Date(a.at) - +new Date(b.at)).map((entry) => ({
+    at: `${formatDate(entry.at)} \xB7 ${formatTime(entry.at)}`,
+    kind: logKindLabel(entry.kind),
+    title: entry.title,
+    place: entry.facility ? `${districtLabel(entry.district)} \xB7 ${entry.facility}` : districtLabel(entry.district),
+    detail: entry.detail,
+    author: memberName(state.members, entry.authorId)
+  }));
+  return {
+    generatedAt: now.toISOString(),
+    rangeLabel: formatRange(start, end),
+    performance: {
+      completionRate: metrics.completionRate,
+      closed: closed.length,
+      overdue: metrics.overdue,
+      inProgress: metrics.inProgress,
+      onTime: closed.filter((t) => completedOnTime(t)).length,
+      meetings: meetings.length,
+      openActions: state.actionItems.filter((a) => a.status !== "completed").length,
+      hubLog: hubLog.length
+    },
+    people,
+    hubLog,
+    meetings: meetings.map((meeting) => {
+      const actions = state.actionItems.filter((a) => a.meetingId === meeting.id);
+      return {
+        id: meeting.id,
+        title: meeting.title,
+        when: `${formatDate(meeting.startTime)} \xB7 ${formatTimeRange(meeting.startTime, meeting.endTime)} \xB7 ${meetingStatus(meeting, now)}`,
+        attendees: meeting.participantIds.map((id) => memberName(state.members, id)).join(", "),
+        agenda: meeting.agenda?.trim() ?? "",
+        notes: meeting.notes?.trim() ?? "",
+        actions: actions.map((item) => ({
+          title: item.title,
+          place: placeLine(item.workKind, item.district, item.facility),
+          owner: memberName(state.members, item.assignedTo),
+          status: item.status.replace("_", " "),
+          deadline: formatDate(item.deadline)
+        }))
+      };
+    })
+  };
+}
+function reportToHtml(report) {
+  const peopleRows = report.people.map(
+    (p) => `<tr><td>${esc2(p.name)}</td><td>${esc2(p.role)}</td><td>${p.closed}</td><td>${p.open}</td><td>${p.overdue}</td></tr>`
+  ).join("");
+  const hubLogRows = report.hubLog.map(
+    (entry) => `<tr><td>${esc2(entry.at)}</td><td>${esc2(entry.kind)}</td><td>${esc2(entry.title)}</td><td>${esc2(entry.place)}</td><td>${esc2(entry.detail || "\u2014")}</td><td>${esc2(entry.author)}</td></tr>`
+  ).join("");
+  const meetingBlocks = report.meetings.map((m) => {
+    const actions = m.actions.length ? `<table><thead><tr><th>Action</th><th>Type / place</th><th>Owner</th><th>Status</th><th>Deadline</th></tr></thead><tbody>${m.actions.map(
+      (a) => `<tr><td>${esc2(a.title)}</td><td>${esc2(a.place)}</td><td>${esc2(a.owner)}</td><td>${esc2(a.status)}</td><td>${esc2(a.deadline)}</td></tr>`
+    ).join("")}</tbody></table>` : '<p class="mute">No action items recorded.</p>';
+    const minutes = m.notes ? `<p class="minutes">${esc2(m.notes)}</p>` : '<p class="mute">Minutes not captured for this session.</p>';
+    const items = agendaLines(m.agenda);
+    const agenda = items.length ? `<ol class="agenda">${items.map((item) => `<li>${esc2(item)}</li>`).join("")}</ol>` : '<p class="mute">Agenda not set for this session.</p>';
+    return `<section class="meeting"><h3>${esc2(m.title)}</h3><p class="meta">${esc2(m.when)}</p><p class="meta">Attendees: ${esc2(m.attendees)}</p><h4>Agenda</h4>${agenda}<h4>Minutes</h4>${minutes}<h4>Action items</h4>${actions}</section>`;
+  }).join("");
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>NHIH Weekly Operations Report \xB7 ${esc2(report.rangeLabel)}</title>
+  <style>
+    body { font-family: Inter, "Segoe UI", sans-serif; color: #1f2933; background: #fff; margin: 0; padding: 32px; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    h2 { font-size: 16px; margin: 28px 0 10px; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; }
+    h3 { font-size: 15px; margin: 0 0 4px; }
+    h4 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #6b7280; margin: 12px 0 6px; }
+    .kicker { color: #1f4e79; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .mute, .meta { color: #6b7280; font-size: 13px; margin: 2px 0; }
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0 8px; }
+    .kpi { border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; }
+    .kpi strong { display: block; font-size: 22px; }
+    .kpi span { color: #6b7280; font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+    th { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #6b7280; }
+    .meeting { border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px; margin: 12px 0; }
+    .minutes { white-space: pre-wrap; line-height: 1.45; font-size: 14px; }
+    .agenda { margin: 0; padding-left: 18px; }
+    .agenda li { margin: 2px 0; }
+    @media print { body { padding: 16px; } .kpis { break-inside: avoid; } .meeting { break-inside: avoid; } }
+  </style>
+</head>
+<body>
+  <div class="kicker">NHIH Team Operations</div>
+  <h1>Weekly operations report</h1>
+  <p class="meta">${esc2(report.rangeLabel)} \xB7 Generated ${esc2(new Date(report.generatedAt).toLocaleString())}</p>
+
+  <h2>Team performance</h2>
+  <div class="kpis">
+    <div class="kpi"><strong>${report.performance.completionRate}%</strong><span>Completion rate</span></div>
+    <div class="kpi"><strong>${report.performance.closed}</strong><span>Tasks closed this week</span></div>
+    <div class="kpi"><strong>${report.performance.onTime}</strong><span>Closed on time</span></div>
+    <div class="kpi"><strong>${report.performance.overdue}</strong><span>Still overdue</span></div>
+    <div class="kpi"><strong>${report.performance.inProgress}</strong><span>In progress</span></div>
+    <div class="kpi"><strong>${report.performance.meetings}</strong><span>Meetings this week</span></div>
+    <div class="kpi"><strong>${report.performance.openActions}</strong><span>Open action items</span></div>
+    <div class="kpi"><strong>${report.performance.hubLog}</strong><span>Hub log entries</span></div>
+  </div>
+
+  <h2>Hub log</h2>
+  ${hubLogRows ? `<table><thead><tr><th>When</th><th>Kind</th><th>What happened</th><th>Where</th><th>Detail</th><th>Logged by</th></tr></thead><tbody>${hubLogRows}</tbody></table>` : '<p class="mute">No extract, late-reporting, or incident entries this week.</p>'}
+
+  <h2>Individual performance</h2>
+  <table>
+    <thead><tr><th>Name</th><th>Role</th><th>Closed this week</th><th>Open</th><th>Overdue</th></tr></thead>
+    <tbody>${peopleRows}</tbody>
+  </table>
+
+  <h2>Meetings and minutes</h2>
+  ${meetingBlocks || '<p class="mute">No meetings recorded in this period.</p>'}
+</body>
+</html>`;
+}
+function esc2(value) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// src/data/seed.ts
+var MEMBERS = [
+  { id: "m1", name: "Regina Daniels", role: "Coordinator", initials: "RD" },
+  { id: "m2", name: "Ibrahim Sorie", role: "Team Lead", initials: "IS" },
+  { id: "m3", name: "Prince Mafinda", role: "Operations Manager", initials: "PM" },
+  { id: "m4", name: "Maliaka Madi", role: "Data Engineer", initials: "MM" },
+  { id: "m5", name: "Joseph Koroma", role: "Data Engineer", initials: "JK" },
+  { id: "m6", name: "Les Kamara", role: "Data Engineer", initials: "LK" },
+  { id: "m7", name: "Daniel Jah", role: "Data Analyst", initials: "DJ" },
+  { id: "m8", name: "Ishmael Kamara", role: "HMIS Officer", initials: "IK" },
+  { id: "m9", name: "Sallay", role: "HIO", initials: "SA" },
+  { id: "m10", name: "Karim SB Momoh", role: "HMIS", initials: "KM" },
+  { id: "m11", name: "Ahmed Saidu", role: "HMIS", initials: "AS" }
+];
+function iso(date5) {
+  return date5.toISOString();
+}
+function ago(minutes, now) {
+  return iso(new Date(now.getTime() - minutes * 6e4));
+}
+function buildSeed(now = /* @__PURE__ */ new Date()) {
+  const lead = "m2";
+  const meetings = [
+    {
+      id: "mtg-standup",
+      title: "Daily Standup",
+      startTime: iso(atTime(now, 8, 45)),
+      endTime: iso(atTime(now, 9, 10)),
+      participantIds: MEMBERS.map((m) => m.id),
+      rolling: true,
+      agenda: "Overnight extract status\nWestern Area completeness / late PHUs\nBlockers\nToday\u2019s owners and due times",
+      notes: "Standup closed on DHIS2 completeness for Western Area and overnight extract lag. Maliaka owns the warehouse retry. Ishmael will flag late facilities before the 10:00 review. No blocker on the immunization rebuild."
+    },
+    {
+      id: "mtg-dhis2",
+      title: "DHIS2 Completeness Review",
+      startTime: iso(atTime(now, 10, 0)),
+      endTime: iso(atTime(now, 10, 45)),
+      participantIds: ["m2", "m3", "m4", "m8", "m10", "m11"],
+      rolling: true,
+      agenda: "Completeness by district\nLate PHUs \u2014 Western Area Urban\nMaternity register extract\nWeekly league table",
+      notes: "Western Area Urban still 86% complete. Karim to call three late PHUs. Decision: freeze the weekly league table until Ahmed confirms the maternity register extract."
+    },
+    {
+      id: "mtg-hio",
+      title: "HIO Coordination Huddle",
+      startTime: iso(atTime(now, 13, 0)),
+      endTime: iso(atTime(now, 13, 30)),
+      participantIds: ["m1", "m2", "m8", "m9"],
+      rolling: true,
+      agenda: "Kenema field-visit notes\nUnmatched facility codes\nHIO coverage roster",
+      notes: ""
+    },
+    {
+      id: "mtg-ops",
+      title: "Hub Operations Sync",
+      startTime: iso(atTime(now, 14, 30)),
+      endTime: iso(atTime(now, 15, 20)),
+      participantIds: ["m1", "m2", "m3", "m6", "m7"],
+      rolling: true,
+      agenda: "Engineer load vs overdue extracts\nImmunization catch-up\nMonday executive brief",
+      notes: ""
+    },
+    {
+      id: "mtg-analytics",
+      title: "Analytics Delivery Briefing",
+      startTime: iso(atTime(now, 16, 0)),
+      endTime: iso(atTime(now, 16, 40)),
+      participantIds: ["m2", "m3", "m7", "m8", "m10"],
+      rolling: true,
+      agenda: "Weekly census workbook\nOvernight KPI snapshot\nDistrict completeness tile",
+      notes: ""
+    },
+    {
+      id: "mtg-wed-qa",
+      title: "Wednesday Data Quality Review",
+      startTime: iso(atTime(addDays(now, -1), 15, 0)),
+      endTime: iso(atTime(addDays(now, -1), 15, 40)),
+      participantIds: ["m2", "m5", "m7", "m8", "m11"],
+      agenda: "Null organisation-unit mapping\nMaternity extract confirmation\nCompleteness target for the week",
+      notes: "Null organisation-unit codes traced to the Friday metadata sync. Joseph patched the mapping. Completeness target stays 95% for this week."
+    }
+  ];
+  const tasks = [
+    {
+      id: "t1",
+      title: "Retry overnight DHIS2 warehouse extract",
+      description: "Last night\u2019s aggregate pull stalled at 02:14. Restore before the completeness review.",
+      assignedTo: "m4",
+      assignedBy: lead,
+      priority: "critical",
+      dueDate: iso(atTime(now, 12, 0)),
+      status: "in_progress",
+      progress: 68,
+      createdAt: iso(atTime(now, 7, 40)),
+      workKind: "extract",
+      district: "national"
+    },
+    {
+      id: "t2",
+      title: "Call late PHUs \u2014 Western Area Urban",
+      description: "Three facilities have not submitted this week\u2019s outpatient dataset.",
+      assignedTo: "m10",
+      assignedBy: "m8",
+      priority: "high",
+      dueDate: iso(atTime(now, 11, 30)),
+      status: "in_progress",
+      progress: 40,
+      createdAt: iso(atTime(now, 8, 50)),
+      workKind: "facility_followup",
+      district: "western_urban"
+    },
+    {
+      id: "t3",
+      title: "Confirm maternity register extract",
+      description: "Verify organisation-unit mapping after Wednesday\u2019s metadata patch.",
+      assignedTo: "m11",
+      assignedBy: lead,
+      priority: "high",
+      dueDate: iso(atTime(now, 13, 0)),
+      status: "under_review",
+      progress: 82,
+      createdAt: iso(addDays(atTime(now, 16, 0), -1)),
+      workKind: "extract",
+      district: "national"
+    },
+    {
+      id: "t4",
+      title: "Close unmatched facility codes",
+      description: "Resolve leftover codes flagged by HIOs last week.",
+      assignedTo: "m9",
+      assignedBy: "m1",
+      priority: "critical",
+      dueDate: iso(atTime(addDays(now, -1), 17, 0)),
+      status: "overdue",
+      progress: 45,
+      createdAt: iso(addDays(atTime(now, 11, 0), -5)),
+      workKind: "facility_followup",
+      district: "western_urban"
+    },
+    {
+      id: "t5",
+      title: "Publish weekly census workbook",
+      description: "Refresh occupancy and admissions tiles for the 16:00 briefing.",
+      assignedTo: "m7",
+      assignedBy: "m3",
+      priority: "high",
+      dueDate: iso(atTime(now, 15, 45)),
+      status: "in_progress",
+      progress: 55,
+      createdAt: iso(addDays(atTime(now, 9, 0), -1)),
+      workKind: "analysis_request",
+      district: "national"
+    },
+    {
+      id: "t6",
+      title: "HIO site notes \u2014 Kenema capture",
+      description: "Log data-capture issues from the last Kenema field visit into the dictionary.",
+      assignedTo: "m9",
+      assignedBy: "m1",
+      priority: "medium",
+      dueDate: iso(atTime(now, 17, 0)),
+      status: "in_progress",
+      progress: 30,
+      createdAt: iso(addDays(atTime(now, 14, 0), -2)),
+      workKind: "hio_field_visit",
+      district: "kenema"
+    },
+    {
+      id: "t7",
+      title: "Patch null organisation-unit mapping",
+      description: "Apply the Wednesday QA fix in production and re-run tests.",
+      assignedTo: "m5",
+      assignedBy: "m4",
+      priority: "high",
+      dueDate: iso(atTime(now, 14, 0)),
+      status: "in_progress",
+      progress: 72,
+      createdAt: iso(addDays(atTime(now, 16, 20), -1)),
+      workKind: "data_quality",
+      district: "national"
+    },
+    {
+      id: "t8",
+      title: "Prepare Monday executive brief outline",
+      description: "One-page note: completeness, incidents, and overdue follow-up.",
+      assignedTo: "m3",
+      assignedBy: lead,
+      priority: "medium",
+      dueDate: iso(atTime(addDays(now, 1), 10, 0)),
+      status: "not_started",
+      progress: 0,
+      createdAt: iso(atTime(now, 9, 5)),
+      workKind: "analysis_request",
+      district: "national"
+    },
+    {
+      id: "t9",
+      title: "Rebuild immunization catch-up extract",
+      description: "Source-system lag after the weekend outage.",
+      assignedTo: "m6",
+      assignedBy: "m3",
+      priority: "high",
+      dueDate: iso(atTime(addDays(now, -2), 16, 0)),
+      status: "overdue",
+      progress: 22,
+      createdAt: iso(addDays(atTime(now, 9, 0), -4)),
+      workKind: "extract",
+      district: "national"
+    },
+    {
+      id: "t10",
+      title: "Circulate standup action log",
+      description: "Owners and due times from the 08:45 standup.",
+      assignedTo: "m1",
+      assignedBy: lead,
+      priority: "high",
+      dueDate: iso(atTime(now, 10, 0)),
+      status: "completed",
+      progress: 100,
+      createdAt: iso(atTime(now, 8, 20)),
+      completedAt: iso(atTime(now, 9, 18)),
+      workKind: "analysis_request",
+      district: "national"
+    },
+    {
+      id: "t11",
+      title: "Post overnight KPI snapshot",
+      description: "Share completeness and extract status in the hub channel.",
+      assignedTo: "m7",
+      assignedBy: "m6",
+      priority: "medium",
+      dueDate: iso(atTime(now, 9, 0)),
+      status: "completed",
+      progress: 100,
+      createdAt: iso(addDays(atTime(now, 17, 0), -1)),
+      completedAt: iso(atTime(now, 8, 12)),
+      workKind: "extract",
+      district: "national"
+    },
+    {
+      id: "t12",
+      title: "Week-start capacity plan",
+      description: "Balance engineer vs HMIS follow-up after two late extracts.",
+      assignedTo: lead,
+      assignedBy: "m3",
+      priority: "medium",
+      dueDate: iso(atTime(now, 11, 0)),
+      status: "completed",
+      progress: 100,
+      createdAt: iso(addDays(atTime(now, 18, 0), -1)),
+      completedAt: iso(atTime(now, 8, 30)),
+      workKind: "analysis_request",
+      district: "national"
+    }
+  ];
+  const weekClosed = [
+    ["t-w1", "m5", 1, 16, "Fix null organisation-unit codes", "data_quality", "national"],
+    ["t-w2", "m8", 1, 14, "Verify maternity register extract", "extract", "national"],
+    ["t-w3", "m1", 2, 12, "Issue HIO coverage roster", "hio_field_visit", "national"],
+    ["t-w4", "m6", 2, 17, "Close Tuesday census QA", "data_quality", "national"],
+    ["t-w5", "m11", 3, 15, "Confirm pharmacy stock feed", "extract", "national"],
+    ["t-w6", "m4", 3, 18, "Approve overnight extract hotfix", "extract", "national"],
+    ["t-w7", "m9", 4, 16, "File Bo unmatched codes", "facility_followup", "bo"],
+    ["t-w8", "m7", 5, 11, "Refresh district completeness tile", "dhis2_completeness", "national"]
+  ].map(([id, assignedTo, daysAgo, hour, title, workKind2, district]) => ({
+    id,
+    title,
+    description: "Closed earlier this week.",
+    assignedTo,
+    assignedBy: lead,
+    priority: "medium",
+    dueDate: iso(atTime(addDays(now, -daysAgo), hour, 0)),
+    status: "completed",
+    progress: 100,
+    createdAt: iso(addDays(atTime(now, 9, 0), -daysAgo - 1)),
+    completedAt: iso(atTime(addDays(now, -daysAgo), Math.max(hour - 1, 9), 15)),
+    workKind: workKind2,
+    district
+  }));
+  const actionItems = [
+    {
+      id: "a1",
+      meetingId: "mtg-standup",
+      meetingTitle: "Daily Standup",
+      title: "Retry warehouse extract if not green by 12:00",
+      assignedTo: "m4",
+      deadline: iso(atTime(now, 12, 0)),
+      status: "in_progress",
+      convertedToTaskId: "t1",
+      workKind: "extract",
+      district: "national"
+    },
+    {
+      id: "a2",
+      meetingId: "mtg-standup",
+      meetingTitle: "Daily Standup",
+      title: "Flag late Western Area facilities before the DHIS2 review",
+      assignedTo: "m8",
+      deadline: iso(atTime(now, 10, 0)),
+      status: "open",
+      workKind: "dhis2_completeness",
+      district: "western_urban"
+    },
+    {
+      id: "a3",
+      meetingId: "mtg-dhis2",
+      meetingTitle: "DHIS2 Completeness Review",
+      title: "Call three late PHUs in Western Area Urban",
+      assignedTo: "m10",
+      deadline: iso(atTime(now, 11, 30)),
+      status: "in_progress",
+      convertedToTaskId: "t2",
+      workKind: "facility_followup",
+      district: "western_urban"
+    },
+    {
+      id: "a4",
+      meetingId: "mtg-wed-qa",
+      meetingTitle: "Wednesday Data Quality Review",
+      title: "Confirm maternity register extract after metadata patch",
+      assignedTo: "m11",
+      deadline: iso(atTime(now, 13, 0)),
+      status: "in_progress",
+      convertedToTaskId: "t3",
+      workKind: "extract",
+      district: "national"
+    },
+    {
+      id: "a5",
+      meetingId: "mtg-hio",
+      meetingTitle: "HIO Coordination Huddle",
+      title: "Bring Kenema capture issues into the data dictionary",
+      assignedTo: "m9",
+      deadline: iso(atTime(now, 17, 0)),
+      status: "open",
+      workKind: "hio_field_visit",
+      district: "kenema"
+    },
+    {
+      id: "a6",
+      meetingId: "mtg-ops",
+      meetingTitle: "Hub Operations Sync",
+      title: "Rebalance engineer load if the immunization extract is still overdue",
+      assignedTo: lead,
+      deadline: iso(atTime(now, 15, 0)),
+      status: "open",
+      workKind: "extract",
+      district: "national"
+    }
+  ];
+  const hubLog = [
+    {
+      id: "log1",
+      at: iso(atTime(now, 2, 14)),
+      kind: "extract_failed",
+      title: "DHIS2 warehouse extract stalled",
+      detail: "Aggregate pull stopped at 02:14. Retry is with Maliaka before the 10:00 completeness review.",
+      district: "national",
+      authorId: "m4"
+    },
+    {
+      id: "log2",
+      at: iso(atTime(now, 8, 52)),
+      kind: "late_reporting",
+      title: "Three PHUs still outstanding in Western Area Urban",
+      detail: "This week\u2019s outpatient dataset is missing. Karim is calling facilities before the DHIS2 review.",
+      district: "western_urban",
+      authorId: "m8"
+    },
+    {
+      id: "log3",
+      at: iso(atTime(now, 7, 40)),
+      kind: "incident",
+      title: "Maternity register extract mapping mismatch",
+      detail: "Organisation-unit codes after Wednesday\u2019s metadata patch. Weekly league table frozen until confirmed.",
+      district: "national",
+      facility: "Maternity register",
+      authorId: "m11"
+    },
+    {
+      id: "log4",
+      at: iso(atTime(addDays(now, -1), 16, 10)),
+      kind: "extract_restored",
+      title: "Wednesday metadata patch applied",
+      detail: "Joseph restored the organisation-unit mapping. Maternity extract still needs a confirmation run.",
+      district: "national",
+      authorId: "m5"
+    }
+  ];
+  const events = [
+    {
+      id: "e1",
+      at: ago(8, now),
+      message: "DHIS2 Completeness Review \xB7 live now",
+      tone: "info"
+    },
+    {
+      id: "e2",
+      at: ago(22, now),
+      message: "Regina Daniels completed \xB7 Circulate standup action log",
+      tone: "success"
+    },
+    {
+      id: "e3",
+      at: ago(48, now),
+      message: "Minutes updated \xB7 Daily Standup",
+      tone: "info"
+    },
+    {
+      id: "e4",
+      at: ago(70, now),
+      message: "New task assigned \xB7 Retry overnight DHIS2 warehouse extract",
+      tone: "danger"
+    },
+    {
+      id: "e5",
+      at: ago(95, now),
+      message: "Daniel Jah completed \xB7 Post overnight KPI snapshot",
+      tone: "success"
+    },
+    {
+      id: "e6",
+      at: ago(140, now),
+      message: "Overdue \xB7 Rebuild immunization catch-up extract",
+      tone: "warn"
+    },
+    {
+      id: "e7",
+      at: nowIso(),
+      message: "Hub board online \xB7 live operations feed connected",
+      tone: "info"
+    }
+  ];
+  return {
+    members: MEMBERS,
+    tasks: [...tasks, ...weekClosed],
+    meetings,
+    actionItems,
+    events,
+    hubLog
+  };
+}
+
+// server/errors.ts
+var HttpError = class extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+    this.name = "HttpError";
+  }
+};
+
+// server/ops.ts
+function pushEvent(state, message, tone) {
+  return {
+    ...state,
+    events: [{ id: uid("e"), at: nowIso(), message, tone }, ...state.events].slice(0, 12)
+  };
+}
+function rollMeeting(meeting, now) {
+  if (!meeting.rolling) return meeting;
+  const start = new Date(meeting.startTime);
+  const end = new Date(meeting.endTime);
+  return {
+    ...meeting,
+    startTime: atTime(now, start.getHours(), start.getMinutes()).toISOString(),
+    endTime: atTime(now, end.getHours(), end.getMinutes()).toISOString()
+  };
+}
+function viewState(state, now = /* @__PURE__ */ new Date()) {
+  return {
+    ...state,
+    meetings: state.meetings.map((meeting) => rollMeeting(meeting, now)),
+    hubLog: state.hubLog ?? []
+  };
+}
+function tickOverdue(state, now = /* @__PURE__ */ new Date()) {
+  const due = state.tasks.filter((task) => {
+    const derived = displayStatus(task, now);
+    return task.status !== "completed" && derived === "overdue" && task.status !== "overdue";
+  });
+  if (due.length === 0) return state;
+  const ids = new Set(due.map((task) => task.id));
+  return pushEvent(
+    {
+      ...state,
+      tasks: state.tasks.map((task) => ids.has(task.id) ? { ...task, status: "overdue" } : task)
+    },
+    `${due.length} overdue ${due.length === 1 ? "task requires" : "tasks require"} attention`,
+    "danger"
+  );
+}
+function addTask(state, task) {
+  return pushEvent(
+    { ...state, tasks: [task, ...state.tasks] },
+    `New task assigned \xB7 ${task.title}`,
+    task.priority === "critical" ? "danger" : "info"
+  );
+}
+function updateTask(state, id, patch) {
+  const current = state.tasks.find((task) => task.id === id);
+  if (!current) throw new HttpError(404, "Task not found");
+  const next = { ...current, ...patch };
+  if (patch.status === "completed") {
+    next.progress = 100;
+    next.completedAt = next.completedAt ?? nowIso();
+  }
+  let following = {
+    ...state,
+    tasks: state.tasks.map((task) => task.id === id ? next : task)
+  };
+  if (current.status !== next.status && next.status === "completed") {
+    following = pushEvent(
+      following,
+      `${memberName(state.members, next.assignedTo)} completed \xB7 ${next.title}`,
+      "success"
+    );
+  } else if (current.status !== next.status) {
+    following = pushEvent(
+      following,
+      `Status change \xB7 ${next.title}`,
+      next.status === "overdue" ? "danger" : "info"
+    );
+  } else if (current.assignedTo !== next.assignedTo) {
+    following = pushEvent(following, `Reassigned \xB7 ${next.title}`, "info");
+  }
+  return following;
+}
+function addMeeting(state, meeting) {
+  return pushEvent(
+    { ...state, meetings: [...state.meetings, meeting] },
+    `Meeting added \xB7 ${meeting.title}`,
+    "info"
+  );
+}
+function updateMeeting(state, id, patch) {
+  const current = state.meetings.find((meeting) => meeting.id === id);
+  if (!current) throw new HttpError(404, "Meeting not found");
+  const next = { ...current, ...patch };
+  let following = {
+    ...state,
+    meetings: state.meetings.map((meeting) => meeting.id === id ? next : meeting)
+  };
+  if (patch.startTime && patch.startTime !== current.startTime) {
+    following = pushEvent(following, `Meeting started \xB7 ${next.title}`, "info");
+  } else if (patch.endTime && patch.endTime !== current.endTime) {
+    following = pushEvent(following, `Meeting ended \xB7 ${next.title}`, "success");
+  } else if (patch.notes !== void 0 && patch.notes !== current.notes) {
+    following = pushEvent(following, `Minutes updated \xB7 ${next.title}`, "info");
+  } else if (patch.agenda !== void 0 && patch.agenda !== current.agenda) {
+    following = pushEvent(following, `Agenda updated \xB7 ${next.title}`, "info");
+  }
+  return following;
+}
+function addActionItem(state, item) {
+  return pushEvent(
+    { ...state, actionItems: [item, ...state.actionItems] },
+    `Action item created \xB7 ${item.title}`,
+    "info"
+  );
+}
+function updateActionItem(state, id, patch) {
+  const current = state.actionItems.find((item) => item.id === id);
+  if (!current) throw new HttpError(404, "Action item not found");
+  const next = { ...current, ...patch };
+  return {
+    ...state,
+    actionItems: state.actionItems.map((item) => item.id === id ? next : item)
+  };
+}
+function convertAction(state, actionId, assignedBy) {
+  const item = state.actionItems.find((entry) => entry.id === actionId);
+  if (!item) throw new HttpError(404, "Action item not found");
+  if (item.convertedToTaskId) throw new HttpError(409, "Action item already converted");
+  const task = {
+    id: uid("t"),
+    title: item.title,
+    description: `Converted from meeting action \xB7 ${item.meetingTitle}`,
+    assignedTo: item.assignedTo,
+    assignedBy,
+    priority: "high",
+    dueDate: item.deadline,
+    status: "not_started",
+    progress: 0,
+    createdAt: nowIso(),
+    fromActionItemId: actionId,
+    workKind: item.workKind,
+    district: item.district,
+    facility: item.facility
+  };
+  return pushEvent(
+    {
+      ...state,
+      tasks: [task, ...state.tasks],
+      actionItems: state.actionItems.map(
+        (entry) => entry.id === actionId ? { ...entry, convertedToTaskId: task.id, status: "in_progress" } : entry
+      )
+    },
+    `Action converted to task \xB7 ${task.title}`,
+    "success"
+  );
+}
+function addHubLog(state, entry) {
+  const prefix = entry.kind === "extract_failed" ? "Extract failed" : entry.kind === "extract_restored" ? "Extract restored" : entry.kind === "late_reporting" ? "Late reporting" : entry.kind === "incident" ? "Incident" : "Hub note";
+  return pushEvent(
+    { ...state, hubLog: [entry, ...state.hubLog ?? []].slice(0, 40) },
+    `${prefix} \xB7 ${entry.title}`,
+    entry.kind === "extract_failed" || entry.kind === "incident" ? "danger" : "info"
+  );
+}
+
+// server/persist.ts
+var import_node_fs = require("node:fs");
+var import_node_path = __toESM(require("node:path"), 1);
+var SEED_VERSION = "meet-agenda-1";
+var KEY = "nhih-ops-state";
+var LOCAL_FILE = process.env.VERCEL ? import_node_path.default.join("/tmp", "ops-state.json") : import_node_path.default.join(process.cwd(), "data", "ops-state.json");
+function kvConfig() {
+  const url2 = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url2 || !token) return null;
+  return { url: url2.replace(/\/$/, ""), token };
+}
+function storageKind() {
+  return kvConfig() ? "kv" : "file";
+}
+async function redis(command) {
+  const kv = kvConfig();
+  if (!kv) throw new Error("KV is not configured");
+  const res = await fetch(kv.url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${kv.token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(command),
+    cache: "no-store"
+  });
+  if (!res.ok) {
+    throw new Error(`KV command failed (${res.status})`);
+  }
+  const body = await res.json();
+  return body.result ?? null;
+}
+async function readSnapshot() {
+  const kv = kvConfig();
+  if (kv) {
+    const result = await redis(["GET", KEY]);
+    if (!result) return null;
+    return typeof result === "string" ? JSON.parse(result) : result;
+  }
+  if (!(0, import_node_fs.existsSync)(LOCAL_FILE)) return null;
+  try {
+    return JSON.parse((0, import_node_fs.readFileSync)(LOCAL_FILE, "utf8"));
+  } catch {
+    return null;
+  }
+}
+async function writeSnapshot(snapshot2) {
+  const kv = kvConfig();
+  if (kv) {
+    await redis(["SET", KEY, JSON.stringify(snapshot2)]);
+    return;
+  }
+  (0, import_node_fs.mkdirSync)(import_node_path.default.dirname(LOCAL_FILE), { recursive: true });
+  (0, import_node_fs.writeFileSync)(LOCAL_FILE, JSON.stringify(snapshot2), "utf8");
+}
+
+// server/db.ts
+var cacheProcess = !process.env.VERCEL;
+var memory = null;
+var loading = null;
+async function loadFromStore() {
+  const stored = await readSnapshot();
+  if (!stored || stored.version !== SEED_VERSION) {
+    const next = { version: SEED_VERSION, state: buildSeed() };
+    await writeSnapshot(next);
+    return next;
+  }
+  return {
+    version: stored.version,
+    state: { ...stored.state, hubLog: stored.state.hubLog ?? [] }
+  };
+}
+async function snapshot() {
+  if (cacheProcess && memory) return memory;
+  if (!loading) {
+    loading = loadFromStore().finally(() => {
+      loading = null;
+    });
+  }
+  const next = await loading;
+  memory = next;
+  return next;
+}
+async function commit(state) {
+  memory = { version: SEED_VERSION, state };
+  await writeSnapshot(memory);
+  return viewState(state);
+}
+async function getState() {
+  const current = await snapshot();
+  const ticked = tickOverdue(current.state);
+  if (ticked !== current.state) return commit(ticked);
+  return viewState(ticked);
+}
+async function resetState() {
+  memory = null;
+  return commit(buildSeed());
+}
+async function addTask2(task) {
+  const current = await snapshot();
+  return commit(addTask(current.state, task));
+}
+async function updateTask2(id, patch) {
+  const current = await snapshot();
+  return commit(updateTask(current.state, id, patch));
+}
+async function addMeeting2(meeting) {
+  const current = await snapshot();
+  return commit(addMeeting(current.state, meeting));
+}
+async function updateMeeting2(id, patch) {
+  const current = await snapshot();
+  return commit(updateMeeting(current.state, id, patch));
+}
+async function addActionItem2(item) {
+  const current = await snapshot();
+  return commit(addActionItem(current.state, item));
+}
+async function updateActionItem2(id, patch) {
+  const current = await snapshot();
+  return commit(updateActionItem(current.state, id, patch));
+}
+async function convertAction2(actionId, assignedBy) {
+  const current = await snapshot();
+  return commit(convertAction(current.state, actionId, assignedBy));
+}
+async function addHubLog2(entry) {
+  const current = await snapshot();
+  return commit(addHubLog(current.state, entry));
+}
+function persistence() {
+  return storageKind();
+}
+
+// server/operator.ts
+function expectedOperatorCode() {
+  const fromEnv = process.env.OPERATOR_CODE?.trim();
+  if (fromEnv) return fromEnv;
+  if (process.env.VERCEL) return "";
+  return "nhih-ops";
+}
+function isValidOperatorCode(given) {
+  const expected = expectedOperatorCode();
+  return Boolean(expected) && given === expected;
+}
+
+// server/hub.ts
+var clients = /* @__PURE__ */ new Set();
+function subscribe(send) {
+  clients.add(send);
+  return () => {
+    clients.delete(send);
+  };
+}
+function broadcast(state) {
+  for (const send of clients) {
+    try {
+      send(state);
+    } catch {
+      clients.delete(send);
+    }
+  }
+}
+function clientCount() {
+  return clients.size;
+}
+
 // server/validate.ts
 var isoDate = external_exports.string().min(1, "Date is required");
 var taskStatus = external_exports.enum(["not_started", "in_progress", "under_review", "completed", "overdue"]);
@@ -22526,9 +22538,22 @@ api.use(
   "*",
   cors({
     origin: "*",
-    allowMethods: ["GET", "POST", "PATCH", "OPTIONS"]
+    allowMethods: ["GET", "POST", "PATCH", "OPTIONS"],
+    allowHeaders: ["Content-Type", "X-Operator-Code"]
   })
 );
+api.use("*", async (c, next) => {
+  if (c.req.method === "GET" || c.req.method === "OPTIONS") return next();
+  const path2 = c.req.path;
+  if (path2 === "/unlock" || path2 === "/operator/unlock" || path2.endsWith("/unlock") || path2.endsWith("/operator/unlock")) {
+    return next();
+  }
+  const given = c.req.header("x-operator-code") ?? "";
+  if (!isValidOperatorCode(given)) {
+    throw new HttpError(401, "Operator access required");
+  }
+  return next();
+});
 async function push(state) {
   const next = state ?? await getState();
   broadcast(next);
@@ -22564,6 +22589,16 @@ api.get(
     at: (/* @__PURE__ */ new Date()).toISOString()
   })
 );
+api.post("/unlock", async (c) => {
+  const body = await readBody(c, external_exports.object({ code: external_exports.string().trim().min(1, "Access code is required") }));
+  if (!isValidOperatorCode(body.code)) throw new HttpError(401, "Invalid access code");
+  return c.json({ ok: true });
+});
+api.post("/operator/unlock", async (c) => {
+  const body = await readBody(c, external_exports.object({ code: external_exports.string().trim().min(1, "Access code is required") }));
+  if (!isValidOperatorCode(body.code)) throw new HttpError(401, "Invalid access code");
+  return c.json({ ok: true });
+});
 api.get("/state", async (c) => c.json(await getState()));
 api.get("/reports/weekly", async (c) => {
   const report = buildWeeklyReport(await getState());
@@ -22665,11 +22700,26 @@ function headerValue(value) {
   if (value == null) return void 0;
   return Array.isArray(value) ? value.join(",") : value;
 }
+function requestPath(req) {
+  const candidates = [
+    req.url,
+    headerValue(req.headers["x-forwarded-uri"]),
+    headerValue(req.headers["x-invoke-path"])
+  ].filter((value) => Boolean(value));
+  const normalized = candidates.map((value) => {
+    if (value.startsWith("http")) {
+      const parsed = new URL(value);
+      return parsed.pathname + parsed.search;
+    }
+    return value.startsWith("/") ? value : `/${value}`;
+  });
+  return normalized.find((value) => value.startsWith("/api/") && value.split("/").filter(Boolean).length > 1) || normalized[0] || "/";
+}
 async function handler(req, res) {
   try {
     const proto = headerValue(req.headers["x-forwarded-proto"]) || "https";
     const host = headerValue(req.headers["x-forwarded-host"]) || headerValue(req.headers.host) || "localhost";
-    const url2 = `${proto}://${host}${req.url || "/"}`;
+    const url2 = `${proto}://${host}${requestPath(req)}`;
     const method = req.method || "GET";
     const headers = new Headers();
     for (const [key, value] of Object.entries(req.headers)) {
