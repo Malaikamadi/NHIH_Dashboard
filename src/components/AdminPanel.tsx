@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { PlaceFields, PlaceLine, placeFromForm } from './PlaceFields'
 import { HubLogPanel } from './HubLogPanel'
 import { MeetingActions } from './MeetingActions'
 import { MeetingForm } from './MeetingForm'
-import { TaskActions } from './TaskActions'
+import { PlaceFields, placeFromForm } from './PlaceFields'
+import { TaskUpdatePanel } from './TaskUpdatePanel'
 import { useOps } from '../store/OpsContext'
 import type { Priority, TaskStatus } from '../types'
 import { meetingStatus, todaysMeetings } from '../utils/metrics'
@@ -25,10 +25,10 @@ const STATUSES: TaskStatus[] = [
 const PRIORITIES: Priority[] = ['critical', 'high', 'medium', 'low']
 
 export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
-  const { state, addTask, updateTask, addActionItem, convertActionToTask, resetDemo } =
+  const { state, addTask, addActionItem, convertActionToTask, resetDemo } =
     useOps()
   const lead = state.members.find((m) => m.role === 'Team Lead')?.id ?? 'm1'
-  const [tab, setTab] = useState<'task' | 'meeting' | 'action' | 'log'>('task')
+  const [tab, setTab] = useState<'task' | 'update' | 'meeting' | 'action' | 'log'>('task')
   const [saved, setSaved] = useState('')
   const todayMeetings = todaysMeetings(state.meetings)
 
@@ -47,13 +47,13 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
         </header>
 
         <p className="admin-help">
-          This is the only place to add tasks, meetings, agenda, minutes, and the hub log. The
+          Assign new work here. Use Update tasks to change progress, status, and details. The
           dashboard stays view-only for the rest of the team.
         </p>
         {saved && <p className="meet-saved">{saved}</p>}
 
         <div className="admin-tabs">
-          {(['task', 'meeting', 'action', 'log'] as const).map((id) => (
+          {(['task', 'update', 'meeting', 'action', 'log'] as const).map((id) => (
             <button
               key={id}
               type="button"
@@ -62,11 +62,13 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
             >
               {id === 'task'
                 ? 'Assign task'
-                : id === 'meeting'
-                  ? 'Add meeting'
-                  : id === 'action'
-                    ? 'Action item'
-                    : 'Hub log'}
+                : id === 'update'
+                  ? 'Update tasks'
+                  : id === 'meeting'
+                    ? 'Add meeting'
+                    : id === 'action'
+                      ? 'Action item'
+                      : 'Hub log'}
             </button>
           ))}
         </div>
@@ -164,6 +166,8 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
           </form>
         )}
 
+        {tab === 'update' && <TaskUpdatePanel />}
+
         {tab === 'meeting' && (
           <MeetingForm />
         )}
@@ -247,47 +251,13 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
 
         {tab === 'log' && <HubLogPanel now={new Date()} allowInput />}
 
+        {tab === 'action' && (
         <section className="admin-live">
-          <h3>Open work</h3>
-          <div className="admin-list">
-            {state.tasks
-              .filter((t) => t.status !== 'completed')
-              .slice(0, 8)
-              .map((task) => (
-                <div key={task.id} className="admin-item">
-                  <span>
-                    {task.title}
-                    <em className="muted">
-                      {' '}
-                      ·{' '}
-                      <PlaceLine
-                        workKind={task.workKind}
-                        workKindOther={task.workKindOther}
-                        district={task.district}
-                        facility={task.facility}
-                      />
-                    </em>
-                  </span>
-                  <div className="admin-item-tools">
-                    <TaskActions task={task} />
-                    <select
-                      value={task.status}
-                      onChange={(e) =>
-                        updateTask(task.id, { status: e.target.value as TaskStatus })
-                      }
-                    >
-                      {STATUSES.map((s) => (
-                        <option key={s} value={s}>
-                          {s.replace('_', ' ')}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              ))}
-          </div>
           <h3>Unconverted actions</h3>
           <div className="admin-list">
+            {state.actionItems.filter((a) => !a.convertedToTaskId).length === 0 && (
+              <p className="muted">No unconverted action items.</p>
+            )}
             {state.actionItems
               .filter((a) => !a.convertedToTaskId)
               .map((item) => (
@@ -300,6 +270,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
               ))}
           </div>
         </section>
+        )}
 
         <button type="button" className="ghost-btn danger-text" onClick={resetDemo}>
           Clear hub data

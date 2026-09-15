@@ -1116,7 +1116,45 @@ button { cursor: pointer; }
 .admin-h { display: flex; justify-content: space-between; align-items: center; }
 .admin-h h2 { margin: 0; }
 .admin-help { color: var(--muted); font-size: 13px; }
-.admin-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.admin-tabs.compact { margin: 0; }
+.task-update { display: grid; gap: 12px; }
+.task-update-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+.task-update-tools .search { flex: 1; min-width: 180px; }
+.task-update-tools .search input { width: 100%; border: 0; background: transparent; outline: none; }
+.task-update-list { display: grid; gap: 10px; }
+.task-update-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--row);
+  display: grid;
+  gap: 10px;
+}
+.task-update-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+.task-update-top strong { display: block; }
+.task-update-progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.task-update-progress select {
+  background: var(--icon-bg);
+  border: 1px solid var(--line);
+  padding: 8px;
+  border-radius: 10px;
+}
 .admin-tabs button { flex: 1; background: var(--icon-bg); border: 0; padding: 8px; border-radius: 10px; }
 .admin-tabs button.is-active { background: var(--accent); color: #fff; }
 .admin-form { display: grid; gap: 10px; }

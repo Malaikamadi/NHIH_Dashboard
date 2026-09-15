@@ -13,7 +13,7 @@ export function placeFromForm(data: FormData): {
   const workKindOther = String(data.get('workKindOther') || '').trim()
   return {
     workKind,
-    workKindOther: workKind === 'other' ? workKindOther : undefined,
+    workKindOther: workKind === 'other' ? workKindOther : '',
     district: String(data.get('district') || 'national') as DistrictId,
     facility: facility || undefined,
   }
@@ -23,10 +23,12 @@ export function PlaceFields({
   workKind = 'facility_followup',
   workKindOther = '',
   district = 'national',
+  facility = '',
 }: {
   workKind?: WorkKind
   workKindOther?: string
   district?: DistrictId
+  facility?: string
 }) {
   const [kind, setKind] = useState<WorkKind>(workKind)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -80,7 +82,7 @@ export function PlaceFields({
       )}
       <label>
         Facility
-        <input name="facility" placeholder="PHU / hospital (optional)" />
+        <input name="facility" defaultValue={facility} placeholder="PHU / hospital (optional)" />
       </label>
     </div>
   )
