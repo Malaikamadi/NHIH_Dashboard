@@ -9,10 +9,10 @@ import {
   openWeekMeetings,
   overdueTasks,
   pipeStatus,
+  weeksMeetings,
 } from '../utils/metrics'
-import { countdown, formatDate, formatTime } from '../utils/time'
+import { countdown, formatTime, isSameDay, weekDays } from '../utils/time'
 import { useOps } from '../store/OpsContext'
-import { StatusPill } from './Header'
 import { Icon } from './Icons'
 
 export function HubBrief({
@@ -28,6 +28,8 @@ export function HubBrief({
 }) {
   const { state } = useOps()
   const today = openWeekMeetings(state.meetings, now)
+  const weekMeetings = weeksMeetings(state.meetings, now)
+  const weekdays = weekDays(now).slice(0, 5)
   const activities = openTodayActivities(state.activities, now)
   const focus = currentOrNextMeeting(state.meetings, now)
   const live = Boolean(focus && meetingStatus(focus, now) === 'live')
@@ -46,10 +48,10 @@ export function HubBrief({
           <strong>{focus ? focus.title : 'No remaining meetings this week'}</strong>
           <span className="muted">
             {focus
-              ? `${formatDate(focus.startTime)} · ${formatTime(focus.startTime)} – ${formatTime(focus.endTime)} · ${
+              ? `${formatTime(focus.startTime)} – ${formatTime(focus.endTime)} · ${
                   live ? `${countdown(focus.endTime, now)} remaining` : `starts in ${countdown(focus.startTime, now)}`
                 }`
-              : 'Add a meeting to put the hub week on the board'}
+              : 'Mon–Fri meetings sit in the strip below'}
           </span>
         </button>
         <div className="brief-stats">
@@ -77,22 +79,36 @@ export function HubBrief({
             </span>
           </button>
         </div>
-        {today.length > 0 && (
-          <ol className="agenda-strip">
-            {today.map((meeting) => {
-              const status = meetingStatus(meeting, now)
-              return (
-                <li key={meeting.id} className={`agenda-item is-${status}`}>
-                  <span>
-                    {formatDate(meeting.startTime)} · {formatTime(meeting.startTime)}
-                  </span>
-                  <em>{meeting.title}</em>
-                  <StatusPill status={status === 'live' ? 'ongoing' : status} />
-                </li>
-              )
-            })}
-          </ol>
-        )}
+        <ol className="week-strip" aria-label="Meetings Monday to Friday">
+          {weekdays.map((day) => {
+            const items = weekMeetings.filter((meeting) => isSameDay(new Date(meeting.startTime), day))
+            return (
+              <li key={day.toISOString()} className={isSameDay(day, now) ? 'is-today' : ''}>
+                <span>
+                  {day.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })}
+                </span>
+                {items.length === 0 ? (
+                  <em className="week-empty">—</em>
+                ) : (
+                  items.map((meeting) => {
+                    const status = meetingStatus(meeting, now)
+                    return (
+                      <button
+                        key={meeting.id}
+                        type="button"
+                        className={`week-meet is-${status}`}
+                        onClick={onOpenMeetings}
+                      >
+                        <b>{formatTime(meeting.startTime)}</b>
+                        {meeting.title}
+                      </button>
+                    )
+                  })
+                )}
+              </li>
+            )
+          })}
+        </ol>
       </section>
 
       {pipe && (

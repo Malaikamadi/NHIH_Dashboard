@@ -57,6 +57,10 @@ export function memberName(members: TeamMember[], id: string): string {
   return memberById(members, id)?.name ?? 'Unassigned'
 }
 
+export function memberLabel(member: TeamMember): string {
+  return `${member.name} (${member.role})`
+}
+
 export function memberIndex(members: TeamMember[], id: string): number {
   const idx = members.findIndex((m) => m.id === id)
   return idx < 0 ? 0 : idx
@@ -113,6 +117,14 @@ export function todaysActivities(activities: TeamActivity[] | undefined, now = n
 
 export function openTodayActivities(activities: TeamActivity[] | undefined, now = new Date()): TeamActivity[] {
   return todaysActivities(activities, now).filter((item) => meetingStatus(item, now) !== 'completed')
+}
+
+export function weeksActivities(activities: TeamActivity[] | undefined, now = new Date()): TeamActivity[] {
+  const start = startOfWeek(now)
+  const end = endOfWeek(now)
+  return [...(activities ?? [])]
+    .filter((item) => isInRange(item.startTime, start, end))
+    .sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime))
 }
 
 export function currentOrNextMeeting(

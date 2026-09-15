@@ -8,7 +8,6 @@ import { Icon } from './Icons'
 
 export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput?: boolean }) {
   const { state, addHubLog } = useOps()
-  const [editingId, setEditingId] = useState<string | null>(null)
   const [typeFilter, setTypeFilter] = useState<HubLogKind | 'all'>('all')
   const authorId =
     state.members.find((m) => m.role === 'Operations Manager')?.id ??
@@ -127,12 +126,8 @@ export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput
                   />
                 </span>
                 <div>
-                  {editingId === entry.id && allowInput ? (
-                    <HubLogEditForm
-                      entry={entry}
-                      onDone={() => setEditingId(null)}
-                      onCancel={() => setEditingId(null)}
-                    />
+                  {allowInput ? (
+                    <HubLogEditForm entry={entry} />
                   ) : (
                     <>
                       <strong>{entry.title}</strong>
@@ -142,11 +137,6 @@ export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput
                         {entry.detail ? ` · ${entry.detail}` : ''}
                         {` · ${memberName(state.members, entry.authorId)}`}
                       </p>
-                      {allowInput && (
-                        <button type="button" className="link-btn" onClick={() => setEditingId(entry.id)}>
-                          Edit
-                        </button>
-                      )}
                     </>
                   )}
                 </div>
@@ -210,16 +200,9 @@ function HubLogFields({ entry }: { entry?: HubLogEntry }) {
   )
 }
 
-function HubLogEditForm({
-  entry,
-  onDone,
-  onCancel,
-}: {
-  entry: HubLogEntry
-  onDone: () => void
-  onCancel: () => void
-}) {
+function HubLogEditForm({ entry }: { entry: HubLogEntry }) {
   const { updateHubLog } = useOps()
+  const [saved, setSaved] = useState(false)
   return (
     <form
       className="hub-log-form is-edit"
@@ -236,7 +219,8 @@ function HubLogEditForm({
           district: String(data.get('district')) as DistrictId,
           facility: facility || '',
         })
-        onDone()
+        setSaved(true)
+        window.setTimeout(() => setSaved(false), 2000)
       }}
     >
       <HubLogFields entry={entry} />
@@ -244,9 +228,7 @@ function HubLogEditForm({
         <button type="submit" className="primary-btn sm">
           Save updates
         </button>
-        <button type="button" className="ghost-btn" onClick={onCancel}>
-          Cancel
-        </button>
+        {saved && <p className="meet-saved">Log saved.</p>}
       </div>
     </form>
   )

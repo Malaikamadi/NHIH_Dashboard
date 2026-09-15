@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { MeetingForm } from './MeetingForm'
 import { PlaceFields, placeFromForm } from './PlaceFields'
 import { useOps } from '../store/OpsContext'
 import type { Meeting, MeetingStatus } from '../types'
@@ -38,7 +39,7 @@ function MeetingTools({
 }) {
   const { state, updateMeeting, addActionItem } = useOps()
   const status: MeetingStatus = meetingStatus(meeting, now)
-  const [panel, setPanel] = useState<'action' | 'agenda' | 'minutes' | null>(null)
+  const [panel, setPanel] = useState<'action' | 'agenda' | 'minutes' | 'details' | null>('details')
   const [notes, setNotes] = useState(meeting.notes ?? '')
   const [agenda, setAgenda] = useState(meeting.agenda ?? '')
   const [saved, setSaved] = useState<'agenda' | 'minutes' | null>(null)
@@ -54,7 +55,7 @@ function MeetingTools({
     setAgenda(meeting.agenda ?? '')
   }, [meeting.agenda])
 
-  const toggle = (next: 'action' | 'agenda' | 'minutes') => {
+  const toggle = (next: 'action' | 'agenda' | 'minutes' | 'details') => {
     setSaved(null)
     setPanel((current) => (current === next ? null : next))
   }
@@ -104,6 +105,13 @@ function MeetingTools({
         {status === 'completed' && <span className="muted">Ended</span>}
         <button
           type="button"
+          className={`tool-btn ${panel === 'details' ? 'is-on' : ''}`}
+          onClick={() => toggle('details')}
+        >
+          Edit meeting
+        </button>
+        <button
+          type="button"
           className={`tool-btn ${panel === 'agenda' ? 'is-on' : ''}`}
           onClick={() => toggle('agenda')}
         >
@@ -129,6 +137,8 @@ function MeetingTools({
       {saved === 'agenda' && panel !== 'agenda' && <p className="meet-saved">Agenda saved</p>}
       {hasMinutes && panel !== 'minutes' && <p className="meet-minutes">{meeting.notes}</p>}
       {saved === 'minutes' && panel !== 'minutes' && <p className="meet-saved">Minutes saved</p>}
+
+      {panel === 'details' && <MeetingForm meeting={meeting} />}
 
       {panel === 'agenda' && (
         <form

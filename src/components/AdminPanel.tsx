@@ -6,8 +6,9 @@ import { MeetingForm } from './MeetingForm'
 import { PlaceFields, placeFromForm } from './PlaceFields'
 import { TaskUpdatePanel } from './TaskUpdatePanel'
 import { useOps } from '../store/OpsContext'
-import type { Meeting, Priority, TaskStatus } from '../types'
-import { meetingStatus, todaysActivities, weeksMeetings } from '../utils/metrics'
+import type { ActionItem, ActionStatus, Meeting, Priority, TaskStatus } from '../types'
+import { meetingStatus, weeksActivities, weeksMeetings } from '../utils/metrics'
+import { toDatetimeLocal } from '../utils/time'
 
 interface Props {
   open: boolean
@@ -26,13 +27,15 @@ const STATUSES: TaskStatus[] = [
 const PRIORITIES: Priority[] = ['critical', 'high', 'medium', 'low']
 
 export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
-  const { state, addTask, addActionItem, convertActionToTask, resetDemo } =
-    useOps()
+  const { state, addTask, addActionItem, resetDemo } = useOps()
   const lead = state.members.find((m) => m.role === 'Team Lead')?.id ?? 'm1'
   const [tab, setTab] = useState<'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log'>('task')
   const [saved, setSaved] = useState('')
   const todayMeetings = weeksMeetings(state.meetings)
-  const todayActivities = todaysActivities(state.activities)
+  const weekActivities = weeksActivities(state.activities)
+  const deskActions = [...state.actionItems].sort(
+    (a, b) => +new Date(b.deadline) - +new Date(a.deadline),
+  )
 
   if (!open) return null
 
@@ -115,7 +118,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
                 <select name="assignedTo" required>
                   {state.members.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {m.name}
+                      {m.name} ({m.role})
                     </option>
                   ))}
                 </select>
@@ -125,7 +128,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
                 <select name="assignedBy" defaultValue={lead}>
                   {state.members.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {m.name}
+                      {m.name} ({m.role})
                     </option>
                   ))}
                 </select>
@@ -179,6 +182,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
         {tab === 'meeting' && (
           <section className="admin-live">
             <h3>This week's meetings</h3>
+            <p className="admin-help">Each meeting is open to edit. Save changes to update the dashboard.</p>
             <div className="admin-list">
               {todayMeetings.length === 0 && (
                 <p className="muted">No meetings on the board this week.</p>
@@ -200,12 +204,13 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
 
         {tab === 'activity' && (
           <section className="admin-live">
-            <h3>Today's activities</h3>
+            <h3>This week's activities</h3>
+            <p className="admin-help">Edit title, type, time, place, people, and notes. Changes show on the dashboard.</p>
             <div className="admin-list">
-              {todayActivities.length === 0 && (
-                <p className="muted">No team activities on the board today.</p>
+              {weekActivities.length === 0 && (
+                <p className="muted">No team activities on the board this week.</p>
               )}
-              {todayActivities.map((activity) => (
+              {weekActivities.map((activity) => (
                 <div key={activity.id} className="admin-item admin-meeting">
                   <span>
                     {activity.title}
@@ -252,7 +257,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
                 <select name="assignedTo">
                   {state.members.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {m.name}
+                      {m.name} ({m.role})
                     </option>
                   ))}
                 </select>
@@ -272,24 +277,16 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
         {tab === 'log' && <HubLogPanel now={new Date()} allowInput />}
 
         {tab === 'action' && (
-        <section className="admin-live">
-          <h3>Unconverted actions</h3>
-          <div className="admin-list">
-            {state.actionItems.filter((a) => !a.convertedToTaskId).length === 0 && (
-              <p className="muted">No unconverted action items.</p>
-            )}
-            {state.actionItems
-              .filter((a) => !a.convertedToTaskId)
-              .map((item) => (
-                <div key={item.id} className="admin-item">
-                  <span>{item.title}</span>
-                  <button type="button" onClick={() => convertActionToTask(item.id, lead)}>
-                    Convert
-                  </button>
-                </div>
+          <section className="admin-live">
+            <h3>Action items</h3>
+            <p className="admin-help">Each posted action is open to edit. Convert it when it should become a task.</p>
+            <div className="admin-list">
+              {deskActions.length === 0 && <p className="muted">No action items yet.</p>}
+              {deskActions.map((item) => (
+                <ActionItemEdit key={item.id} item={item} lead={lead} meetings={state.meetings} />
               ))}
-          </div>
-        </section>
+            </div>
+          </section>
         )}
 
         <button type="button" className="ghost-btn danger-text" onClick={resetDemo}>
@@ -307,18 +304,22 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
   )
 }
 
-function MeetingField({ meetings }: { meetings: Meeting[] }) {
-  const [title, setTitle] = useState('')
+function MeetingField({ meetings, defaultTitle = '' }: { meetings: Meeting[]; defaultTitle?: string }) {
+  const [title, setTitle] = useState(defaultTitle)
   const rootRef = useRef<HTMLDivElement>(null)
   const selectedId = meetings.find((meeting) => meeting.title === title)?.id ?? ''
 
   useEffect(() => {
+    setTitle(defaultTitle)
+  }, [defaultTitle])
+
+  useEffect(() => {
     const form = rootRef.current?.closest('form')
     if (!form) return
-    const onReset = () => setTitle('')
+    const onReset = () => setTitle(defaultTitle)
     form.addEventListener('reset', onReset)
     return () => form.removeEventListener('reset', onReset)
-  }, [])
+  }, [defaultTitle])
 
   return (
     <div ref={rootRef}>
@@ -350,6 +351,108 @@ function MeetingField({ meetings }: { meetings: Meeting[] }) {
           placeholder="Daily Standup, DHIS2 review, or type another meeting"
         />
       </label>
+    </div>
+  )
+}
+
+function ActionItemEdit({
+  item,
+  lead,
+  meetings,
+}: {
+  item: ActionItem
+  lead: string
+  meetings: Meeting[]
+}) {
+  const { state, updateActionItem, convertActionToTask } = useOps()
+  const [saved, setSaved] = useState(false)
+
+  return (
+    <div className="admin-item admin-meeting">
+      <span>
+        {item.title}
+        <em className="muted">
+          {' '}
+          · {item.status}
+          {item.convertedToTaskId ? ' · converted' : ''}
+        </em>
+      </span>
+      <form
+        className="admin-form"
+        onSubmit={(e) => {
+          e.preventDefault()
+          const data = new FormData(e.currentTarget)
+          const meetingTitle = String(data.get('meetingTitle') || '').trim() || 'Ad hoc'
+          const meeting = meetings.find(
+            (entry) => entry.id === String(data.get('meetingId')) || entry.title === meetingTitle,
+          )
+          const deadline = new Date(String(data.get('deadline')))
+          if (Number.isNaN(deadline.getTime())) return
+          updateActionItem(item.id, {
+            title: String(data.get('title')).trim(),
+            meetingId: meeting?.id ?? item.meetingId,
+            meetingTitle: meeting?.title ?? meetingTitle,
+            assignedTo: String(data.get('assignedTo')),
+            deadline: deadline.toISOString(),
+            status: String(data.get('status')) as ActionStatus,
+            ...placeFromForm(data),
+          })
+          setSaved(true)
+          window.setTimeout(() => setSaved(false), 2000)
+        }}
+      >
+        <label>
+          Action point
+          <input name="title" required defaultValue={item.title} />
+        </label>
+        <MeetingField meetings={meetings} defaultTitle={item.meetingTitle} />
+        <div className="admin-split">
+          <label>
+            Owner
+            <select name="assignedTo" defaultValue={item.assignedTo}>
+              {state.members.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.name} ({member.role})
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Status
+            <select name="status" defaultValue={item.status}>
+              <option value="open">open</option>
+              <option value="in_progress">in progress</option>
+              <option value="completed">completed</option>
+            </select>
+          </label>
+        </div>
+        <label>
+          Deadline
+          <input
+            name="deadline"
+            type="datetime-local"
+            required
+            defaultValue={toDatetimeLocal(new Date(item.deadline))}
+          />
+        </label>
+        <PlaceFields
+          workKind={item.workKind}
+          workKindOther={item.workKindOther}
+          district={item.district}
+          facility={item.facility ?? ''}
+        />
+        <div className="meeting-composer-actions">
+          <button type="submit" className="primary-btn sm">
+            Save action
+          </button>
+          {!item.convertedToTaskId && (
+            <button type="button" className="ghost-btn" onClick={() => convertActionToTask(item.id, lead)}>
+              Convert to task
+            </button>
+          )}
+        </div>
+        {saved && <p className="meet-saved">Action saved to the dashboard.</p>}
+      </form>
     </div>
   )
 }

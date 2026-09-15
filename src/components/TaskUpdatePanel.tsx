@@ -21,7 +21,7 @@ export function TaskUpdatePanel() {
   const { state } = useOps()
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<'open' | 'all'>('open')
-  const [editingId, setEditingId] = useState<string | null>(null)
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   const now = useMemo(() => new Date(), [state.tasks])
 
   const tasks = useMemo(() => {
@@ -73,8 +73,10 @@ export function TaskUpdatePanel() {
             key={task.id}
             task={task}
             now={now}
-            editing={editingId === task.id}
-            onToggle={() => setEditingId((current) => (current === task.id ? null : task.id))}
+            editing={!collapsed[task.id]}
+            onToggle={() =>
+              setCollapsed((current) => ({ ...current, [task.id]: !current[task.id] }))
+            }
           />
         ))}
       </div>
@@ -177,7 +179,7 @@ function TaskUpdateCard({
               <select name="assignedTo" defaultValue={task.assignedTo}>
                 {state.members.map((member) => (
                   <option key={member.id} value={member.id}>
-                    {member.name}
+                    {member.name} ({member.role})
                   </option>
                 ))}
               </select>
@@ -187,7 +189,7 @@ function TaskUpdateCard({
               <select name="assignedBy" defaultValue={task.assignedBy}>
                 {state.members.map((member) => (
                   <option key={member.id} value={member.id}>
-                    {member.name}
+                    {member.name} ({member.role})
                   </option>
                 ))}
               </select>

@@ -1,7 +1,7 @@
 import type { OpsState, TeamMember } from '../types'
 
 export const MEMBERS: TeamMember[] = [
-  { id: 'm1', name: 'Regina Daniels', role: 'Coordinator', initials: 'RD' },
+  { id: 'm1', name: 'Regina Samuels', role: 'Coordinator', initials: 'RS' },
   { id: 'm2', name: 'Ibrahim Sorie', role: 'Team Lead', initials: 'IS' },
   { id: 'm3', name: 'Prince Mafinda', role: 'Operations Manager', initials: 'PM' },
   { id: 'm4', name: 'Maliaka Madi', role: 'Data Engineer', initials: 'MM' },

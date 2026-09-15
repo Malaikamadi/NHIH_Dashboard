@@ -5,6 +5,7 @@ import type { ActivityKind, DistrictId, MeetingStatus, TeamActivity } from '../t
 import { meetingStatus } from '../utils/metrics'
 import { formatDate, formatTimeRange, nowIso, toDatetimeLocal } from '../utils/time'
 import { StatusPill } from './Header'
+import { ParticipantPicker } from './ParticipantPicker'
 
 function defaultStart(): Date {
   return new Date()
@@ -15,22 +16,25 @@ function defaultEnd(): Date {
 }
 
 export function ActivityForm({
+  activity,
   onAdded,
 }: {
+  activity?: TeamActivity
   onAdded?: () => void
 }) {
-  const { state, addActivity } = useOps()
-  const [kind, setKind] = useState<ActivityKind>('training')
+  const { state, addActivity, updateActivity } = useOps()
+  const [kind, setKind] = useState<ActivityKind>(activity?.kind ?? 'training')
   const rootRef = useRef<HTMLFormElement>(null)
   const lead = state.members.find((m) => m.role === 'Team Lead')?.id ?? state.members[0]?.id ?? ''
+  const editing = Boolean(activity)
 
   useEffect(() => {
     const form = rootRef.current
-    if (!form) return
+    if (!form || editing) return
     const onReset = () => setKind('training')
     form.addEventListener('reset', onReset)
     return () => form.removeEventListener('reset', onReset)
-  }, [])
+  }, [editing])
 
   return (
     <form
@@ -47,7 +51,7 @@ export function ActivityForm({
           return
         }
         const nextKind = String(data.get('kind')) as ActivityKind
-        addActivity({
+        const payload = {
           title: String(data.get('title')).trim(),
           kind: nextKind,
           kindOther: nextKind === 'other' ? String(data.get('kindOther') || '').trim() : '',
@@ -57,14 +61,19 @@ export function ActivityForm({
           district: String(data.get('district') || 'national') as DistrictId,
           facility: String(data.get('facility') || '').trim() || undefined,
           notes: String(data.get('notes') || '').trim(),
-        })
-        form.reset()
+        }
+        if (activity) {
+          updateActivity(activity.id, payload)
+        } else {
+          addActivity(payload)
+          form.reset()
+        }
         onAdded?.()
       }}
     >
       <label>
         Activity
-        <input name="title" required placeholder="Training, field visit, workshop…" />
+        <input name="title" required defaultValue={activity?.title} placeholder="Training, field visit, workshop…" />
       </label>
       <div className="admin-split">
         <label>
@@ -79,7 +88,7 @@ export function ActivityForm({
         </label>
         <label>
           District
-          <select name="district" defaultValue="national">
+          <select name="district" defaultValue={activity?.district ?? 'national'}>
             {DISTRICTS.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.label}
@@ -91,39 +100,51 @@ export function ActivityForm({
       {kind === 'other' && (
         <label>
           Other activity
-          <input name="kindOther" required placeholder="Type the activity" />
+          <input name="kindOther" required defaultValue={activity?.kindOther} placeholder="Type the activity" />
         </label>
       )}
       <label>
         Place
-        <input name="facility" placeholder="Venue / facility (optional)" />
+        <input name="facility" defaultValue={activity?.facility ?? ''} placeholder="Venue / facility (optional)" />
       </label>
       <div className="admin-split">
         <label>
           Start
-          <input name="start" type="datetime-local" required defaultValue={toDatetimeLocal(defaultStart())} />
+          <input
+            name="start"
+            type="datetime-local"
+            required
+            defaultValue={toDatetimeLocal(activity ? new Date(activity.startTime) : defaultStart())}
+          />
         </label>
         <label>
           End
-          <input name="end" type="datetime-local" required defaultValue={toDatetimeLocal(defaultEnd())} />
+          <input
+            name="end"
+            type="datetime-local"
+            required
+            defaultValue={toDatetimeLocal(activity ? new Date(activity.endTime) : defaultEnd())}
+          />
         </label>
       </div>
-      <fieldset className="participant-picks">
-        <legend>Who is attending</legend>
-        {state.members.map((member) => (
-          <label key={member.id} className="check-line">
-            <input type="checkbox" name="participants" value={member.id} />
-            {member.name}
-          </label>
-        ))}
-      </fieldset>
+      <ParticipantPicker
+        members={state.members}
+        selectedIds={activity?.participantIds}
+        defaultAll={!activity}
+        legend="Who is attending"
+      />
       <label>
         Notes
-        <textarea name="notes" rows={3} placeholder="Purpose, venue, or what the team is attending" />
+        <textarea
+          name="notes"
+          rows={3}
+          defaultValue={activity?.notes}
+          placeholder="Purpose, venue, or what the team is attending"
+        />
       </label>
       <div className="meeting-composer-actions">
         <button type="submit" className="primary-btn sm">
-          Add activity
+          {editing ? 'Save activity' : 'Add activity'}
         </button>
       </div>
     </form>
@@ -141,12 +162,6 @@ function ActivityTools({
 }) {
   const { updateActivity } = useOps()
   const status: MeetingStatus = meetingStatus(activity, now)
-  const [notes, setNotes] = useState(activity.notes ?? '')
-  const [editing, setEditing] = useState(false)
-
-  useEffect(() => {
-    setNotes(activity.notes ?? '')
-  }, [activity.notes])
 
   const startActivity = () => {
     const start = new Date()
@@ -180,30 +195,8 @@ function ActivityTools({
           </button>
         )}
         {status === 'completed' && <span className="muted">Ended</span>}
-        <button type="button" className={`tool-btn ${editing ? 'is-on' : ''}`} onClick={() => setEditing((on) => !on)}>
-          {activity.notes?.trim() ? 'Edit notes' : 'Add notes'}
-        </button>
       </div>
-      {editing && (
-        <form
-          className="meeting-composer"
-          onSubmit={(e) => {
-            e.preventDefault()
-            updateActivity(activity.id, { notes: notes.trim() })
-            setEditing(false)
-          }}
-        >
-          <label>
-            Notes
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
-          </label>
-          <div className="meeting-composer-actions">
-            <button type="submit" className="primary-btn sm">
-              Save notes
-            </button>
-          </div>
-        </form>
-      )}
+      <ActivityForm activity={activity} />
     </div>
   )
 }
