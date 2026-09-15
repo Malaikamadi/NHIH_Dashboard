@@ -4,7 +4,7 @@ import { StatusPill } from './Header'
 import { TaskActions } from './TaskActions'
 import { useOps } from '../store/OpsContext'
 import type { Priority, Task, TaskStatus } from '../types'
-import { displayStatus, memberName } from '../utils/metrics'
+import { displayStatus, memberName, taskStatusLabel } from '../utils/metrics'
 import { formatDue, toDatetimeLocal } from '../utils/time'
 
 const STATUSES: TaskStatus[] = [
@@ -126,7 +126,7 @@ function TaskUpdateCard({
         >
           {STATUSES.map((item) => (
             <option key={item} value={item}>
-              {item.replace('_', ' ')}
+              {taskStatusLabel(item)}
             </option>
           ))}
         </select>
@@ -211,7 +211,7 @@ function TaskUpdateCard({
               <select name="status" defaultValue={task.status}>
                 {STATUSES.map((item) => (
                   <option key={item} value={item}>
-                    {item.replace('_', ' ')}
+                    {taskStatusLabel(item)}
                   </option>
                 ))}
               </select>

@@ -66,6 +66,18 @@ export function memberIndex(members: TeamMember[], id: string): number {
   return idx < 0 ? 0 : idx
 }
 
+export const TASK_STATUS_LABEL: Record<TaskStatus, string> = {
+  not_started: 'Pending',
+  in_progress: 'In progress',
+  under_review: 'Under review',
+  completed: 'Completed',
+  overdue: 'Overdue',
+}
+
+export function taskStatusLabel(status: TaskStatus): string {
+  return TASK_STATUS_LABEL[status] ?? status.replaceAll('_', ' ')
+}
+
 export function displayStatus(task: Task, now = new Date()): TaskStatus {
   if (task.status === 'completed') return 'completed'
   if (new Date(task.dueDate).getTime() < now.getTime()) return 'overdue'

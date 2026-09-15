@@ -68,7 +68,7 @@ export function PerformanceView() {
                 <strong>{overdue}</strong>
               </div>
               <div className="legend-row">
-                <span className="swatch mute" /> Not started
+                <span className="swatch mute" /> Pending
                 <strong>
                   {state.tasks.filter((t) => displayStatus(t, now) === 'not_started').length}
                 </strong>

@@ -247,7 +247,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
           <div className="traffic-legend">
             <LegendDot color="var(--ok)" label="Completed" value={breakdown.completed} total={metrics.total} />
             <LegendDot color="var(--warn)" label="In progress" value={breakdown.in_progress} total={metrics.total} />
-            <LegendDot color="var(--muted)" label="Not started" value={breakdown.not_started} total={metrics.total} />
+            <LegendDot color="var(--muted)" label="Pending" value={breakdown.not_started} total={metrics.total} />
             <LegendDot color="var(--danger)" label="Overdue" value={breakdown.overdue} total={metrics.total} />
           </div>
         </section>

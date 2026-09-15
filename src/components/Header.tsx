@@ -123,7 +123,7 @@ function LiveMeetingChip({ now, soonCount }: { now: Date; soonCount: number }) {
 
 export function StatusPill({ status }: { status: TaskStatus | 'upcoming' | 'live' | 'open' | 'ongoing' }) {
   const labels: Record<string, string> = {
-    not_started: 'Not Started',
+    not_started: 'Pending',
     in_progress: 'In Progress',
     under_review: 'Under Review',
     completed: 'Completed',

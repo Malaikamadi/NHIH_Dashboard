@@ -7,7 +7,7 @@ import { PlaceFields, placeFromForm } from './PlaceFields'
 import { TaskUpdatePanel } from './TaskUpdatePanel'
 import { useOps } from '../store/OpsContext'
 import type { ActionItem, ActionStatus, Meeting, Priority, TaskStatus } from '../types'
-import { meetingStatus, weeksActivities, weeksMeetings } from '../utils/metrics'
+import { meetingStatus, taskStatusLabel, weeksActivities, weeksMeetings } from '../utils/metrics'
 import { toDatetimeLocal } from '../utils/time'
 
 interface Props {
@@ -150,7 +150,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
                 <select name="status" defaultValue="not_started">
                   {STATUSES.map((s) => (
                     <option key={s} value={s}>
-                      {s.replace('_', ' ')}
+                      {taskStatusLabel(s)}
                     </option>
                   ))}
                 </select>
