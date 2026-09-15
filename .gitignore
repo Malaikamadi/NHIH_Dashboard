@@ -5,6 +5,6 @@ dist
 .env
 .env.*
 .verify
-data
+/data
 .vercel
 .env*
