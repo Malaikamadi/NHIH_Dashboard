@@ -12,6 +12,7 @@ export const workKind = z.enum([
   'hio_field_visit',
   'analysis_request',
   'facility_followup',
+  'other',
 ])
 export const districtId = z.enum([
   'national',
@@ -34,23 +35,29 @@ export const districtId = z.enum([
 ])
 export const hubLogKind = z.enum(['incident', 'late_reporting', 'extract_failed', 'extract_restored', 'note'])
 
-export const taskCreate = z.object({
-  id: z.string().optional(),
-  title: z.string().trim().min(1, 'Title is required'),
-  description: z.string().optional().default(''),
-  assignedTo: z.string().min(1, 'Assignee is required'),
-  assignedBy: z.string().min(1, 'Assigner is required'),
-  priority,
-  dueDate: isoDate,
-  status: taskStatus.optional().default('not_started'),
-  progress: z.number().int().min(0).max(100).optional().default(0),
-  createdAt: z.string().optional(),
-  completedAt: z.string().optional(),
-  fromActionItemId: z.string().optional(),
-  workKind: workKind.optional().default('facility_followup'),
-  district: districtId.optional().default('national'),
-  facility: z.string().optional().default(''),
-})
+export const taskCreate = z
+  .object({
+    id: z.string().optional(),
+    title: z.string().trim().min(1, 'Title is required'),
+    description: z.string().optional().default(''),
+    assignedTo: z.string().min(1, 'Assignee is required'),
+    assignedBy: z.string().min(1, 'Assigner is required'),
+    priority,
+    dueDate: isoDate,
+    status: taskStatus.optional().default('not_started'),
+    progress: z.number().int().min(0).max(100).optional().default(0),
+    createdAt: z.string().optional(),
+    completedAt: z.string().optional(),
+    fromActionItemId: z.string().optional(),
+    workKind: workKind.optional().default('facility_followup'),
+    workKindOther: z.string().optional().default(''),
+    district: districtId.optional().default('national'),
+    facility: z.string().optional().default(''),
+  })
+  .refine((value) => value.workKind !== 'other' || Boolean(value.workKindOther?.trim()), {
+    message: 'Type the other work type',
+    path: ['workKindOther'],
+  })
 
 export const taskPatch = z
   .object({
@@ -64,6 +71,7 @@ export const taskPatch = z
     progress: z.number().int().min(0).max(100).optional(),
     completedAt: z.string().optional(),
     workKind: workKind.optional(),
+    workKindOther: z.string().optional(),
     district: districtId.optional(),
     facility: z.string().optional(),
   })
@@ -92,18 +100,24 @@ export const meetingPatch = z
   })
   .refine((value) => Object.keys(value).length > 0, 'No fields to update')
 
-export const actionCreate = z.object({
-  id: z.string().optional(),
-  meetingId: z.string().min(1),
-  meetingTitle: z.string().min(1),
-  title: z.string().trim().min(1, 'Title is required'),
-  assignedTo: z.string().min(1),
-  deadline: isoDate,
-  status: actionStatus.optional().default('open'),
-  workKind: workKind.optional().default('facility_followup'),
-  district: districtId.optional().default('national'),
-  facility: z.string().optional().default(''),
-})
+export const actionCreate = z
+  .object({
+    id: z.string().optional(),
+    meetingId: z.string().min(1),
+    meetingTitle: z.string().min(1),
+    title: z.string().trim().min(1, 'Title is required'),
+    assignedTo: z.string().min(1),
+    deadline: isoDate,
+    status: actionStatus.optional().default('open'),
+    workKind: workKind.optional().default('facility_followup'),
+    workKindOther: z.string().optional().default(''),
+    district: districtId.optional().default('national'),
+    facility: z.string().optional().default(''),
+  })
+  .refine((value) => value.workKind !== 'other' || Boolean(value.workKindOther?.trim()), {
+    message: 'Type the other work type',
+    path: ['workKindOther'],
+  })
 
 export const actionPatch = z
   .object({
@@ -114,6 +128,7 @@ export const actionPatch = z
     meetingId: z.string().optional(),
     meetingTitle: z.string().optional(),
     workKind: workKind.optional(),
+    workKindOther: z.string().optional(),
     district: districtId.optional(),
     facility: z.string().optional(),
   })

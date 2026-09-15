@@ -64,7 +64,12 @@ export function ActionItemsView() {
               <div key={item.id} className={`action-row ${overdue ? 'is-late' : ''}`}>
                 <div className="action-title">
                   {item.title}
-                  <PlaceLine workKind={item.workKind} district={item.district} facility={item.facility} />
+                  <PlaceLine
+                    workKind={item.workKind}
+                    workKindOther={item.workKindOther}
+                    district={item.district}
+                    facility={item.facility}
+                  />
                 </div>
                 <div className="muted">{item.meetingTitle}</div>
                 <div className="task-meta">

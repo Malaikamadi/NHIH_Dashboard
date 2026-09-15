@@ -20,6 +20,7 @@ export type WorkKind =
   | 'hio_field_visit'
   | 'analysis_request'
   | 'facility_followup'
+  | 'other'
 
 export type DistrictId =
   | 'national'
@@ -63,6 +64,7 @@ export interface Task {
   completedAt?: string
   fromActionItemId?: string
   workKind: WorkKind
+  workKindOther?: string
   district: DistrictId
   facility?: string
 }
@@ -92,6 +94,7 @@ export interface ActionItem {
   status: ActionStatus
   convertedToTaskId?: string
   workKind: WorkKind
+  workKindOther?: string
   district: DistrictId
   facility?: string
 }

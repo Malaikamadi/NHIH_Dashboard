@@ -154,6 +154,7 @@ export function convertAction(state: OpsState, actionId: string, assignedBy: str
     createdAt: nowIso(),
     fromActionItemId: actionId,
     workKind: item.workKind,
+    workKindOther: item.workKindOther,
     district: item.district,
     facility: item.facility,
   }

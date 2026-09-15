@@ -121,7 +121,7 @@ export function buildWeeklyReport(state: OpsState, now = new Date()): WeeklyRepo
         notes: meeting.notes?.trim() ?? '',
         actions: actions.map((item) => ({
           title: item.title,
-          place: placeLine(item.workKind, item.district, item.facility),
+          place: placeLine(item.workKind, item.district, item.facility, item.workKindOther),
           owner: memberName(state.members, item.assignedTo),
           status: item.status.replace('_', ' '),
           deadline: formatDate(item.deadline),

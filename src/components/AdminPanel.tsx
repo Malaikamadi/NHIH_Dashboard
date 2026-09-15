@@ -259,7 +259,13 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
                     {task.title}
                     <em className="muted">
                       {' '}
-                      · <PlaceLine workKind={task.workKind} district={task.district} facility={task.facility} />
+                      ·{' '}
+                      <PlaceLine
+                        workKind={task.workKind}
+                        workKindOther={task.workKindOther}
+                        district={task.district}
+                        facility={task.facility}
+                      />
                     </em>
                   </span>
                   <div className="admin-item-tools">

@@ -75,7 +75,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
         if (!q) return true
         return (
           t.title.toLowerCase().includes(q) ||
-          placeLine(t.workKind, t.district, t.facility).toLowerCase().includes(q)
+          placeLine(t.workKind, t.district, t.facility, t.workKindOther).toLowerCase().includes(q)
         )
       })
       .sort((a, b) => +new Date(a.dueDate) - +new Date(b.dueDate))
@@ -347,6 +347,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
                       <strong>{task.title}</strong>
                       <PlaceLine
                         workKind={task.workKind}
+                        workKindOther={task.workKindOther}
                         district={task.district}
                         facility={task.facility}
                       />

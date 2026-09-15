@@ -220,6 +220,7 @@ interface OpsContextValue {
     status: TaskStatus
     progress: number
     workKind: WorkKind
+    workKindOther?: string
     district: DistrictId
     facility?: string
   }) => void
@@ -336,6 +337,7 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
         createdAt: nowIso(),
         fromActionItemId: item.id,
         workKind: item.workKind,
+        workKindOther: item.workKindOther,
         district: item.district,
         facility: item.facility,
       }

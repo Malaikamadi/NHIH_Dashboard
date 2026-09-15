@@ -56,7 +56,12 @@ export function MemberDesk({
                 <div className="member-task-top">
                   <div>
                     <h4>{task.title}</h4>
-                    <PlaceLine workKind={task.workKind} district={task.district} facility={task.facility} />
+                    <PlaceLine
+                      workKind={task.workKind}
+                      workKindOther={task.workKindOther}
+                      district={task.district}
+                      facility={task.facility}
+                    />
                     <p className="muted">{formatDue(task.dueDate, now)}</p>
                   </div>
                   <div className="member-task-marks">
