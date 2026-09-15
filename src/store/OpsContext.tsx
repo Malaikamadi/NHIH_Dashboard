@@ -38,6 +38,7 @@ import type {
   WorkKind,
 } from '../types'
 import { memberName } from '../utils/metrics'
+import { MEMBERS } from '../data/seed'
 import { nowIso, uid } from '../utils/time'
 
 const EMPTY: OpsState = {
@@ -72,6 +73,7 @@ function reducer(state: OpsState, action: Action): OpsState {
     case 'hydrate':
       return {
         ...action.state,
+        members: MEMBERS,
         hubLog: action.state.hubLog ?? [],
         activities: action.state.activities ?? [],
       }

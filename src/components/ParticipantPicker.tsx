@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { TeamMember } from '../types'
+import { memberLabel } from '../utils/metrics'
 
 export function ParticipantPicker({
   members,
@@ -19,10 +20,16 @@ export function ParticipantPicker({
     selectedIds ?? (defaultAll ? members.map((member) => member.id) : []),
   )
   const allOn = members.length > 0 && members.every((member) => ids.includes(member.id))
+  const memberKey = members.map((member) => member.id).join(',')
+  const selectedKey = selectedIds?.join(',') ?? ''
 
   useEffect(() => {
-    if (selectedIds) setIds(selectedIds)
-  }, [selectedIds?.join(',')])
+    if (selectedIds) {
+      setIds(selectedIds)
+      return
+    }
+    if (defaultAll) setIds(members.map((member) => member.id))
+  }, [selectedKey, defaultAll, memberKey])
 
   useEffect(() => {
     const form = rootRef.current?.closest('form')
@@ -58,7 +65,7 @@ export function ParticipantPicker({
                 )
               }
             />
-            {member.name} ({member.role})
+            {memberLabel(member)}
           </label>
         )
       })}
