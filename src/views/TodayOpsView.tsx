@@ -320,7 +320,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
                 ))}
                 {meetings.length === 0 && (
                   <div className="data-row meet-row">
-                    <span className="muted">No meetings on the board today.</span>
+                    <span className="muted table-empty">No meetings on the board today.</span>
                   </div>
                 )}
               </div>
@@ -337,7 +337,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
               </div>
               {tasks.length === 0 && (
                 <div className="data-row">
-                  <span className="muted">No live tasks yet. Prince can add them from the operator desk.</span>
+                  <span className="muted table-empty">No live tasks yet. Prince can add them from the operator desk.</span>
                 </div>
               )}
               {tasks.map((task) => {

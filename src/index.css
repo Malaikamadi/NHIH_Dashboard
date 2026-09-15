@@ -658,6 +658,10 @@ button { cursor: pointer; }
   gap: 2px;
 }
 
+.table-empty {
+  grid-column: 1 / -1;
+}
+
 .data-head {
   background: var(--navy);
   color: #fff;

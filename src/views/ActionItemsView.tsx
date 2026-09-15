@@ -55,7 +55,7 @@ export function ActionItemsView() {
           </div>
           {items.length === 0 && (
             <div className="action-row">
-              <span className="muted">No action points yet. Add them from a meeting on the operator desk.</span>
+              <span className="muted table-empty">No action points yet. Add them from a meeting on the operator desk.</span>
             </div>
           )}
           {items.map((item) => {
