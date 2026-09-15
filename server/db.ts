@@ -1,5 +1,5 @@
 import { buildSeed, MEMBERS } from '../src/data/seed'
-import type { ActionItem, HubLogEntry, Meeting, OpsState, Task } from '../src/types'
+import type { ActionItem, HubLogEntry, Meeting, OpsState, Task, TeamActivity } from '../src/types'
 import * as ops from './ops'
 import { readSnapshot, SEED_VERSION, storageKind, writeSnapshot, type Snapshot } from './persist'
 
@@ -20,8 +20,16 @@ function withRoster(state: OpsState): { state: OpsState; changed: boolean } {
         member.initials === next.initials
       )
     })
-  if (same) return { state: { ...state, hubLog: state.hubLog ?? [] }, changed: false }
-  return { state: { ...state, members: MEMBERS, hubLog: state.hubLog ?? [] }, changed: true }
+  if (same) {
+    return {
+      state: { ...state, hubLog: state.hubLog ?? [], activities: state.activities ?? [] },
+      changed: false,
+    }
+  }
+  return {
+    state: { ...state, members: MEMBERS, hubLog: state.hubLog ?? [], activities: state.activities ?? [] },
+    changed: true,
+  }
 }
 
 async function loadFromStore(): Promise<Snapshot> {
@@ -85,6 +93,16 @@ export async function addMeeting(meeting: Meeting): Promise<OpsState> {
 export async function updateMeeting(id: string, patch: Partial<Meeting>): Promise<OpsState> {
   const current = await snapshot()
   return commit(ops.updateMeeting(current.state, id, patch))
+}
+
+export async function addActivity(activity: TeamActivity): Promise<OpsState> {
+  const current = await snapshot()
+  return commit(ops.addActivity(current.state, activity))
+}
+
+export async function updateActivity(id: string, patch: Partial<TeamActivity>): Promise<OpsState> {
+  const current = await snapshot()
+  return commit(ops.updateActivity(current.state, id, patch))
 }
 
 export async function addActionItem(item: ActionItem): Promise<OpsState> {

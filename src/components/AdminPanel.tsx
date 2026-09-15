@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { ActivityActions, ActivityForm } from './ActivityForm'
 import { HubLogPanel } from './HubLogPanel'
 import { MeetingActions } from './MeetingActions'
 import { MeetingForm } from './MeetingForm'
@@ -6,7 +7,7 @@ import { PlaceFields, placeFromForm } from './PlaceFields'
 import { TaskUpdatePanel } from './TaskUpdatePanel'
 import { useOps } from '../store/OpsContext'
 import type { Meeting, Priority, TaskStatus } from '../types'
-import { meetingStatus, todaysMeetings } from '../utils/metrics'
+import { meetingStatus, todaysActivities, todaysMeetings } from '../utils/metrics'
 
 interface Props {
   open: boolean
@@ -28,9 +29,10 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
   const { state, addTask, addActionItem, convertActionToTask, resetDemo } =
     useOps()
   const lead = state.members.find((m) => m.role === 'Team Lead')?.id ?? 'm1'
-  const [tab, setTab] = useState<'task' | 'update' | 'meeting' | 'action' | 'log'>('task')
+  const [tab, setTab] = useState<'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log'>('task')
   const [saved, setSaved] = useState('')
   const todayMeetings = todaysMeetings(state.meetings)
+  const todayActivities = todaysActivities(state.activities)
 
   if (!open) return null
 
@@ -53,7 +55,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
         {saved && <p className="meet-saved">{saved}</p>}
 
         <div className="admin-tabs">
-          {(['task', 'update', 'meeting', 'action', 'log'] as const).map((id) => (
+          {(['task', 'update', 'meeting', 'activity', 'action', 'log'] as const).map((id) => (
             <button
               key={id}
               type="button"
@@ -66,9 +68,11 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
                   ? 'Update tasks'
                   : id === 'meeting'
                     ? 'Add meeting'
-                    : id === 'action'
-                      ? 'Action item'
-                      : 'Hub log'}
+                    : id === 'activity'
+                      ? 'Activity'
+                      : id === 'action'
+                        ? 'Action item'
+                        : 'Hub log'}
             </button>
           ))}
         </div>
@@ -186,6 +190,28 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
                     <em className="muted"> · {meetingStatus(meeting)}</em>
                   </span>
                   <MeetingActions meeting={meeting} />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {tab === 'activity' && <ActivityForm />}
+
+        {tab === 'activity' && (
+          <section className="admin-live">
+            <h3>Today's activities</h3>
+            <div className="admin-list">
+              {todayActivities.length === 0 && (
+                <p className="muted">No team activities on the board today.</p>
+              )}
+              {todayActivities.map((activity) => (
+                <div key={activity.id} className="admin-item admin-meeting">
+                  <span>
+                    {activity.title}
+                    <em className="muted"> · {meetingStatus(activity)}</em>
+                  </span>
+                  <ActivityActions activity={activity} />
                 </div>
               ))}
             </div>

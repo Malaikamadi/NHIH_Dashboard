@@ -6,6 +6,7 @@ import type {
   Meeting,
   MeetingStatus,
   OpsState,
+  TeamActivity,
   PeriodId,
   Priority,
   Task,
@@ -57,7 +58,10 @@ export function displayStatus(task: Task, now = new Date()): TaskStatus {
   return task.status === 'overdue' ? 'in_progress' : task.status
 }
 
-export function meetingStatus(meeting: Meeting, now = new Date()): MeetingStatus {
+export function meetingStatus(
+  meeting: { startTime: string; endTime: string },
+  now = new Date(),
+): MeetingStatus {
   const start = new Date(meeting.startTime).getTime()
   const end = new Date(meeting.endTime).getTime()
   const t = now.getTime()
@@ -76,6 +80,12 @@ export function agendaLines(agenda?: string): string[] {
 export function todaysMeetings(meetings: Meeting[], now = new Date()): Meeting[] {
   return meetings
     .filter((m) => isSameDay(new Date(m.startTime), now))
+    .sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime))
+}
+
+export function todaysActivities(activities: TeamActivity[] | undefined, now = new Date()): TeamActivity[] {
+  return [...(activities ?? [])]
+    .filter((item) => isSameDay(new Date(item.startTime), now))
     .sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime))
 }
 
@@ -118,6 +128,7 @@ export function workloadLevel(active: number, overdue: number): WorkloadLevel {
 
 export interface TeamMetrics {
   meetingsToday: number
+  activitiesToday: number
   dueToday: number
   completedToday: number
   inProgress: number
@@ -127,6 +138,7 @@ export interface TeamMetrics {
   onTime: number
   total: number
   liveMeetings: number
+  liveActivities: number
   highPriorityDue: number
 }
 
@@ -135,8 +147,10 @@ export function teamMetrics(state: OpsState, now = new Date()): TeamMetrics {
   const total = tasks.length
   const completed = tasks.filter((t) => displayStatus(t, now) === 'completed')
   const today = todaysMeetings(state.meetings, now)
+  const activities = todaysActivities(state.activities, now)
   return {
     meetingsToday: today.length,
+    activitiesToday: activities.length,
     dueToday: tasks.filter((t) => isDueToday(t, now) && displayStatus(t, now) !== 'completed').length,
     completedToday: tasks.filter((t) => wasCompletedToday(t, now)).length,
     inProgress: tasks.filter((t) => {
@@ -149,6 +163,7 @@ export function teamMetrics(state: OpsState, now = new Date()): TeamMetrics {
     onTime: tasks.filter((t) => completedOnTime(t)).length,
     total,
     liveMeetings: today.filter((m) => meetingStatus(m, now) === 'live').length,
+    liveActivities: activities.filter((item) => meetingStatus(item, now) === 'live').length,
     highPriorityDue: tasks.filter((t) => {
       const s = displayStatus(t, now)
       return isDueToday(t, now) && s !== 'completed' && (t.priority === 'high' || t.priority === 'critical')

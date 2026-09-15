@@ -10,6 +10,7 @@ import {
 } from 'react'
 import {
   convertAction,
+  createActivity,
   createActionItem,
   createHubLog,
   createMeeting,
@@ -17,6 +18,7 @@ import {
   fetchState,
   openStateStream,
   patchActionItem,
+  patchActivity,
   patchHubLog,
   patchMeeting,
   patchTask,
@@ -32,6 +34,7 @@ import type {
   Priority,
   Task,
   TaskStatus,
+  TeamActivity,
   WorkKind,
 } from '../types'
 import { memberName } from '../utils/metrics'
@@ -44,6 +47,7 @@ const EMPTY: OpsState = {
   actionItems: [],
   events: [],
   hubLog: [],
+  activities: [],
 }
 
 type Action =
@@ -52,6 +56,8 @@ type Action =
   | { type: 'update_task'; id: string; patch: Partial<Task> }
   | { type: 'add_meeting'; meeting: Meeting }
   | { type: 'update_meeting'; id: string; patch: Partial<Meeting> }
+  | { type: 'add_activity'; activity: TeamActivity }
+  | { type: 'update_activity'; id: string; patch: Partial<TeamActivity> }
   | { type: 'add_action'; item: ActionItem }
   | { type: 'convert_action'; actionId: string; task: Task }
   | { type: 'add_hub_log'; entry: HubLogEntry }
@@ -64,7 +70,11 @@ function pushEvent(state: OpsState, event: ActivityEvent): OpsState {
 function reducer(state: OpsState, action: Action): OpsState {
   switch (action.type) {
     case 'hydrate':
-      return action.state
+      return {
+        ...action.state,
+        hubLog: action.state.hubLog ?? [],
+        activities: action.state.activities ?? [],
+      }
     case 'add_task':
       return pushEvent(
         { ...state, tasks: [action.task, ...state.tasks] },
@@ -161,6 +171,47 @@ function reducer(state: OpsState, action: Action): OpsState {
       }
       return { ...state, meetings }
     }
+    case 'add_activity':
+      return pushEvent(
+        { ...state, activities: [...(state.activities ?? []), action.activity] },
+        {
+          id: uid('e'),
+          at: nowIso(),
+          message: `Activity added · ${action.activity.title}`,
+          tone: 'info',
+        },
+      )
+    case 'update_activity': {
+      const prev = (state.activities ?? []).find((item) => item.id === action.id)
+      const activities = (state.activities ?? []).map((item) =>
+        item.id === action.id ? { ...item, ...action.patch } : item,
+      )
+      const next = activities.find((item) => item.id === action.id)
+      if (!prev || !next) return { ...state, activities }
+      if (action.patch.startTime && action.patch.startTime !== prev.startTime) {
+        return pushEvent(
+          { ...state, activities },
+          {
+            id: uid('e'),
+            at: nowIso(),
+            message: `Activity started · ${next.title}`,
+            tone: 'info',
+          },
+        )
+      }
+      if (action.patch.endTime && action.patch.endTime !== prev.endTime) {
+        return pushEvent(
+          { ...state, activities },
+          {
+            id: uid('e'),
+            at: nowIso(),
+            message: `Activity ended · ${next.title}`,
+            tone: 'success',
+          },
+        )
+      }
+      return { ...state, activities }
+    }
     case 'add_action':
       return {
         ...state,
@@ -236,6 +287,8 @@ interface OpsContextValue {
   updateTask: (id: string, patch: Partial<Task>) => void
   addMeeting: (input: Omit<Meeting, 'id'>) => void
   updateMeeting: (id: string, patch: Partial<Meeting>) => void
+  addActivity: (input: Omit<TeamActivity, 'id'>) => void
+  updateActivity: (id: string, patch: Partial<TeamActivity>) => void
   addActionItem: (input: Omit<ActionItem, 'id' | 'convertedToTaskId'>) => void
   updateActionItem: (id: string, patch: Partial<ActionItem>) => void
   convertActionToTask: (actionId: string, assignedBy: string) => void
@@ -310,6 +363,23 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
     (id: string, patch: Partial<Meeting>) => {
       dispatch({ type: 'update_meeting', id, patch })
       void patchMeeting(id, patch).then(hydrate).catch(refresh)
+    },
+    [hydrate, refresh],
+  )
+
+  const addActivity = useCallback(
+    (input: Omit<TeamActivity, 'id'>) => {
+      const activity: TeamActivity = { ...input, id: uid('act') }
+      dispatch({ type: 'add_activity', activity })
+      void createActivity(activity).then(hydrate).catch(refresh)
+    },
+    [hydrate, refresh],
+  )
+
+  const updateActivity = useCallback(
+    (id: string, patch: Partial<TeamActivity>) => {
+      dispatch({ type: 'update_activity', id, patch })
+      void patchActivity(id, patch).then(hydrate).catch(refresh)
     },
     [hydrate, refresh],
   )
@@ -391,6 +461,8 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
       updateTask,
       addMeeting,
       updateMeeting,
+      addActivity,
+      updateActivity,
       addActionItem,
       updateActionItem,
       convertActionToTask,
@@ -405,6 +477,8 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
       updateTask,
       addMeeting,
       updateMeeting,
+      addActivity,
+      updateActivity,
       addActionItem,
       updateActionItem,
       convertActionToTask,

@@ -12,6 +12,8 @@ import { broadcast, clientCount, subscribe } from './hub'
 import {
   actionCreate,
   actionPatch,
+  activityCreate,
+  activityPatch,
   convertBody,
   hubLogCreate,
   hubLogPatch,
@@ -195,6 +197,27 @@ api.patch('/meeting', async (c) => {
 api.patch('/meetings/:id', async (c) => {
   const patch = await readBody(c, meetingPatch)
   return c.json(await push(await repo.updateMeeting(c.req.param('id'), patch)))
+})
+
+api.post('/activities', async (c) => {
+  const body = await readBody(c, activityCreate)
+  return c.json(
+    await push(
+      await repo.addActivity({
+        ...body,
+        id: body.id || uid('act'),
+        kindOther: body.kind === 'other' ? body.kindOther : '',
+        facility: body.facility || undefined,
+      }),
+    ),
+  )
+})
+
+api.patch('/activity', async (c) => {
+  const id = c.req.query('id')
+  if (!id) throw new HttpError(400, 'Activity id is required')
+  const patch = await readBody(c, activityPatch)
+  return c.json(await push(await repo.updateActivity(id, patch)))
 })
 
 api.post('/actions', async (c) => {

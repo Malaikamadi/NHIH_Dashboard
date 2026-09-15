@@ -5,6 +5,7 @@ import type {
   Meeting,
   OpsState,
   Task,
+  TeamActivity,
 } from '../src/types'
 import { displayStatus, memberName } from '../src/utils/metrics'
 import { atTime, nowIso, uid } from '../src/utils/time'
@@ -33,6 +34,7 @@ export function viewState(state: OpsState, now = new Date()): OpsState {
     ...state,
     meetings: state.meetings.map((meeting) => rollMeeting(meeting, now)),
     hubLog: state.hubLog ?? [],
+    activities: state.activities ?? [],
   }
 }
 
@@ -115,6 +117,30 @@ export function updateMeeting(state: OpsState, id: string, patch: Partial<Meetin
     following = pushEvent(following, `Minutes updated · ${next.title}`, 'info')
   } else if (patch.agenda !== undefined && patch.agenda !== current.agenda) {
     following = pushEvent(following, `Agenda updated · ${next.title}`, 'info')
+  }
+  return following
+}
+
+export function addActivity(state: OpsState, activity: TeamActivity): OpsState {
+  return pushEvent(
+    { ...state, activities: [...(state.activities ?? []), activity] },
+    `Activity added · ${activity.title}`,
+    'info',
+  )
+}
+
+export function updateActivity(state: OpsState, id: string, patch: Partial<TeamActivity>): OpsState {
+  const current = (state.activities ?? []).find((activity) => activity.id === id)
+  if (!current) throw new HttpError(404, 'Activity not found')
+  const next: TeamActivity = { ...current, ...patch }
+  let following = {
+    ...state,
+    activities: (state.activities ?? []).map((activity) => (activity.id === id ? next : activity)),
+  }
+  if (patch.startTime && patch.startTime !== current.startTime) {
+    following = pushEvent(following, `Activity started · ${next.title}`, 'info')
+  } else if (patch.endTime && patch.endTime !== current.endTime) {
+    following = pushEvent(following, `Activity ended · ${next.title}`, 'success')
   }
   return following
 }

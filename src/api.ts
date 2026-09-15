@@ -1,5 +1,5 @@
 import { getOperatorCode, setOperatorCode } from './access'
-import type { ActionItem, HubLogEntry, Meeting, OpsState, Task } from './types'
+import type { ActionItem, HubLogEntry, Meeting, OpsState, Task, TeamActivity } from './types'
 import type { WeeklyReport } from './utils/report'
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -80,6 +80,20 @@ export function resetDemo(): Promise<OpsState> {
 
 export function patchMeeting(id: string, patch: Partial<Meeting>): Promise<OpsState> {
   return request<OpsState>(`/api/meeting?id=${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  })
+}
+
+export function createActivity(activity: TeamActivity): Promise<OpsState> {
+  return request<OpsState>('/api/activities', {
+    method: 'POST',
+    body: JSON.stringify(activity),
+  })
+}
+
+export function patchActivity(id: string, patch: Partial<TeamActivity>): Promise<OpsState> {
+  return request<OpsState>(`/api/activity?id=${encodeURIComponent(id)}`, {
     method: 'PATCH',
     body: JSON.stringify(patch),
   })

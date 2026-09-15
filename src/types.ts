@@ -43,6 +43,14 @@ export type DistrictId =
 
 export type HubLogKind = 'incident' | 'late_reporting' | 'extract_failed' | 'extract_restored' | 'note'
 
+export type ActivityKind =
+  | 'field_visit'
+  | 'training'
+  | 'workshop'
+  | 'supervision'
+  | 'partner'
+  | 'other'
+
 export interface TeamMember {
   id: string
   name: string
@@ -99,6 +107,19 @@ export interface ActionItem {
   facility?: string
 }
 
+export interface TeamActivity {
+  id: string
+  title: string
+  kind: ActivityKind
+  kindOther?: string
+  startTime: string
+  endTime: string
+  participantIds: string[]
+  district: DistrictId
+  facility?: string
+  notes?: string
+}
+
 export interface HubLogEntry {
   id: string
   at: string
@@ -121,6 +142,7 @@ export interface OpsState {
   members: TeamMember[]
   tasks: Task[]
   meetings: Meeting[]
+  activities: TeamActivity[]
   actionItems: ActionItem[]
   hubLog: HubLogEntry[]
   events: ActivityEvent[]

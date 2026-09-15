@@ -33,6 +33,14 @@ export const districtId = z.enum([
   'pujehun',
   'tonkolili',
 ])
+export const activityKind = z.enum([
+  'field_visit',
+  'training',
+  'workshop',
+  'supervision',
+  'partner',
+  'other',
+])
 export const hubLogKind = z.enum(['incident', 'late_reporting', 'extract_failed', 'extract_restored', 'note'])
 
 export const taskCreate = z
@@ -137,6 +145,38 @@ export const actionPatch = z
 export const convertBody = z.object({
   assignedBy: z.string().min(1).optional().default('m1'),
 })
+
+export const activityCreate = z
+  .object({
+    id: z.string().optional(),
+    title: z.string().trim().min(1, 'Title is required'),
+    kind: activityKind.optional().default('training'),
+    kindOther: z.string().optional().default(''),
+    startTime: isoDate,
+    endTime: isoDate,
+    participantIds: z.array(z.string()).optional().default([]),
+    district: districtId.optional().default('national'),
+    facility: z.string().optional().default(''),
+    notes: z.string().optional().default(''),
+  })
+  .refine((value) => value.kind !== 'other' || Boolean(value.kindOther?.trim()), {
+    message: 'Type the other activity',
+    path: ['kindOther'],
+  })
+
+export const activityPatch = z
+  .object({
+    title: z.string().trim().min(1).optional(),
+    kind: activityKind.optional(),
+    kindOther: z.string().optional(),
+    startTime: isoDate.optional(),
+    endTime: isoDate.optional(),
+    participantIds: z.array(z.string()).optional(),
+    district: districtId.optional(),
+    facility: z.string().optional(),
+    notes: z.string().optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, 'No fields to update')
 
 export const hubLogCreate = z.object({
   id: z.string().optional(),

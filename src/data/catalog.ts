@@ -1,4 +1,4 @@
-import type { DistrictId, HubLogKind, WorkKind } from '../types'
+import type { ActivityKind, DistrictId, HubLogKind, WorkKind } from '../types'
 
 export const WORK_TYPES: { id: WorkKind; label: string }[] = [
   { id: 'extract', label: 'Extract' },
@@ -30,6 +30,15 @@ export const DISTRICTS: { id: DistrictId; label: string }[] = [
   { id: 'tonkolili', label: 'Tonkolili' },
 ]
 
+export const ACTIVITY_KINDS: { id: ActivityKind; label: string }[] = [
+  { id: 'field_visit', label: 'Field visit' },
+  { id: 'training', label: 'Training' },
+  { id: 'workshop', label: 'Workshop' },
+  { id: 'supervision', label: 'Supervision' },
+  { id: 'partner', label: 'Partner engagement' },
+  { id: 'other', label: 'Other' },
+]
+
 export const LOG_KINDS: { id: HubLogKind; label: string }[] = [
   { id: 'extract_failed', label: 'Extract failed' },
   { id: 'extract_restored', label: 'Extract restored' },
@@ -50,6 +59,10 @@ export const LOG_KIND_LABEL: Record<HubLogKind, string> = Object.fromEntries(
   LOG_KINDS.map((item) => [item.id, item.label]),
 ) as Record<HubLogKind, string>
 
+export const ACTIVITY_KIND_LABEL: Record<ActivityKind, string> = Object.fromEntries(
+  ACTIVITY_KINDS.map((item) => [item.id, item.label]),
+) as Record<ActivityKind, string>
+
 export function workTypeLabel(id: WorkKind, other?: string): string {
   if (id === 'other') {
     const custom = other?.trim()
@@ -64,6 +77,14 @@ export function districtLabel(id: DistrictId): string {
 
 export function logKindLabel(id: HubLogKind): string {
   return LOG_KIND_LABEL[id] ?? id
+}
+
+export function activityKindLabel(id: ActivityKind, other?: string): string {
+  if (id === 'other') {
+    const custom = other?.trim()
+    return custom || 'Other'
+  }
+  return ACTIVITY_KIND_LABEL[id] ?? id
 }
 
 export function placeLine(

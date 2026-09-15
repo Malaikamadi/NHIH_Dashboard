@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { ActivitySession } from '../components/ActivityForm'
 import { Avatar, PriorityMark, StatusPill } from '../components/Header'
 import { Icon } from '../components/Icons'
 import { HubLogPanel } from '../components/HubLogPanel'
@@ -6,7 +7,7 @@ import { MeetingSession } from '../components/MeetingActions'
 import { HubBrief } from '../components/HubBrief'
 import { PlaceLine } from '../components/PlaceFields'
 import { WeeklyReportModal } from '../components/WeeklyReport'
-import { placeLine } from '../data/catalog'
+import { activityKindLabel, districtLabel, placeLine } from '../data/catalog'
 import { useOps } from '../store/OpsContext'
 import type { DistrictId, PeriodId, ViewId } from '../types'
 import {
@@ -27,11 +28,12 @@ import {
   priorityBand,
   statusBreakdown,
   teamMetrics,
+  todaysActivities,
   todaysMeetings,
 } from '../utils/metrics'
 import { formatDate } from '../utils/time'
 
-type Spotlight = 'meetings' | 'due' | 'progress' | 'overdue' | null
+type Spotlight = 'meetings' | 'activities' | 'due' | 'progress' | 'overdue' | null
 
 export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void }) {
   const { state } = useOps()
@@ -56,6 +58,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
   const closedInPeriod = periodClosedCount(state.tasks, period, now)
   const periodRate = periodCompletionRate(state.tasks, period, now)
   const meetings = todaysMeetings(state.meetings, now)
+  const activities = todaysActivities(state.activities, now)
   const districts = districtWorkload(state.tasks, now)
   const hotspot = hotspotDistrict(state.tasks, now)
   const tasks = useMemo(() => {
@@ -95,7 +98,9 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
       ? selectedDistrict.label
       : spotlight === 'meetings'
       ? "Today's Meetings"
-      : spotlight === 'due'
+      : spotlight === 'activities'
+        ? "Today's Activities"
+        : spotlight === 'due'
         ? 'Tasks Due Today'
         : spotlight === 'progress'
           ? 'In Progress'
@@ -110,6 +115,8 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
         : `${selectedDistrict.open} open ${selectedDistrict.open === 1 ? 'item' : 'items'}`
       : spotlight === 'meetings'
         ? 'Agenda, minutes, and actions from today’s huddles'
+        : spotlight === 'activities'
+          ? 'Trainings, field visits, and other events the team is attending'
         : spotlight === 'due'
           ? 'Still open and due today'
           : spotlight === 'progress'
@@ -127,6 +134,13 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
         onOpenMeetings={() => {
           setDistrictFilter(null)
           setSpotlight('meetings')
+          window.setTimeout(() => {
+            detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }, 50)
+        }}
+        onOpenActivities={() => {
+          setDistrictFilter(null)
+          setSpotlight('activities')
           window.setTimeout(() => {
             detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
           }, 50)
@@ -184,6 +198,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
 
           <div className="mini-stats">
             <Mini icon="calendar" tone="info" label="Meetings today" value={metrics.meetingsToday} />
+            <Mini icon="users" tone={metrics.liveActivities ? 'ok' : 'info'} label="Activities today" value={metrics.activitiesToday} />
             <Mini icon="clipboard" tone={metrics.dueToday ? 'warn' : 'info'} label="Due today" value={metrics.dueToday} />
             <Mini icon="clock" tone="info" label="In progress" value={metrics.inProgress} />
             <Mini icon="alert" tone={metrics.overdue ? 'danger' : 'ok'} label="Overdue" value={metrics.overdue} />
