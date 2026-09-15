@@ -90,16 +90,40 @@ export async function fetchWeeklyReportHtml(): Promise<string> {
 }
 
 export function openStateStream(onState: (state: OpsState) => void, onStatus: (live: boolean) => void): () => void {
-  const source = new EventSource('/api/stream')
-  source.onopen = () => onStatus(true)
-  source.onerror = () => onStatus(false)
-  source.onmessage = (event) => {
+  let closed = false
+  let source: EventSource | null = new EventSource('/api/stream')
+
+  const apply = (state: OpsState) => {
+    if (closed) return
+    onState(state)
     onStatus(true)
+  }
+
+  source.onopen = () => onStatus(true)
+  source.onmessage = (event) => {
     try {
-      onState(JSON.parse(event.data) as OpsState)
+      apply(JSON.parse(event.data) as OpsState)
     } catch {
-      /* ignore malformed frames */
+      /* ignore pings and malformed frames */
     }
   }
-  return () => source.close()
+  source.onerror = () => {
+    source?.close()
+    source = null
+    onStatus(false)
+  }
+
+  const timer = window.setInterval(() => {
+    void fetchState()
+      .then(apply)
+      .catch(() => {
+        if (!closed) onStatus(false)
+      })
+  }, 4000)
+
+  return () => {
+    closed = true
+    source?.close()
+    window.clearInterval(timer)
+  }
 }

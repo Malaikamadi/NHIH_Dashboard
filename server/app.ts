@@ -1,0 +1,176 @@
+import { Hono } from 'hono'
+import { cors } from 'hono/cors'
+import { logger } from 'hono/logger'
+import { streamSSE } from 'hono/streaming'
+import type { ZodType } from 'zod'
+import { buildWeeklyReport, reportToHtml } from '../src/utils/report'
+import { uid } from '../src/utils/time'
+import * as repo from './db'
+import { HttpError } from './errors'
+import { broadcast, clientCount, subscribe } from './hub'
+import {
+  actionCreate,
+  actionPatch,
+  convertBody,
+  hubLogCreate,
+  meetingCreate,
+  meetingPatch,
+  taskCreate,
+  taskPatch,
+} from './validate'
+
+const api = new Hono()
+
+api.use('*', logger())
+api.use(
+  '*',
+  cors({
+    origin: '*',
+    allowMethods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
+  }),
+)
+
+async function push(state?: Awaited<ReturnType<typeof repo.getState>>) {
+  const next = state ?? (await repo.getState())
+  broadcast(next)
+  return next
+}
+
+async function readBody<T>(c: { req: { json: () => Promise<unknown> } }, schema: ZodType<T>): Promise<T> {
+  let raw: unknown
+  try {
+    raw = await c.req.json()
+  } catch {
+    throw new HttpError(400, 'Invalid JSON')
+  }
+  const parsed = schema.safeParse(raw)
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? 'Invalid request')
+  }
+  return parsed.data
+}
+
+api.onError((err, c) => {
+  if (err instanceof HttpError) {
+    return c.json({ error: err.message }, err.status)
+  }
+  console.error(err)
+  return c.json({ error: err instanceof Error ? err.message : 'Internal server error' }, 500)
+})
+
+api.get('/health', async (c) =>
+  c.json({
+    ok: true,
+    service: 'nhih-ops-api',
+    storage: repo.persistence(),
+    clients: clientCount(),
+    at: new Date().toISOString(),
+  }),
+)
+
+api.get('/state', async (c) => c.json(await repo.getState()))
+
+api.get('/reports/weekly', async (c) => {
+  const report = buildWeeklyReport(await repo.getState())
+  if (c.req.query('format') === 'html') {
+    c.header('Content-Disposition', `inline; filename="NHIH-weekly-ops-report.html"`)
+    return c.html(reportToHtml(report))
+  }
+  return c.json(report)
+})
+
+api.get('/stream', (c) =>
+  streamSSE(c, async (stream) => {
+    let closed = false
+    const send = (state: Awaited<ReturnType<typeof repo.getState>>) => {
+      if (closed) return
+      void stream.writeSSE({ data: JSON.stringify(state) })
+    }
+    const unsubscribe = subscribe(send)
+    send(await repo.getState())
+    c.req.raw.signal.addEventListener('abort', () => {
+      closed = true
+      unsubscribe()
+    })
+    while (!closed) {
+      await stream.sleep(4000)
+      if (!closed) send(await repo.getState())
+    }
+  }),
+)
+
+api.post('/tasks', async (c) => {
+  const body = await readBody(c, taskCreate)
+  return c.json(
+    await push(
+      await repo.addTask({
+        ...body,
+        id: body.id || uid('t'),
+        createdAt: body.createdAt || new Date().toISOString(),
+      }),
+    ),
+  )
+})
+
+api.patch('/tasks/:id', async (c) => {
+  const patch = await readBody(c, taskPatch)
+  return c.json(await push(await repo.updateTask(c.req.param('id'), patch)))
+})
+
+api.post('/meetings', async (c) => {
+  const body = await readBody(c, meetingCreate)
+  return c.json(
+    await push(
+      await repo.addMeeting({
+        ...body,
+        id: body.id || uid('mtg'),
+      }),
+    ),
+  )
+})
+
+api.patch('/meetings/:id', async (c) => {
+  const patch = await readBody(c, meetingPatch)
+  return c.json(await push(await repo.updateMeeting(c.req.param('id'), patch)))
+})
+
+api.post('/actions', async (c) => {
+  const body = await readBody(c, actionCreate)
+  return c.json(
+    await push(
+      await repo.addActionItem({
+        ...body,
+        id: body.id || uid('a'),
+      }),
+    ),
+  )
+})
+
+api.post('/actions/:id/convert', async (c) => {
+  const body = await readBody(c, convertBody).catch(() => ({ assignedBy: 'm1' }))
+  return c.json(await push(await repo.convertAction(c.req.param('id'), body.assignedBy || 'm1')))
+})
+
+api.patch('/actions/:id', async (c) => {
+  const patch = await readBody(c, actionPatch)
+  return c.json(await push(await repo.updateActionItem(c.req.param('id'), patch)))
+})
+
+api.post('/hub-log', async (c) => {
+  const body = await readBody(c, hubLogCreate)
+  return c.json(
+    await push(
+      await repo.addHubLog({
+        ...body,
+        id: body.id || uid('log'),
+        at: body.at || new Date().toISOString(),
+      }),
+    ),
+  )
+})
+
+api.post('/reset', async (c) => c.json(await push(await repo.resetState())))
+
+export const app = new Hono()
+app.route('/api', api)
+app.route('/', api)
