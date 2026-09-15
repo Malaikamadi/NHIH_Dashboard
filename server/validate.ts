@@ -148,3 +148,14 @@ export const hubLogCreate = z.object({
   facility: z.string().optional().default(''),
   authorId: z.string().min(1),
 })
+
+export const hubLogPatch = z
+  .object({
+    kind: hubLogKind.optional(),
+    title: z.string().trim().min(1).optional(),
+    detail: z.string().optional(),
+    district: districtId.optional(),
+    facility: z.string().optional(),
+    authorId: z.string().optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, 'No fields to update')

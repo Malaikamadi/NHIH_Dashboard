@@ -92,6 +92,13 @@ export function createHubLog(entry: HubLogEntry): Promise<OpsState> {
   })
 }
 
+export function patchHubLog(id: string, patch: Partial<HubLogEntry>): Promise<OpsState> {
+  return request<OpsState>(`/api/log?id=${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  })
+}
+
 export function fetchWeeklyReport(): Promise<WeeklyReport> {
   return request<WeeklyReport>('/api/report')
 }

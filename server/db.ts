@@ -107,6 +107,11 @@ export async function addHubLog(entry: HubLogEntry): Promise<OpsState> {
   return commit(ops.addHubLog(current.state, entry))
 }
 
+export async function updateHubLog(id: string, patch: Partial<HubLogEntry>): Promise<OpsState> {
+  const current = await snapshot()
+  return commit(ops.updateHubLog(current.state, id, patch))
+}
+
 export async function tickOverdue(): Promise<OpsState | null> {
   const current = await snapshot()
   const ticked = ops.tickOverdue(current.state)

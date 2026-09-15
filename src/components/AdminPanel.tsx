@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { HubLogPanel } from './HubLogPanel'
 import { MeetingActions } from './MeetingActions'
 import { MeetingForm } from './MeetingForm'
 import { PlaceFields, placeFromForm } from './PlaceFields'
 import { TaskUpdatePanel } from './TaskUpdatePanel'
 import { useOps } from '../store/OpsContext'
-import type { Priority, TaskStatus } from '../types'
+import type { Meeting, Priority, TaskStatus } from '../types'
 import { meetingStatus, todaysMeetings } from '../utils/metrics'
 
 interface Props {
@@ -199,10 +199,13 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
               e.preventDefault()
               const form = e.currentTarget
               const data = new FormData(form)
-              const meeting = state.meetings.find((m) => m.id === String(data.get('meetingId')))
+              const meetingTitle = String(data.get('meetingTitle') || '').trim() || 'Ad hoc'
+              const meeting = state.meetings.find(
+                (item) => item.id === String(data.get('meetingId')) || item.title === meetingTitle,
+              )
               addActionItem({
                 meetingId: meeting?.id ?? 'adhoc',
-                meetingTitle: meeting?.title ?? 'Ad hoc',
+                meetingTitle: meeting?.title ?? meetingTitle,
                 title: String(data.get('title')),
                 assignedTo: String(data.get('assignedTo')),
                 deadline: new Date(String(data.get('deadline'))).toISOString(),
@@ -216,16 +219,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
               Action point
               <input name="title" required placeholder="Follow up on..." />
             </label>
-            <label>
-              Meeting
-              <select name="meetingId">
-                {state.meetings.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.title}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <MeetingField meetings={state.meetings} />
             <div className="admin-split">
               <label>
                 Owner
@@ -283,6 +277,53 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
   return (
     <div className="admin-scrim" onClick={onClose}>
       {body}
+    </div>
+  )
+}
+
+function MeetingField({ meetings }: { meetings: Meeting[] }) {
+  const [title, setTitle] = useState('')
+  const rootRef = useRef<HTMLDivElement>(null)
+  const selectedId = meetings.find((meeting) => meeting.title === title)?.id ?? ''
+
+  useEffect(() => {
+    const form = rootRef.current?.closest('form')
+    if (!form) return
+    const onReset = () => setTitle('')
+    form.addEventListener('reset', onReset)
+    return () => form.removeEventListener('reset', onReset)
+  }, [])
+
+  return (
+    <div ref={rootRef}>
+      <label>
+        Meeting
+        <select
+          name="meetingId"
+          value={selectedId}
+          onChange={(e) => {
+            const meeting = meetings.find((item) => item.id === e.target.value)
+            setTitle(meeting?.title ?? '')
+          }}
+        >
+          <option value="">Select a meeting, or type the name below</option>
+          {meetings.map((meeting) => (
+            <option key={meeting.id} value={meeting.id}>
+              {meeting.title}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Meeting name
+        <input
+          name="meetingTitle"
+          required
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Daily Standup, DHIS2 review, or type another meeting"
+        />
+      </label>
     </div>
   )
 }

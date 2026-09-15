@@ -190,3 +190,12 @@ export function addHubLog(state: OpsState, entry: HubLogEntry): OpsState {
     entry.kind === 'extract_failed' || entry.kind === 'incident' ? 'danger' : 'info',
   )
 }
+
+export function updateHubLog(state: OpsState, id: string, patch: Partial<HubLogEntry>): OpsState {
+  const current = (state.hubLog ?? []).find((entry) => entry.id === id)
+  if (!current) throw new HttpError(404, 'Hub log entry not found')
+  return {
+    ...state,
+    hubLog: (state.hubLog ?? []).map((entry) => (entry.id === id ? { ...entry, ...patch } : entry)),
+  }
+}

@@ -17,6 +17,7 @@ import {
   fetchState,
   openStateStream,
   patchActionItem,
+  patchHubLog,
   patchMeeting,
   patchTask,
   resetDemo as resetDemoApi,
@@ -54,6 +55,7 @@ type Action =
   | { type: 'add_action'; item: ActionItem }
   | { type: 'convert_action'; actionId: string; task: Task }
   | { type: 'add_hub_log'; entry: HubLogEntry }
+  | { type: 'update_hub_log'; id: string; patch: Partial<HubLogEntry> }
 
 function pushEvent(state: OpsState, event: ActivityEvent): OpsState {
   return { ...state, events: [event, ...state.events].slice(0, 12) }
@@ -202,6 +204,13 @@ function reducer(state: OpsState, action: Action): OpsState {
         },
       )
     }
+    case 'update_hub_log':
+      return {
+        ...state,
+        hubLog: state.hubLog.map((entry) =>
+          entry.id === action.id ? { ...entry, ...action.patch } : entry,
+        ),
+      }
     default:
       return state
   }
@@ -231,6 +240,7 @@ interface OpsContextValue {
   updateActionItem: (id: string, patch: Partial<ActionItem>) => void
   convertActionToTask: (actionId: string, assignedBy: string) => void
   addHubLog: (input: Omit<HubLogEntry, 'id' | 'at'> & { at?: string }) => void
+  updateHubLog: (id: string, patch: Partial<HubLogEntry>) => void
   resetDemo: () => void
 }
 
@@ -361,6 +371,14 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
     [hydrate, refresh],
   )
 
+  const updateHubLog = useCallback(
+    (id: string, patch: Partial<HubLogEntry>) => {
+      dispatch({ type: 'update_hub_log', id, patch })
+      void patchHubLog(id, patch).then(hydrate).catch(refresh)
+    },
+    [hydrate, refresh],
+  )
+
   const resetDemo = useCallback(() => {
     void resetDemoApi().then(hydrate).catch(refresh)
   }, [hydrate, refresh])
@@ -377,6 +395,7 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
       updateActionItem,
       convertActionToTask,
       addHubLog,
+      updateHubLog,
       resetDemo,
     }),
     [
@@ -390,6 +409,7 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
       updateActionItem,
       convertActionToTask,
       addHubLog,
+      updateHubLog,
       resetDemo,
     ],
   )

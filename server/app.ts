@@ -14,6 +14,7 @@ import {
   actionPatch,
   convertBody,
   hubLogCreate,
+  hubLogPatch,
   meetingCreate,
   meetingPatch,
   taskCreate,
@@ -247,6 +248,13 @@ api.post('/hub-log', async (c) => {
       }),
     ),
   )
+})
+
+api.patch('/log', async (c) => {
+  const id = c.req.query('id')
+  if (!id) throw new HttpError(400, 'Hub log id is required')
+  const patch = await readBody(c, hubLogPatch)
+  return c.json(await push(await repo.updateHubLog(id, patch)))
 })
 
 api.post('/reset', async (c) => c.json(await push(await repo.resetState())))

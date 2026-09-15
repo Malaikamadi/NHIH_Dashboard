@@ -3,7 +3,6 @@ import type {
   ActionItem,
   DistrictId,
   HubLogEntry,
-  HubLogKind,
   Meeting,
   MeetingStatus,
   OpsState,
@@ -368,21 +367,16 @@ export function todaysHubLog(log: HubLogEntry[], now = new Date()): HubLogEntry[
     .sort((a, b) => +new Date(b.at) - +new Date(a.at))
 }
 
-export function pipeStatus(
-  log: HubLogEntry[],
-  now = new Date(),
-): { kind: HubLogKind; title: string } | null {
+export function pipeStatus(log: HubLogEntry[], now = new Date()): HubLogEntry | null {
   const today = todaysHubLog(log, now)
   const failed = today.find((entry) => entry.kind === 'extract_failed')
   const restored = today.find((entry) => entry.kind === 'extract_restored')
-  if (failed && (!restored || +new Date(failed.at) > +new Date(restored.at))) {
-    return { kind: failed.kind, title: failed.title }
-  }
+  if (failed && (!restored || +new Date(failed.at) > +new Date(restored.at))) return failed
   const late = today.find((entry) => entry.kind === 'late_reporting')
-  if (late) return { kind: late.kind, title: late.title }
+  if (late) return late
   const incident = today.find((entry) => entry.kind === 'incident')
-  if (incident) return { kind: incident.kind, title: incident.title }
-  return today[0] ? { kind: today[0].kind, title: today[0].title } : null
+  if (incident) return incident
+  return today[0] ?? null
 }
 
 export function hotspotDistrict(tasks: Task[], now = new Date()): DistrictLoad | undefined {
