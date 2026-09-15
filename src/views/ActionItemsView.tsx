@@ -53,6 +53,11 @@ export function ActionItemsView() {
             <span>Status</span>
             <span>Task</span>
           </div>
+          {items.length === 0 && (
+            <div className="action-row">
+              <span className="muted">No action points yet. Add them from a meeting on the operator desk.</span>
+            </div>
+          )}
           {items.map((item) => {
             const overdue = item.status !== 'completed' && new Date(item.deadline) < now
             return (

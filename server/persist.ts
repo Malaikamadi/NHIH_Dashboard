@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import type { OpsState } from '../src/types'
 
-export const SEED_VERSION = 'meet-agenda-1'
+export const SEED_VERSION = 'live-empty-1'
 
 export interface Snapshot {
   version: string

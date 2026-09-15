@@ -291,7 +291,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
         </section>
 
         <button type="button" className="ghost-btn danger-text" onClick={resetDemo}>
-          Clear board
+          Clear hub data
         </button>
       </aside>
   )

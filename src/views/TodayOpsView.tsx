@@ -335,6 +335,11 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
                 <span>Due</span>
                 <span>Status</span>
               </div>
+              {tasks.length === 0 && (
+                <div className="data-row">
+                  <span className="muted">No live tasks yet. Prince can add them from the operator desk.</span>
+                </div>
+              )}
               {tasks.map((task) => {
                 const owner = memberById(state.members, task.assignedTo)
                 return (
