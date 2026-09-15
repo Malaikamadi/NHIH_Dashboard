@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ActivityActions, ActivityForm } from './ActivityForm'
+import { DeskDeleteButton } from './DeskDeleteButton'
 import { HubLogPanel } from './HubLogPanel'
 import { MeetingActions } from './MeetingActions'
 import { MeetingForm } from './MeetingForm'
@@ -27,7 +28,7 @@ const STATUSES: TaskStatus[] = [
 const PRIORITIES: Priority[] = ['critical', 'high', 'medium', 'low']
 
 export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
-  const { state, addTask, addActionItem, resetDemo } = useOps()
+  const { state, addTask, addActionItem, removeMeeting, removeActivity, resetDemo } = useOps()
   const lead = state.members.find((m) => m.role === 'Team Lead')?.id ?? 'm1'
   const [tab, setTab] = useState<'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log'>('task')
   const [saved, setSaved] = useState('')
@@ -190,10 +191,13 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
               )}
               {todayMeetings.map((meeting) => (
                 <div key={meeting.id} className="admin-item admin-meeting">
-                  <span>
-                    {meeting.title}
-                    <em className="muted"> · {meetingStatus(meeting)}</em>
-                  </span>
+                  <div className="admin-item-head">
+                    <span>
+                      {meeting.title}
+                      <em className="muted"> · {meetingStatus(meeting)}</em>
+                    </span>
+                    <DeskDeleteButton label={meeting.title} onDelete={() => removeMeeting(meeting.id)} />
+                  </div>
                   <MeetingActions meeting={meeting} />
                 </div>
               ))}
@@ -213,10 +217,13 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
               )}
               {weekActivities.map((activity) => (
                 <div key={activity.id} className="admin-item admin-meeting">
-                  <span>
-                    {activity.title}
-                    <em className="muted"> · {meetingStatus(activity)}</em>
-                  </span>
+                  <div className="admin-item-head">
+                    <span>
+                      {activity.title}
+                      <em className="muted"> · {meetingStatus(activity)}</em>
+                    </span>
+                    <DeskDeleteButton label={activity.title} onDelete={() => removeActivity(activity.id)} />
+                  </div>
                   <ActivityActions activity={activity} />
                 </div>
               ))}
@@ -366,20 +373,23 @@ function ActionItemEdit({
   lead: string
   meetings: Meeting[]
 }) {
-  const { state, updateActionItem, convertActionToTask } = useOps()
+  const { state, updateActionItem, convertActionToTask, removeActionItem } = useOps()
   const [saved, setSaved] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
   return (
     <div className="admin-item admin-meeting">
-      <span>
-        {item.title}
-        <em className="muted">
-          {' '}
-          · {item.status}
-          {item.convertedToTaskId ? ' · converted' : ''}
-        </em>
-      </span>
+      <div className="admin-item-head">
+        <span>
+          {item.title}
+          <em className="muted">
+            {' '}
+            · {item.status}
+            {item.convertedToTaskId ? ' · converted' : ''}
+          </em>
+        </span>
+        <DeskDeleteButton label={item.title} onDelete={() => removeActionItem(item.id)} />
+      </div>
       <form
         id={`edit-action-${item.id}`}
         ref={formRef}

@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import { DeskDeleteButton } from './DeskDeleteButton'
 import { PlaceFields, PlaceLine, placeFromForm } from './PlaceFields'
 import { StatusPill } from './Header'
 import { TaskActions } from './TaskActions'
@@ -95,7 +96,7 @@ function TaskUpdateCard({
   editing: boolean
   onToggle: () => void
 }) {
-  const { state, updateTask } = useOps()
+  const { state, updateTask, removeTask } = useOps()
   const [saved, setSaved] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
   const status = displayStatus(task, now)
@@ -115,7 +116,10 @@ function TaskUpdateCard({
             {memberName(state.members, task.assignedTo)} · {formatDue(task.dueDate, now)}
           </p>
         </div>
-        <StatusPill status={status} />
+        <div className="admin-item-head">
+          <StatusPill status={status} />
+          <DeskDeleteButton label={task.title} onDelete={() => removeTask(task.id)} />
+        </div>
       </header>
 
       <div className="task-update-progress">

@@ -225,3 +225,53 @@ export function updateHubLog(state: OpsState, id: string, patch: Partial<HubLogE
     hubLog: (state.hubLog ?? []).map((entry) => (entry.id === id ? { ...entry, ...patch } : entry)),
   }
 }
+
+export function removeTask(state: OpsState, id: string): OpsState {
+  const current = state.tasks.find((task) => task.id === id)
+  if (!current) throw new HttpError(404, 'Task not found')
+  return pushEvent(
+    { ...state, tasks: state.tasks.filter((task) => task.id !== id) },
+    `Task deleted · ${current.title}`,
+    'info',
+  )
+}
+
+export function removeMeeting(state: OpsState, id: string): OpsState {
+  const current = state.meetings.find((meeting) => meeting.id === id)
+  if (!current) throw new HttpError(404, 'Meeting not found')
+  return pushEvent(
+    { ...state, meetings: state.meetings.filter((meeting) => meeting.id !== id) },
+    `Meeting deleted · ${current.title}`,
+    'info',
+  )
+}
+
+export function removeActivity(state: OpsState, id: string): OpsState {
+  const current = (state.activities ?? []).find((activity) => activity.id === id)
+  if (!current) throw new HttpError(404, 'Activity not found')
+  return pushEvent(
+    { ...state, activities: (state.activities ?? []).filter((activity) => activity.id !== id) },
+    `Activity deleted · ${current.title}`,
+    'info',
+  )
+}
+
+export function removeActionItem(state: OpsState, id: string): OpsState {
+  const current = state.actionItems.find((item) => item.id === id)
+  if (!current) throw new HttpError(404, 'Action item not found')
+  return pushEvent(
+    { ...state, actionItems: state.actionItems.filter((item) => item.id !== id) },
+    `Action item deleted · ${current.title}`,
+    'info',
+  )
+}
+
+export function removeHubLog(state: OpsState, id: string): OpsState {
+  const current = (state.hubLog ?? []).find((entry) => entry.id === id)
+  if (!current) throw new HttpError(404, 'Hub log entry not found')
+  return pushEvent(
+    { ...state, hubLog: (state.hubLog ?? []).filter((entry) => entry.id !== id) },
+    `Hub incident log deleted · ${current.title}`,
+    'info',
+  )
+}

@@ -130,6 +130,31 @@ export async function updateHubLog(id: string, patch: Partial<HubLogEntry>): Pro
   return commit(ops.updateHubLog(current.state, id, patch))
 }
 
+export async function removeTask(id: string): Promise<OpsState> {
+  const current = await snapshot()
+  return commit(ops.removeTask(current.state, id))
+}
+
+export async function removeMeeting(id: string): Promise<OpsState> {
+  const current = await snapshot()
+  return commit(ops.removeMeeting(current.state, id))
+}
+
+export async function removeActivity(id: string): Promise<OpsState> {
+  const current = await snapshot()
+  return commit(ops.removeActivity(current.state, id))
+}
+
+export async function removeActionItem(id: string): Promise<OpsState> {
+  const current = await snapshot()
+  return commit(ops.removeActionItem(current.state, id))
+}
+
+export async function removeHubLog(id: string): Promise<OpsState> {
+  const current = await snapshot()
+  return commit(ops.removeHubLog(current.state, id))
+}
+
 export async function tickOverdue(): Promise<OpsState | null> {
   const current = await snapshot()
   const ticked = ops.tickOverdue(current.state)

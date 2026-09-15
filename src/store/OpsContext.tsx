@@ -15,6 +15,11 @@ import {
   createHubLog,
   createMeeting,
   createTask,
+  deleteActionItem,
+  deleteActivity,
+  deleteHubLog,
+  deleteMeeting,
+  deleteTask,
   fetchState,
   openStateStream,
   patchActionItem,
@@ -64,6 +69,11 @@ type Action =
   | { type: 'convert_action'; actionId: string; task: Task }
   | { type: 'add_hub_log'; entry: HubLogEntry }
   | { type: 'update_hub_log'; id: string; patch: Partial<HubLogEntry> }
+  | { type: 'remove_task'; id: string }
+  | { type: 'remove_meeting'; id: string }
+  | { type: 'remove_activity'; id: string }
+  | { type: 'remove_action'; id: string }
+  | { type: 'remove_hub_log'; id: string }
 
 function pushEvent(state: OpsState, event: ActivityEvent): OpsState {
   return { ...state, events: [event, ...state.events].slice(0, 12) }
@@ -272,6 +282,19 @@ function reducer(state: OpsState, action: Action): OpsState {
           entry.id === action.id ? { ...entry, ...action.patch } : entry,
         ),
       }
+    case 'remove_task':
+      return { ...state, tasks: state.tasks.filter((task) => task.id !== action.id) }
+    case 'remove_meeting':
+      return { ...state, meetings: state.meetings.filter((meeting) => meeting.id !== action.id) }
+    case 'remove_activity':
+      return {
+        ...state,
+        activities: (state.activities ?? []).filter((activity) => activity.id !== action.id),
+      }
+    case 'remove_action':
+      return { ...state, actionItems: state.actionItems.filter((item) => item.id !== action.id) }
+    case 'remove_hub_log':
+      return { ...state, hubLog: (state.hubLog ?? []).filter((entry) => entry.id !== action.id) }
     default:
       return state
   }
@@ -304,6 +327,11 @@ interface OpsContextValue {
   convertActionToTask: (actionId: string, assignedBy: string) => void
   addHubLog: (input: Omit<HubLogEntry, 'id' | 'at'> & { at?: string }) => void
   updateHubLog: (id: string, patch: Partial<HubLogEntry>) => void
+  removeTask: (id: string) => void
+  removeMeeting: (id: string) => void
+  removeActivity: (id: string) => void
+  removeActionItem: (id: string) => void
+  removeHubLog: (id: string) => void
   resetDemo: () => void
 }
 
@@ -460,6 +488,46 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
     [hydrate, refresh],
   )
 
+  const removeTask = useCallback(
+    (id: string) => {
+      dispatch({ type: 'remove_task', id })
+      void deleteTask(id).then(hydrate).catch(refresh)
+    },
+    [hydrate, refresh],
+  )
+
+  const removeMeeting = useCallback(
+    (id: string) => {
+      dispatch({ type: 'remove_meeting', id })
+      void deleteMeeting(id).then(hydrate).catch(refresh)
+    },
+    [hydrate, refresh],
+  )
+
+  const removeActivity = useCallback(
+    (id: string) => {
+      dispatch({ type: 'remove_activity', id })
+      void deleteActivity(id).then(hydrate).catch(refresh)
+    },
+    [hydrate, refresh],
+  )
+
+  const removeActionItem = useCallback(
+    (id: string) => {
+      dispatch({ type: 'remove_action', id })
+      void deleteActionItem(id).then(hydrate).catch(refresh)
+    },
+    [hydrate, refresh],
+  )
+
+  const removeHubLog = useCallback(
+    (id: string) => {
+      dispatch({ type: 'remove_hub_log', id })
+      void deleteHubLog(id).then(hydrate).catch(refresh)
+    },
+    [hydrate, refresh],
+  )
+
   const resetDemo = useCallback(() => {
     void resetDemoApi().then(hydrate).catch(refresh)
   }, [hydrate, refresh])
@@ -479,6 +547,11 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
       convertActionToTask,
       addHubLog,
       updateHubLog,
+      removeTask,
+      removeMeeting,
+      removeActivity,
+      removeActionItem,
+      removeHubLog,
       resetDemo,
     }),
     [
@@ -495,6 +568,11 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
       convertActionToTask,
       addHubLog,
       updateHubLog,
+      removeTask,
+      removeMeeting,
+      removeActivity,
+      removeActionItem,
+      removeHubLog,
       resetDemo,
     ],
   )

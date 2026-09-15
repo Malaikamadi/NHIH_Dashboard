@@ -30,7 +30,7 @@ api.use(
   '*',
   cors({
     origin: '*',
-    allowMethods: ['GET', 'POST', 'PATCH', 'HEAD', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'X-Operator-Code'],
   }),
 )
@@ -278,6 +278,36 @@ api.patch('/log', async (c) => {
   if (!id) throw new HttpError(400, 'Hub log id is required')
   const patch = await readBody(c, hubLogPatch)
   return c.json(await push(await repo.updateHubLog(id, patch)))
+})
+
+api.delete('/task', async (c) => {
+  const id = c.req.query('id')
+  if (!id) throw new HttpError(400, 'Task id is required')
+  return c.json(await push(await repo.removeTask(id)))
+})
+
+api.delete('/meeting', async (c) => {
+  const id = c.req.query('id')
+  if (!id) throw new HttpError(400, 'Meeting id is required')
+  return c.json(await push(await repo.removeMeeting(id)))
+})
+
+api.delete('/activity', async (c) => {
+  const id = c.req.query('id')
+  if (!id) throw new HttpError(400, 'Activity id is required')
+  return c.json(await push(await repo.removeActivity(id)))
+})
+
+api.delete('/action', async (c) => {
+  const id = c.req.query('id')
+  if (!id) throw new HttpError(400, 'Action id is required')
+  return c.json(await push(await repo.removeActionItem(id)))
+})
+
+api.delete('/log', async (c) => {
+  const id = c.req.query('id')
+  if (!id) throw new HttpError(400, 'Hub log id is required')
+  return c.json(await push(await repo.removeHubLog(id)))
 })
 
 api.post('/reset', async (c) => c.json(await push(await repo.resetState())))

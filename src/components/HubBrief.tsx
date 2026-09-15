@@ -9,6 +9,7 @@ import {
   openWeekMeetings,
   overdueTasks,
   pipeStatus,
+  weeksActivities,
   weeksMeetings,
 } from '../utils/metrics'
 import { countdown, formatTime, isSameDay, weekDays } from '../utils/time'
@@ -27,40 +28,70 @@ export function HubBrief({
   onOpenOverdue?: () => void
 }) {
   const { state } = useOps()
-  const today = openWeekMeetings(state.meetings, now)
   const weekMeetings = weeksMeetings(state.meetings, now)
+  const weekActivities = weeksActivities(state.activities, now)
+  const openMeetings = openWeekMeetings(state.meetings, now)
   const weekdays = weekDays(now).slice(0, 5)
-  const activities = openTodayActivities(state.activities, now)
-  const focus = currentOrNextMeeting(state.meetings, now)
-  const live = Boolean(focus && meetingStatus(focus, now) === 'live')
+  const activitiesToday = openTodayActivities(state.activities, now)
+  const meetingFocus = currentOrNextMeeting(state.meetings, now)
+  const activityFocus = weekActivities.find((item) => meetingStatus(item, now) === 'live')
+    ?? weekActivities.find((item) => meetingStatus(item, now) === 'upcoming')
+  const liveMeeting = Boolean(meetingFocus && meetingStatus(meetingFocus, now) === 'live')
+  const liveActivity = Boolean(activityFocus && meetingStatus(activityFocus, now) === 'live')
+  const focus =
+    liveMeeting && meetingFocus
+      ? { kind: 'meeting' as const, item: meetingFocus }
+      : liveActivity && activityFocus
+        ? { kind: 'activity' as const, item: activityFocus }
+        : meetingFocus
+          ? { kind: 'meeting' as const, item: meetingFocus }
+          : activityFocus
+            ? { kind: 'activity' as const, item: activityFocus }
+            : null
+  const live = focus ? meetingStatus(focus.item, now) === 'live' : false
   const overdue = overdueTasks(state.tasks, now).length
   const dueToday = dueTodayTasks(state.tasks, now).length
   const hotspot = hotspotDistrict(state.tasks, now)
   const pipe = pipeStatus(state.hubLog, now)
+  const weekOpen = openMeetings.length + weekActivities.filter((item) => meetingStatus(item, now) !== 'completed').length
 
   return (
     <div className={`hub-brief-stack ${pipe ? 'has-pipe' : ''}`}>
       <section className={`hub-brief ${live ? 'is-live' : ''}`}>
-        <button type="button" className="brief-focus" onClick={onOpenMeetings}>
+        <button
+          type="button"
+          className="brief-focus"
+          onClick={focus?.kind === 'activity' ? onOpenActivities : onOpenMeetings}
+        >
           <span className={`brief-kicker ${live ? 'is-live' : ''}`}>
-            {live ? 'Live meeting' : focus ? 'Next meeting' : 'Meetings'}
+            {live
+              ? focus?.kind === 'activity'
+                ? 'Live activity'
+                : 'Live meeting'
+              : focus
+                ? focus.kind === 'activity'
+                  ? 'Next activity'
+                  : 'Next meeting'
+                : 'This week'}
           </span>
-          <strong>{focus ? focus.title : 'No remaining meetings this week'}</strong>
+          <strong>{focus ? focus.item.title : 'No remaining meetings or activities this week'}</strong>
           <span className="muted">
             {focus
-              ? `${formatTime(focus.startTime)} – ${formatTime(focus.endTime)} · ${
-                  live ? `${countdown(focus.endTime, now)} remaining` : `starts in ${countdown(focus.startTime, now)}`
+              ? `${formatTime(focus.item.startTime)} – ${formatTime(focus.item.endTime)} · ${
+                  live
+                    ? `${countdown(focus.item.endTime, now)} remaining`
+                    : `starts in ${countdown(focus.item.startTime, now)}`
                 }`
-              : 'Mon–Fri meetings sit in the strip below'}
+              : 'Mon–Fri meetings and activities sit in the strip below'}
           </span>
         </button>
         <div className="brief-stats">
           <div>
-            <strong>{today.length}</strong>
+            <strong>{weekOpen}</strong>
             <span>This week</span>
           </div>
           <button type="button" onClick={onOpenActivities} disabled={!onOpenActivities}>
-            <strong>{activities.length}</strong>
+            <strong>{activitiesToday.length}</strong>
             <span>Activities</span>
           </button>
           <div>
@@ -79,9 +110,16 @@ export function HubBrief({
             </span>
           </button>
         </div>
-        <ol className="week-strip" aria-label="Meetings Monday to Friday">
+        <ol className="week-strip" aria-label="Meetings and activities Monday to Friday">
           {weekdays.map((day) => {
-            const items = weekMeetings.filter((meeting) => isSameDay(new Date(meeting.startTime), day))
+            const items = [
+              ...weekMeetings
+                .filter((meeting) => isSameDay(new Date(meeting.startTime), day))
+                .map((meeting) => ({ ...meeting, kind: 'meeting' as const })),
+              ...weekActivities
+                .filter((activity) => isSameDay(new Date(activity.startTime), day))
+                .map((activity) => ({ ...activity, kind: 'activity' as const })),
+            ].sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime))
             return (
               <li key={day.toISOString()} className={isSameDay(day, now) ? 'is-today' : ''}>
                 <span>
@@ -90,17 +128,20 @@ export function HubBrief({
                 {items.length === 0 ? (
                   <em className="week-empty">—</em>
                 ) : (
-                  items.map((meeting) => {
-                    const status = meetingStatus(meeting, now)
+                  items.map((item) => {
+                    const status = meetingStatus(item, now)
                     return (
                       <button
-                        key={meeting.id}
+                        key={`${item.kind}-${item.id}`}
                         type="button"
-                        className={`week-meet is-${status}`}
-                        onClick={onOpenMeetings}
+                        className={`week-meet is-${item.kind} is-${status}`}
+                        onClick={item.kind === 'activity' ? onOpenActivities : onOpenMeetings}
                       >
-                        <b>{formatTime(meeting.startTime)}</b>
-                        {meeting.title}
+                        <b>
+                          {formatTime(item.startTime)}
+                          <i>{item.kind === 'activity' ? 'Activity' : 'Meeting'}</i>
+                        </b>
+                        {item.title}
                       </button>
                     )
                   })

@@ -113,6 +113,26 @@ export function patchHubLog(id: string, patch: Partial<HubLogEntry>): Promise<Op
   })
 }
 
+export function deleteTask(id: string): Promise<OpsState> {
+  return request<OpsState>(`/api/task?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+}
+
+export function deleteMeeting(id: string): Promise<OpsState> {
+  return request<OpsState>(`/api/meeting?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+}
+
+export function deleteActivity(id: string): Promise<OpsState> {
+  return request<OpsState>(`/api/activity?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+}
+
+export function deleteActionItem(id: string): Promise<OpsState> {
+  return request<OpsState>(`/api/action?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+}
+
+export function deleteHubLog(id: string): Promise<OpsState> {
+  return request<OpsState>(`/api/log?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+}
+
 export function fetchWeeklyReport(): Promise<WeeklyReport> {
   return request<WeeklyReport>('/api/report')
 }

@@ -489,7 +489,9 @@ button { cursor: pointer; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.week-meet b { color: var(--muted); font-size: 10px; font-weight: 800; }
+.week-meet b { color: var(--muted); font-size: 10px; font-weight: 800; display: flex; gap: 6px; align-items: baseline; }
+.week-meet b i { font-style: normal; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.week-meet.is-activity { color: var(--info); }
 .week-meet.is-live { color: var(--ok); }
 .week-meet.is-completed { opacity: 0.55; font-weight: 600; }
 .agenda-item {
@@ -1405,6 +1407,24 @@ button { cursor: pointer; }
 .admin-live h3 { font-size: 12px; text-transform: uppercase; color: var(--muted); }
 .admin-list { display: grid; gap: 6px; }
 .admin-item { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; font-size: 13px; }
+.admin-item-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+.desk-delete,
+.admin-item .desk-delete,
+.task-update-card .desk-delete,
+.hub-log-form .desk-delete {
+  background: transparent;
+  color: var(--danger);
+  border: 0;
+  padding: 4px 0;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
 .admin-item-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-content: flex-end; }
 .admin-meeting { grid-template-columns: 1fr; align-items: start; }
 .admin-item .tool-btn { padding: 6px 10px; }

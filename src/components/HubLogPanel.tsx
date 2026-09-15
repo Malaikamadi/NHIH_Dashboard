@@ -4,6 +4,7 @@ import { useOps } from '../store/OpsContext'
 import type { DistrictId, HubLogEntry, HubLogKind } from '../types'
 import { memberName, todaysHubLog } from '../utils/metrics'
 import { formatDate, formatTime } from '../utils/time'
+import { DeskDeleteButton } from './DeskDeleteButton'
 import { Icon } from './Icons'
 
 export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput?: boolean }) {
@@ -202,7 +203,7 @@ function HubLogFields({ entry }: { entry?: HubLogEntry }) {
 }
 
 function HubLogEditForm({ entry }: { entry: HubLogEntry }) {
-  const { updateHubLog } = useOps()
+  const { updateHubLog, removeHubLog } = useOps()
   const [saved, setSaved] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
   return (
@@ -233,6 +234,7 @@ function HubLogEditForm({ entry }: { entry: HubLogEntry }) {
         <button type="button" className="primary-btn sm" onClick={() => formRef.current?.requestSubmit()}>
           Save updates
         </button>
+        <DeskDeleteButton label={entry.title} onDelete={() => removeHubLog(entry.id)} />
         {saved && <p className="meet-saved">Log saved.</p>}
       </div>
     </form>
