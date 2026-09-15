@@ -100,15 +100,16 @@ async function readBlob(): Promise<SnapshotRead> {
   try {
     const result = await get(BLOB_PATH, { access: 'private', useCache: false })
     if (!result) return { ok: false, missing: true }
-    if (result.statusCode === 304) {
+    const status = result.statusCode
+    if (status === 304) {
       return { ok: false, missing: false, error: 'blob not modified and no local copy' }
     }
-    if (result.statusCode === 200 && result.stream) {
+    if (status === 200 && result.stream) {
       const text = await new Response(result.stream).text()
       if (!text) return { ok: false, missing: true }
       return { ok: true, snapshot: parseSnapshot(text) }
     }
-    return { ok: false, missing: false, error: `blob status ${String(result.statusCode)}` }
+    return { ok: false, missing: false, error: `blob status ${String(status)}` }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     if (/not found|404/i.test(message)) return { ok: false, missing: true }
