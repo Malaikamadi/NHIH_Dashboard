@@ -1,4 +1,4 @@
-import { buildSeed } from '../src/data/seed'
+import { buildSeed, MEMBERS } from '../src/data/seed'
 import type { ActionItem, HubLogEntry, Meeting, OpsState, Task } from '../src/types'
 import * as ops from './ops'
 import { readSnapshot, SEED_VERSION, storageKind, writeSnapshot, type Snapshot } from './persist'
@@ -7,6 +7,23 @@ const cacheProcess = !process.env.VERCEL
 let memory: Snapshot | null = null
 let loading: Promise<Snapshot> | null = null
 
+function withRoster(state: OpsState): { state: OpsState; changed: boolean } {
+  const current = state.members
+  const same =
+    current.length === MEMBERS.length &&
+    current.every((member, index) => {
+      const next = MEMBERS[index]
+      return (
+        member.id === next.id &&
+        member.name === next.name &&
+        member.role === next.role &&
+        member.initials === next.initials
+      )
+    })
+  if (same) return { state: { ...state, hubLog: state.hubLog ?? [] }, changed: false }
+  return { state: { ...state, members: MEMBERS, hubLog: state.hubLog ?? [] }, changed: true }
+}
+
 async function loadFromStore(): Promise<Snapshot> {
   const stored = await readSnapshot()
   if (!stored || stored.version !== SEED_VERSION) {
@@ -14,10 +31,10 @@ async function loadFromStore(): Promise<Snapshot> {
     await writeSnapshot(next)
     return next
   }
-  return {
-    version: stored.version,
-    state: { ...stored.state, hubLog: stored.state.hubLog ?? [] },
-  }
+  const merged = withRoster(stored.state)
+  const next = { version: stored.version, state: merged.state }
+  if (merged.changed) await writeSnapshot(next)
+  return next
 }
 
 async function snapshot(): Promise<Snapshot> {
