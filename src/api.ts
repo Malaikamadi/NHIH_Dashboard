@@ -137,6 +137,20 @@ export function fetchWeeklyReport(): Promise<WeeklyReport> {
   return request<WeeklyReport>('/api/report')
 }
 
+export function restoreHub(state: OpsState): Promise<OpsState> {
+  return request<OpsState>('/api/restore', {
+    method: 'POST',
+    body: JSON.stringify({
+      tasks: state.tasks,
+      meetings: state.meetings,
+      activities: state.activities,
+      actionItems: state.actionItems,
+      hubLog: state.hubLog,
+      events: state.events,
+    }),
+  })
+}
+
 export async function fetchWeeklyReportHtml(): Promise<string> {
   const res = await fetch('/api/report?format=html')
   if (!res.ok) throw new Error(`${res.status} /api/report`)

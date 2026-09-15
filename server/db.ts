@@ -1,9 +1,10 @@
 import { buildSeed, MEMBERS } from '../src/data/seed'
 import type { ActionItem, HubLogEntry, Meeting, OpsState, Task, TeamActivity } from '../src/types'
+import { hubHasWork } from '../src/utils/hub'
+import { HttpError } from './errors'
 import * as ops from './ops'
 import { readSnapshot, SEED_VERSION, storageKind, writeSnapshot, type Snapshot } from './persist'
 
-const cacheProcess = !process.env.VERCEL
 let memory: Snapshot | null = null
 let loading: Promise<Snapshot> | null = null
 
@@ -32,21 +33,33 @@ function withRoster(state: OpsState): { state: OpsState; changed: boolean } {
   }
 }
 
+function adopt(state: OpsState): Snapshot {
+  const merged = withRoster(state)
+  return { version: SEED_VERSION, state: merged.state }
+}
+
 async function loadFromStore(): Promise<Snapshot> {
   const stored = await readSnapshot()
-  if (!stored || stored.version !== SEED_VERSION) {
-    const next = { version: SEED_VERSION, state: buildSeed() }
-    await writeSnapshot(next)
+  if (stored.ok) {
+    const merged = withRoster(stored.snapshot.state)
+    const next = { version: SEED_VERSION, state: merged.state }
+    if (merged.changed || stored.snapshot.version !== SEED_VERSION) {
+      await writeSnapshot(next)
+    }
     return next
   }
-  const merged = withRoster(stored.state)
-  const next = { version: stored.version, state: merged.state }
-  if (merged.changed) await writeSnapshot(next)
+  if (!stored.missing) {
+    if (memory) return memory
+    throw new HttpError(503, `Hub storage is unavailable (${stored.error}). Existing work was not overwritten.`)
+  }
+  if (memory && hubHasWork(memory.state)) return memory
+  const next = { version: SEED_VERSION, state: buildSeed() }
+  await writeSnapshot(next)
   return next
 }
 
 async function snapshot(): Promise<Snapshot> {
-  if (cacheProcess && memory) return memory
+  if (memory) return memory
   if (!loading) {
     loading = loadFromStore().finally(() => {
       loading = null
@@ -73,6 +86,26 @@ export async function getState(): Promise<OpsState> {
 export async function resetState(): Promise<OpsState> {
   memory = null
   return commit(buildSeed())
+}
+
+export async function restoreState(incoming: Partial<OpsState>): Promise<OpsState> {
+  const current = await snapshot().catch(() => memory)
+  const candidate: OpsState = {
+    members: MEMBERS,
+    tasks: incoming.tasks ?? [],
+    meetings: incoming.meetings ?? [],
+    activities: incoming.activities ?? [],
+    actionItems: incoming.actionItems ?? [],
+    hubLog: incoming.hubLog ?? [],
+    events: incoming.events ?? [],
+  }
+  if (current && hubHasWork(current.state) && !hubHasWork(candidate)) {
+    return ops.viewState(current.state)
+  }
+  if (!hubHasWork(candidate)) {
+    return ops.viewState(current?.state ?? buildSeed())
+  }
+  return commit(adopt(candidate).state)
 }
 
 export async function addTask(task: Task): Promise<OpsState> {

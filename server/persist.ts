@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { get, put } from '@vercel/blob'
 import type { OpsState } from '../src/types'
+import { hubHasWork } from '../src/utils/hub'
 
 export const SEED_VERSION = 'live-empty-1'
 export const BLOB_PATH = 'ops-state.json'
@@ -15,6 +16,11 @@ const KEY = 'nhih-ops-state'
 const LOCAL_FILE = process.env.VERCEL
   ? path.join('/tmp', 'ops-state.json')
   : path.join(process.cwd(), 'data', 'ops-state.json')
+
+export type SnapshotRead =
+  | { ok: true; snapshot: Snapshot }
+  | { ok: false; missing: true }
+  | { ok: false; missing: false; error: string }
 
 function kvConfig() {
   const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
@@ -51,15 +57,31 @@ async function redis(command: unknown[]): Promise<unknown> {
   return body.result ?? null
 }
 
-async function readBlob(): Promise<Snapshot | null> {
+function parseSnapshot(text: string): Snapshot {
+  const parsed = JSON.parse(text) as Snapshot
+  if (!parsed || typeof parsed !== 'object' || !parsed.state) {
+    throw new Error('Invalid hub snapshot')
+  }
+  return parsed
+}
+
+async function readBlob(): Promise<SnapshotRead> {
   try {
     const result = await get(BLOB_PATH, { access: 'private', useCache: false })
-    if (!result || result.statusCode !== 200 || !result.stream) return null
+    if (result.statusCode === 404) return { ok: false, missing: true }
+    if (result.statusCode === 304) {
+      return { ok: false, missing: false, error: 'blob not modified and no local copy' }
+    }
+    if (result.statusCode !== 200 || !result.stream) {
+      return { ok: false, missing: false, error: `blob status ${result.statusCode}` }
+    }
     const text = await new Response(result.stream).text()
-    if (!text) return null
-    return JSON.parse(text) as Snapshot
-  } catch {
-    return null
+    if (!text) return { ok: false, missing: true }
+    return { ok: true, snapshot: parseSnapshot(text) }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    if (/not found|404/i.test(message)) return { ok: false, missing: true }
+    return { ok: false, missing: false, error: message }
   }
 }
 
@@ -73,19 +95,34 @@ async function writeBlob(snapshot: Snapshot): Promise<void> {
   })
 }
 
-export async function readSnapshot(): Promise<Snapshot | null> {
+export async function readSnapshot(): Promise<SnapshotRead> {
   if (blobEnabled()) return readBlob()
   const kv = kvConfig()
   if (kv) {
-    const result = await redis(['GET', KEY])
-    if (!result) return null
-    return typeof result === 'string' ? (JSON.parse(result) as Snapshot) : (result as Snapshot)
+    try {
+      const result = await redis(['GET', KEY])
+      if (!result) return { ok: false, missing: true }
+      const snapshot =
+        typeof result === 'string' ? parseSnapshot(result) : (result as Snapshot)
+      if (!snapshot?.state) return { ok: false, missing: true }
+      return { ok: true, snapshot }
+    } catch (error) {
+      return {
+        ok: false,
+        missing: false,
+        error: error instanceof Error ? error.message : String(error),
+      }
+    }
   }
-  if (!existsSync(LOCAL_FILE)) return null
+  if (!existsSync(LOCAL_FILE)) return { ok: false, missing: true }
   try {
-    return JSON.parse(readFileSync(LOCAL_FILE, 'utf8')) as Snapshot
-  } catch {
-    return null
+    return { ok: true, snapshot: parseSnapshot(readFileSync(LOCAL_FILE, 'utf8')) }
+  } catch (error) {
+    return {
+      ok: false,
+      missing: false,
+      error: error instanceof Error ? error.message : String(error),
+    }
   }
 }
 
@@ -101,4 +138,9 @@ export async function writeSnapshot(snapshot: Snapshot): Promise<void> {
   }
   mkdirSync(path.dirname(LOCAL_FILE), { recursive: true })
   writeFileSync(LOCAL_FILE, JSON.stringify(snapshot), 'utf8')
+}
+
+export function preferExisting(current: Snapshot | null, incoming: Snapshot): Snapshot {
+  if (current && hubHasWork(current.state) && !hubHasWork(incoming.state)) return current
+  return incoming
 }

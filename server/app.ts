@@ -19,6 +19,7 @@ import {
   hubLogPatch,
   meetingCreate,
   meetingPatch,
+  restoreBody,
   taskCreate,
   taskPatch,
 } from './validate'
@@ -308,6 +309,11 @@ api.delete('/log', async (c) => {
   const id = c.req.query('id')
   if (!id) throw new HttpError(400, 'Hub log id is required')
   return c.json(await push(await repo.removeHubLog(id)))
+})
+
+api.post('/restore', async (c) => {
+  const body = await readBody(c, restoreBody)
+  return c.json(await push(await repo.restoreState(body)))
 })
 
 api.post('/reset', async (c) => c.json(await push(await repo.resetState())))
