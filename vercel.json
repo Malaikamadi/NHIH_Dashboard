@@ -4,12 +4,13 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/[...path].js": {
+    "api/index.js": {
       "maxDuration": 30,
       "includeFiles": "api/package.json"
     }
   },
   "rewrites": [
+    { "source": "/api/:path*", "destination": "/api" },
     { "source": "/desk", "destination": "/index.html" }
   ]
 }

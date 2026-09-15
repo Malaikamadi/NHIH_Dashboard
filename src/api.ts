@@ -17,7 +17,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export async function unlockOperator(code: string): Promise<boolean> {
-  const res = await fetch('/api/operator/unlock', {
+  const res = await fetch('/api/unlock', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ code }),

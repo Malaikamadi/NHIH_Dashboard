@@ -23,7 +23,17 @@ export default async function handler(req: NodeReq, res: NodeRes) {
     const proto = headerValue(req.headers['x-forwarded-proto']) || 'https'
     const host =
       headerValue(req.headers['x-forwarded-host']) || headerValue(req.headers.host) || 'localhost'
-    const url = `${proto}://${host}${req.url || '/'}`
+    const rawUrl = req.url || '/'
+    const originalPath =
+      headerValue(req.headers['x-invoke-path']) ||
+      headerValue(req.headers['x-forwarded-uri']) ||
+      rawUrl
+    const path = originalPath.startsWith('http')
+      ? new URL(originalPath).pathname + new URL(originalPath).search
+      : originalPath.startsWith('/')
+        ? originalPath
+        : rawUrl
+    const url = `${proto}://${host}${path}`
     const method = req.method || 'GET'
     const headers = new Headers()
     for (const [key, value] of Object.entries(req.headers)) {

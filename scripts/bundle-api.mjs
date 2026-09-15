@@ -6,7 +6,7 @@ mkdirSync(path.join(process.cwd(), 'api'), { recursive: true })
 
 await esbuild.build({
   entryPoints: [path.join('server', 'vercel-handler.ts')],
-  outfile: path.join('api', '[...path].js'),
+  outfile: path.join('api', 'index.js'),
   bundle: true,
   platform: 'node',
   format: 'cjs',

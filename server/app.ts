@@ -35,7 +35,14 @@ api.use(
 api.use('*', async (c, next) => {
   if (c.req.method === 'GET' || c.req.method === 'OPTIONS') return next()
   const path = c.req.path
-  if (path === '/operator/unlock' || path.endsWith('/operator/unlock')) return next()
+  if (
+    path === '/unlock' ||
+    path === '/operator/unlock' ||
+    path.endsWith('/unlock') ||
+    path.endsWith('/operator/unlock')
+  ) {
+    return next()
+  }
   const given = c.req.header('x-operator-code') ?? ''
   if (!isValidOperatorCode(given)) {
     throw new HttpError(401, 'Operator access required')
@@ -80,6 +87,12 @@ api.get('/health', async (c) =>
     at: new Date().toISOString(),
   }),
 )
+
+api.post('/unlock', async (c) => {
+  const body = await readBody(c, z.object({ code: z.string().trim().min(1, 'Access code is required') }))
+  if (!isValidOperatorCode(body.code)) throw new HttpError(401, 'Invalid access code')
+  return c.json({ ok: true })
+})
 
 api.post('/operator/unlock', async (c) => {
   const body = await readBody(c, z.object({ code: z.string().trim().min(1, 'Access code is required') }))
