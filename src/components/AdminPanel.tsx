@@ -29,6 +29,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
     useOps()
   const lead = state.members.find((m) => m.role === 'Team Lead')?.id ?? 'm1'
   const [tab, setTab] = useState<'task' | 'meeting' | 'action' | 'log'>('task')
+  const [saved, setSaved] = useState('')
   const todayMeetings = todaysMeetings(state.meetings)
 
   if (!open) return null
@@ -49,6 +50,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
           This is the only place to add tasks, meetings, agenda, minutes, and the hub log. The
           dashboard stays view-only for the rest of the team.
         </p>
+        {saved && <p className="meet-saved">{saved}</p>}
 
         <div className="admin-tabs">
           {(['task', 'meeting', 'action', 'log'] as const).map((id) => (
@@ -76,18 +78,21 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
               e.preventDefault()
               const form = e.currentTarget
               const data = new FormData(form)
+              const due = new Date(String(data.get('dueDate')))
+              if (Number.isNaN(due.getTime())) return
               addTask({
                 title: String(data.get('title')),
                 description: String(data.get('description')),
                 assignedTo: String(data.get('assignedTo')),
                 assignedBy: String(data.get('assignedBy')),
                 priority: String(data.get('priority')) as Priority,
-                dueDate: new Date(String(data.get('dueDate'))).toISOString(),
+                dueDate: due.toISOString(),
                 status: String(data.get('status')) as TaskStatus,
                 progress: Number(data.get('progress') || 0),
                 ...placeFromForm(data),
               })
               form.reset()
+              setSaved('Task saved. It now shows on the live dashboard.')
             }}
           >
             <label>

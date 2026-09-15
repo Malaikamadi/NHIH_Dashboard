@@ -27,13 +27,20 @@ api.use(
   '*',
   cors({
     origin: '*',
-    allowMethods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'PATCH', 'HEAD', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'X-Operator-Code'],
   }),
 )
 
 api.use('*', async (c, next) => {
-  if (c.req.method === 'GET' || c.req.method === 'OPTIONS') return next()
+  await next()
+  c.header('Cache-Control', 'no-store, no-cache, must-revalidate, private')
+  c.header('CDN-Cache-Control', 'no-store')
+  c.header('Vercel-CDN-Cache-Control', 'no-store')
+})
+
+api.use('*', async (c, next) => {
+  if (c.req.method === 'GET' || c.req.method === 'HEAD' || c.req.method === 'OPTIONS') return next()
   const path = c.req.path
   if (
     path === '/unlock' ||

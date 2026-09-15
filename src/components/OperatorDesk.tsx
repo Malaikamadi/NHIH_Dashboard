@@ -4,7 +4,8 @@ import { unlockOperator } from '../api'
 import { AdminPanel } from './AdminPanel'
 
 function goDashboard() {
-  window.location.assign('/')
+  window.history.pushState({}, '', '/')
+  window.dispatchEvent(new PopStateEvent('popstate'))
 }
 
 export function OperatorDesk() {

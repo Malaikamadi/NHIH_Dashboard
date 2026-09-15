@@ -7,3 +7,4 @@ dist
 .verify
 data
 .vercel
+.env*

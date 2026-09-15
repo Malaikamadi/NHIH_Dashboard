@@ -1,8 +1,10 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
+import { get, put } from '@vercel/blob'
 import type { OpsState } from '../src/types'
 
 export const SEED_VERSION = 'live-empty-1'
+export const BLOB_PATH = 'ops-state.json'
 
 export interface Snapshot {
   version: string
@@ -21,7 +23,12 @@ function kvConfig() {
   return { url: url.replace(/\/$/, ''), token }
 }
 
-export function storageKind(): 'kv' | 'file' {
+function blobEnabled(): boolean {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID)
+}
+
+export function storageKind(): 'blob' | 'kv' | 'file' {
+  if (blobEnabled()) return 'blob'
   return kvConfig() ? 'kv' : 'file'
 }
 
@@ -44,7 +51,30 @@ async function redis(command: unknown[]): Promise<unknown> {
   return body.result ?? null
 }
 
+async function readBlob(): Promise<Snapshot | null> {
+  try {
+    const result = await get(BLOB_PATH, { access: 'private', useCache: false })
+    if (!result || result.statusCode !== 200 || !result.stream) return null
+    const text = await new Response(result.stream).text()
+    if (!text) return null
+    return JSON.parse(text) as Snapshot
+  } catch {
+    return null
+  }
+}
+
+async function writeBlob(snapshot: Snapshot): Promise<void> {
+  await put(BLOB_PATH, JSON.stringify(snapshot), {
+    access: 'private',
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType: 'application/json',
+    cacheControlMaxAge: 0,
+  })
+}
+
 export async function readSnapshot(): Promise<Snapshot | null> {
+  if (blobEnabled()) return readBlob()
   const kv = kvConfig()
   if (kv) {
     const result = await redis(['GET', KEY])
@@ -60,6 +90,10 @@ export async function readSnapshot(): Promise<Snapshot | null> {
 }
 
 export async function writeSnapshot(snapshot: Snapshot): Promise<void> {
+  if (blobEnabled()) {
+    await writeBlob(snapshot)
+    return
+  }
   const kv = kvConfig()
   if (kv) {
     await redis(['SET', KEY, JSON.stringify(snapshot)])

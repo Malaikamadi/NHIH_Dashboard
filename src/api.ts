@@ -9,7 +9,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
   const code = getOperatorCode()
   if (code) headers['X-Operator-Code'] = code
-  const res = await fetch(path, { ...init, headers })
+  const res = await fetch(path, { ...init, headers, cache: 'no-store' })
   if (!res.ok) {
     throw new Error(`${res.status} ${path}`)
   }
@@ -21,6 +21,7 @@ export async function unlockOperator(code: string): Promise<boolean> {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ code }),
+    cache: 'no-store',
   })
   if (!res.ok) return false
   setOperatorCode(code)

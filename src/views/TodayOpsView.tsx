@@ -79,7 +79,6 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
         )
       })
       .sort((a, b) => +new Date(a.dueDate) - +new Date(b.dueDate))
-      .slice(0, 8)
   }, [state.tasks, now, query, spotlight, districtFilter])
 
   const openSpotlight = (next: Spotlight) => {
