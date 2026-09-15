@@ -236,7 +236,7 @@ export function reportToHtml(report: WeeklyReport): string {
 }
 
 export function downloadReport(html: string, filename: string): void {
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8', lastModified: Date.now() })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
