@@ -662,7 +662,7 @@ button { cursor: pointer; }
 
 .gcard-row {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -941,6 +941,14 @@ button { cursor: pointer; }
 }
 
 .data-row:nth-child(odd) { background: var(--row); }
+.data-row.is-done {
+  opacity: 0.72;
+}
+.data-row.is-done strong {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, var(--muted) 70%, transparent);
+}
 .data-row strong { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .task-cell {
   display: grid;

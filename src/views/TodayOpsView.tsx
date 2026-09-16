@@ -31,10 +31,11 @@ import {
   startingSoon,
   statusBreakdown,
   teamMetrics,
+  completedThisWeek,
 } from '../utils/metrics'
 import { countdown, formatDate, isSameDay, parseDateInput, toDateInput, weekDays } from '../utils/time'
 
-type Spotlight = 'meetings' | 'activities' | 'due' | 'progress' | 'overdue' | null
+type Spotlight = 'meetings' | 'activities' | 'due' | 'progress' | 'overdue' | 'completed' | null
 
 export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void }) {
   const { state } = useOps()
@@ -69,26 +70,40 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
   const districts = districtWorkload(state.tasks, now)
   const hotspot = hotspotDistrict(state.tasks, now)
   const tasks = useMemo(() => {
-    let list = state.tasks.filter((t) => displayStatus(t, now) !== 'completed')
-    if (spotlight === 'due') list = dueOnDayTasks(state.tasks, dueDay, now)
-    if (spotlight === 'progress') {
-      list = list.filter((t) => {
-        const status = displayStatus(t, now)
-        return status === 'in_progress' || status === 'under_review'
-      })
-    }
-    if (spotlight === 'overdue') list = overdueTasks(state.tasks, now)
+    const open = state.tasks.filter((t) => displayStatus(t, now) !== 'completed')
+    const done = state.tasks
+      .filter((t) => displayStatus(t, now) === 'completed')
+      .sort(
+        (a, b) =>
+          +new Date(b.completedAt ?? b.dueDate) - +new Date(a.completedAt ?? a.dueDate),
+      )
+
+    let list =
+      spotlight === 'completed'
+        ? done
+        : spotlight === 'due'
+          ? dueOnDayTasks(state.tasks, dueDay, now)
+          : spotlight === 'progress'
+            ? open.filter((t) => {
+                const status = displayStatus(t, now)
+                return status === 'in_progress' || status === 'under_review'
+              })
+            : spotlight === 'overdue'
+              ? overdueTasks(state.tasks, now)
+              : [
+                  ...open.sort((a, b) => +new Date(a.dueDate) - +new Date(b.dueDate)),
+                  ...done.filter((t) => completedThisWeek(t, now)),
+                ]
+
     if (districtFilter) list = list.filter((t) => t.district === districtFilter)
     const q = query.trim().toLowerCase()
-    return list
-      .filter((t) => {
-        if (!q) return true
-        return (
-          t.title.toLowerCase().includes(q) ||
-          placeLine(t.workKind, t.district, t.facility, t.workKindOther).toLowerCase().includes(q)
-        )
-      })
-      .sort((a, b) => +new Date(a.dueDate) - +new Date(b.dueDate))
+    return list.filter((t) => {
+      if (!q) return true
+      return (
+        t.title.toLowerCase().includes(q) ||
+        placeLine(t.workKind, t.district, t.facility, t.workKindOther).toLowerCase().includes(q)
+      )
+    })
   }, [state.tasks, now, query, spotlight, districtFilter, dueDay])
 
   const openSpotlight = (next: Spotlight) => {
@@ -113,7 +128,9 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
           ? 'In Progress'
           : spotlight === 'overdue'
             ? 'Overdue Tasks'
-            : 'Priority Tasks'
+            : spotlight === 'completed'
+              ? 'Tasks Completed'
+              : 'Priority Tasks'
 
   const tableHint =
     selectedDistrict
@@ -134,7 +151,9 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
               ? hotspot
                 ? `${hotspot.label} still open`
                 : 'Past due and still open'
-              : 'Open work across the team'
+              : spotlight === 'completed'
+                ? 'Closed work stays on the board — newest first'
+                : 'Open work first, then tasks completed this week'
 
   return (
     <div className="view light-dash">
@@ -223,6 +242,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
             <Mini icon="calendar" tone="info" label="Meetings this week" value={metrics.meetingsThisWeek} />
             <Mini icon="users" tone={metrics.liveActivities ? 'ok' : 'info'} label="Activities today" value={metrics.activitiesToday} />
             <Mini icon="clipboard" tone={metrics.dueToday ? 'warn' : 'info'} label="Due today" value={metrics.dueToday} />
+            <Mini icon="check" tone="ok" label="Completed" value={breakdown.completed} />
             <Mini icon="clock" tone="info" label="In progress" value={metrics.inProgress} />
             <Mini icon="alert" tone={metrics.overdue ? 'danger' : 'ok'} label="Overdue" value={metrics.overdue} />
           </div>
@@ -292,6 +312,21 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
           values={completedSeries.slice().reverse()}
           active={spotlight === 'progress'}
           onClick={() => openSpotlight('progress')}
+        />
+        <StatusCard
+          tone={breakdown.completed ? 'ok' : 'info'}
+          label="Tasks Completed"
+          value={breakdown.completed}
+          hint={
+            metrics.completedToday
+              ? `${metrics.completedToday} today · ${metrics.completedWeek} this week`
+              : metrics.completedWeek
+                ? `${metrics.completedWeek} this week`
+                : 'Closed work stays visible'
+          }
+          values={completedSeries}
+          active={spotlight === 'completed'}
+          onClick={() => openSpotlight('completed')}
         />
         <StatusCard
           tone={metrics.overdue ? 'danger' : 'ok'}
@@ -431,14 +466,19 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
                   <span className="muted table-empty">
                     {spotlight === 'due'
                       ? `No open tasks due ${formatDate(dueDay.toISOString())}.`
-                      : 'No live tasks yet. Prince can add them from the operator desk.'}
+                      : spotlight === 'completed'
+                        ? 'No completed tasks yet. Closed work will stay listed here.'
+                        : 'No live tasks yet. Prince can add them from the operator desk.'}
                   </span>
                 </div>
               )}
               {tasks.map((task) => {
                 const owner = memberById(state.members, task.assignedTo)
                 return (
-                  <div key={task.id} className="data-row">
+                  <div
+                    key={task.id}
+                    className={`data-row ${displayStatus(task, now) === 'completed' ? 'is-done' : ''}`}
+                  >
                     <div className="task-cell">
                       <strong>{task.title}</strong>
                       <PlaceLine
@@ -475,7 +515,9 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
               ? `Showing ${meetings.length} remaining meetings this week`
               : spotlight === 'activities'
                 ? `Showing ${activities.length} activities`
-              : `Showing ${tasks.length} open tasks`}
+              : spotlight === 'completed'
+                ? `Showing ${tasks.length} completed tasks`
+              : `Showing ${tasks.length} tasks`}
             <button type="button" className="link-btn" onClick={() => onOpenView('workload')}>
               View team load
             </button>
@@ -495,7 +537,7 @@ function Mini({
   label,
   value,
 }: {
-  icon: 'calendar' | 'clipboard' | 'clock' | 'alert' | 'users'
+  icon: 'calendar' | 'clipboard' | 'clock' | 'alert' | 'users' | 'check'
   tone: 'info' | 'warn' | 'danger' | 'ok'
   label: string
   value: number
