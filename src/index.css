@@ -873,6 +873,16 @@ button { cursor: pointer; }
   gap: 2px;
 }
 
+.hub-log .status-stack {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.hub-log .status-stack strong {
+  margin: 0;
+}
+
 .table-empty {
   grid-column: 1 / -1;
 }

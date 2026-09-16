@@ -40,6 +40,9 @@ function getPool(): pg.Pool {
 export async function migratePostgres(): Promise<void> {
   const sql = readFileSync(path.join(process.cwd(), 'db', 'schema.sql'), 'utf8')
   await getPool().query(sql)
+  await getPool().query(
+    `ALTER TABLE hub_log ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'open'`,
+  )
 }
 
 export async function readPostgresSnapshot(): Promise<SnapshotRead> {
@@ -233,12 +236,18 @@ export async function writePostgresSnapshot(snapshot: Snapshot): Promise<void> {
 
     for (const entry of state.hubLog ?? []) {
       await client.query(
-        `INSERT INTO hub_log (id, at, kind, title, detail, district, facility, author_id)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+        `INSERT INTO hub_log (id, at, kind, status, title, detail, district, facility, author_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
         [
           entry.id,
           entry.at,
           entry.kind,
+          entry.status ??
+            (entry.kind === 'extract_restored'
+              ? 'completed'
+              : entry.kind === 'extract_failed' || entry.kind === 'late_reporting'
+                ? 'overdue'
+                : 'open'),
           entry.title,
           entry.detail,
           entry.district,
@@ -360,6 +369,7 @@ type HubLogRow = {
   id: string
   at: Date
   kind: string
+  status: string | null
   title: string
   detail: string
   district: string
@@ -443,10 +453,17 @@ function mapAction(row: ActionRow): ActionItem {
 }
 
 function mapHubLog(row: HubLogRow): HubLogEntry {
+  const kind = row.kind as HubLogEntry['kind']
   return {
     id: row.id,
     at: iso(row.at),
-    kind: row.kind as HubLogEntry['kind'],
+    kind,
+    status: (row.status as HubLogEntry['status']) ??
+      (kind === 'extract_restored'
+        ? 'completed'
+        : kind === 'extract_failed' || kind === 'late_reporting'
+          ? 'overdue'
+          : 'open'),
     title: row.title,
     detail: row.detail,
     district: row.district as HubLogEntry['district'],

@@ -30,6 +30,7 @@ import {
   periodStatusBreakdown,
   priorityBand,
   startingSoon,
+  statusBreakdown,
   teamMetrics,
   completedThisWeek,
 } from '../utils/metrics'
@@ -41,6 +42,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
   const { state } = useOps()
   const [now, setNow] = useState(() => new Date())
   const [period, setPeriod] = useState<PeriodId>('Weekly')
+  const [mixPeriod, setMixPeriod] = useState<PeriodId>('Weekly')
   const [query, setQuery] = useState('')
   const [spotlight, setSpotlight] = useState<Spotlight>(null)
   const [reportOpen, setReportOpen] = useState(false)
@@ -56,9 +58,13 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
 
   const metrics = teamMetrics(state, now)
   const series = periodSeries(period, state.tasks, now)
-  const breakdown = periodStatusBreakdown(state.tasks, period, now)
+  const breakdown = statusBreakdown(state.tasks, now)
+  const mixBreakdown = periodStatusBreakdown(state.tasks, mixPeriod, now)
   const mixTotal =
-    breakdown.completed + breakdown.in_progress + breakdown.not_started + breakdown.overdue
+    mixBreakdown.completed +
+    mixBreakdown.in_progress +
+    mixBreakdown.not_started +
+    mixBreakdown.overdue
   const completedSeries = series.map((d) => d.completed)
   const dueSeries = series.map((d) => d.due)
   const closedInPeriod = periodClosedCount(state.tasks, period, now)
@@ -255,11 +261,11 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
             <div>
               <h2>Task Mix</h2>
               <p>
-                {period === 'Daily'
+                {mixPeriod === 'Daily'
                   ? 'Status mix · due or closed today'
-                  : period === 'Weekly'
+                  : mixPeriod === 'Weekly'
                     ? 'Status mix · last 7 days'
-                    : period === 'Monthly'
+                    : mixPeriod === 'Monthly'
                       ? 'Status mix · this month'
                       : 'Status mix · this year'}
               </p>
@@ -269,8 +275,8 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
                 <button
                   key={p}
                   type="button"
-                  className={period === p ? 'is-active' : ''}
-                  onClick={() => setPeriod(p)}
+                  className={mixPeriod === p ? 'is-active' : ''}
+                  onClick={() => setMixPeriod(p)}
                 >
                   {p}
                 </button>
@@ -280,17 +286,17 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
           <StatusDonut
             total={mixTotal}
             segments={[
-              { value: breakdown.completed, color: 'var(--ok)' },
-              { value: breakdown.in_progress, color: 'var(--warn)' },
-              { value: breakdown.not_started, color: 'var(--muted)' },
-              { value: breakdown.overdue, color: 'var(--danger)' },
+              { value: mixBreakdown.completed, color: 'var(--ok)' },
+              { value: mixBreakdown.in_progress, color: 'var(--warn)' },
+              { value: mixBreakdown.not_started, color: 'var(--muted)' },
+              { value: mixBreakdown.overdue, color: 'var(--danger)' },
             ]}
           />
           <div className="traffic-legend">
-            <LegendDot color="var(--ok)" label="Completed" value={breakdown.completed} total={mixTotal} />
-            <LegendDot color="var(--warn)" label="In progress" value={breakdown.in_progress} total={mixTotal} />
-            <LegendDot color="var(--muted)" label="Pending" value={breakdown.not_started} total={mixTotal} />
-            <LegendDot color="var(--danger)" label="Overdue" value={breakdown.overdue} total={mixTotal} />
+            <LegendDot color="var(--ok)" label="Completed" value={mixBreakdown.completed} total={mixTotal} />
+            <LegendDot color="var(--warn)" label="In progress" value={mixBreakdown.in_progress} total={mixTotal} />
+            <LegendDot color="var(--muted)" label="Pending" value={mixBreakdown.not_started} total={mixTotal} />
+            <LegendDot color="var(--danger)" label="Overdue" value={mixBreakdown.overdue} total={mixTotal} />
           </div>
         </section>
       </div>

@@ -168,7 +168,7 @@ export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput
 }
 
 function HubLogFields({ entry }: { entry?: HubLogEntry }) {
-  const defaultStatus = entry ? hubLogStatus(entry) : defaultHubLogStatus(entry?.kind ?? 'incident')
+  const defaultStatus = entry ? hubLogStatus(entry) : 'open'
   return (
     <>
       <div className="admin-split">
@@ -193,22 +193,16 @@ function HubLogFields({ entry }: { entry?: HubLogEntry }) {
           </select>
         </label>
       </div>
-      <div className="admin-split">
-        <label>
-          District
-          <select name="district" defaultValue={entry?.district ?? 'western_urban'}>
-            {DISTRICTS.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Facility
-          <input name="facility" defaultValue={entry?.facility ?? ''} placeholder="PHU / hospital (optional)" />
-        </label>
-      </div>
+      <label>
+        District
+        <select name="district" defaultValue={entry?.district ?? 'western_urban'}>
+          {DISTRICTS.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.label}
+            </option>
+          ))}
+        </select>
+      </label>
       <label>
         What happened
         <input
@@ -217,6 +211,10 @@ function HubLogFields({ entry }: { entry?: HubLogEntry }) {
           defaultValue={entry?.title}
           placeholder="Late PHUs, extract failed, restored…"
         />
+      </label>
+      <label>
+        Facility
+        <input name="facility" defaultValue={entry?.facility ?? ''} placeholder="PHU / hospital (optional)" />
       </label>
       <label>
         Detail

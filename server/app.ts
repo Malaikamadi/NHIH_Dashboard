@@ -264,10 +264,18 @@ api.patch('/actions/:id', async (c) => {
 
 api.post('/hub-log', async (c) => {
   const body = await readBody(c, hubLogCreate)
+  const status =
+    body.status ??
+    (body.kind === 'extract_restored'
+      ? 'completed'
+      : body.kind === 'extract_failed' || body.kind === 'late_reporting'
+        ? 'overdue'
+        : 'open')
   return c.json(
     await push(
       await repo.addHubLog({
         ...body,
+        status,
         id: body.id || uid('log'),
         at: body.at || new Date().toISOString(),
       }),

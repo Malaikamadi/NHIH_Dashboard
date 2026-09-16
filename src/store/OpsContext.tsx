@@ -509,11 +509,19 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
 
   const addHubLog = useCallback(
     (input: Omit<HubLogEntry, 'id' | 'at'> & { at?: string }) => {
+      const kind = input.kind
       const entry: HubLogEntry = {
         ...input,
         id: uid('log'),
         at: input.at ?? nowIso(),
         detail: input.detail ?? '',
+        status:
+          input.status ??
+          (kind === 'extract_restored'
+            ? 'completed'
+            : kind === 'extract_failed' || kind === 'late_reporting'
+              ? 'overdue'
+              : 'open'),
       }
       dispatch({ type: 'add_hub_log', entry })
       void createHubLog(entry).then(hydrate).catch(refresh)

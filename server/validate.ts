@@ -42,6 +42,7 @@ export const activityKind = z.enum([
   'other',
 ])
 export const hubLogKind = z.enum(['incident', 'late_reporting', 'extract_failed', 'extract_restored', 'note'])
+export const hubLogStatus = z.enum(['open', 'completed', 'overdue'])
 
 export const taskCreate = z
   .object({
@@ -182,6 +183,7 @@ export const hubLogCreate = z.object({
   id: z.string().optional(),
   at: z.string().optional(),
   kind: hubLogKind,
+  status: hubLogStatus.optional(),
   title: z.string().trim().min(1, 'Title is required'),
   detail: z.string().optional().default(''),
   district: districtId.optional().default('national'),
@@ -192,6 +194,7 @@ export const hubLogCreate = z.object({
 export const hubLogPatch = z
   .object({
     kind: hubLogKind.optional(),
+    status: hubLogStatus.optional(),
     title: z.string().trim().min(1).optional(),
     detail: z.string().optional(),
     district: districtId.optional(),
