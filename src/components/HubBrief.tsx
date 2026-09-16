@@ -12,7 +12,7 @@ import {
   weeksActivities,
   weeksMeetings,
 } from '../utils/metrics'
-import { countdown, formatDayLabel, formatTime, isSameDay, weekDays } from '../utils/time'
+import { countdown, formatDate, formatDayLabel, formatTime, isSameDay, weekDays } from '../utils/time'
 import { useOps } from '../store/OpsContext'
 import { Icon } from './Icons'
 
@@ -163,7 +163,7 @@ export function HubBrief({
           <strong>{logKindLabel(pipe.kind)}</strong>
           <p>{pipe.title}</p>
           <span className="brief-pipe-meta">
-            {formatTime(pipe.at)}
+            {isSameDay(new Date(pipe.at), now) ? formatTime(pipe.at) : `${formatDate(pipe.at)} · ${formatTime(pipe.at)}`}
             {` · ${districtLabel(pipe.district)}`}
             {pipe.facility ? ` · ${pipe.facility}` : ''}
           </span>
