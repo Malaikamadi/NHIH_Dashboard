@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { DISTRICTS, LOG_KINDS, districtLabel, logKindLabel } from '../data/catalog'
 import { useOps } from '../store/OpsContext'
 import type { DistrictId, HubLogEntry, HubLogKind, HubLogStatus } from '../types'
-import { defaultHubLogStatus, hubLogStatus, memberName, todaysHubLog } from '../utils/metrics'
+import { defaultHubLogStatus, hubLogStatus, memberName, visibleHubLog } from '../utils/metrics'
 import { formatDate, formatTime } from '../utils/time'
 import { DeskDeleteButton } from './DeskDeleteButton'
 import { StatusPill } from './Header'
@@ -25,7 +25,7 @@ export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput
   const entries = useMemo(() => {
     const list = allowInput
       ? [...(state.hubLog ?? [])].sort((a, b) => +new Date(b.at) - +new Date(a.at)).slice(0, 40)
-      : todaysHubLog(state.hubLog, now)
+      : visibleHubLog(state.hubLog, now)
     return typeFilter === 'all' ? list : list.filter((entry) => entry.kind === typeFilter)
   }, [allowInput, state.hubLog, now, typeFilter])
 
@@ -108,7 +108,7 @@ export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput
               <p>
                 {allowInput
                   ? 'Choose an incident type, then log what happened.'
-                  : 'Nothing logged for this type yet today.'}
+                  : 'Nothing open or logged for this type yet.'}
               </p>
             </div>
           </li>
@@ -125,7 +125,7 @@ export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput
                 <li key={entry.id} className={`tone-${logTone(entry.kind)}`}>
                   <span className="activity-time">
                     {formatTime(entry.at)}
-                    {allowInput ? ` · ${formatDate(entry.at)}` : ''}
+                    {` · ${formatDate(entry.at)}`}
                   </span>
                   <span className="activity-dot">
                     <Icon

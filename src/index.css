@@ -491,7 +491,8 @@ button { cursor: pointer; }
 }
 .week-empty { color: var(--muted); font-style: normal; font-size: 12px; }
 .week-strip li.is-today .week-empty {
-  color: color-mix(in srgb, #fff 72%, transparent);
+  color: #fff;
+  font-weight: 800;
 }
 .week-meet {
   display: grid;
@@ -517,11 +518,19 @@ button { cursor: pointer; }
 .week-strip li.is-today .week-meet,
 .week-strip li.is-today .week-meet b,
 .week-strip li.is-today .week-meet.is-activity,
-.week-strip li.is-today .week-meet.is-live {
+.week-strip li.is-today .week-meet.is-live,
+.week-strip li.is-today .week-meet.is-completed {
   color: #fff;
+  font-weight: 800;
+}
+.week-strip li.is-today .week-meet {
+  font-weight: 900;
+}
+.week-strip li.is-today .week-meet b {
+  font-weight: 900;
 }
 .week-strip li.is-today .week-meet.is-completed {
-  color: color-mix(in srgb, #fff 78%, transparent);
+  opacity: 0.85;
 }
 .agenda-item {
   flex: none;

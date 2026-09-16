@@ -483,16 +483,28 @@ export function todaysHubLog(log: HubLogEntry[], now = new Date()): HubLogEntry[
     .sort((a, b) => +new Date(b.at) - +new Date(a.at))
 }
 
+/** Today's entries plus older ones that are still open/overdue. */
+export function visibleHubLog(log: HubLogEntry[], now = new Date()): HubLogEntry[] {
+  const all = [...(log ?? [])].sort((a, b) => +new Date(b.at) - +new Date(a.at))
+  return all.filter(
+    (entry) => isSameDay(new Date(entry.at), now) || hubLogStatus(entry) !== 'completed',
+  )
+}
+
 export function pipeStatus(log: HubLogEntry[], now = new Date()): HubLogEntry | null {
   const today = todaysHubLog(log, now)
-  const failed = today.find((entry) => entry.kind === 'extract_failed')
+  const open = visibleHubLog(log, now).filter((entry) => hubLogStatus(entry) !== 'completed')
+  const pick = (kind: HubLogEntry['kind']) =>
+    today.find((entry) => entry.kind === kind) ?? open.find((entry) => entry.kind === kind)
+
+  const failed = pick('extract_failed')
   const restored = today.find((entry) => entry.kind === 'extract_restored')
   if (failed && (!restored || +new Date(failed.at) > +new Date(restored.at))) return failed
-  const late = today.find((entry) => entry.kind === 'late_reporting')
+  const late = pick('late_reporting')
   if (late) return late
-  const incident = today.find((entry) => entry.kind === 'incident')
+  const incident = pick('incident')
   if (incident) return incident
-  return today[0] ?? null
+  return today[0] ?? open[0] ?? null
 }
 
 export function hotspotDistrict(tasks: Task[], now = new Date()): DistrictLoad | undefined {
