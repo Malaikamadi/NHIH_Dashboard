@@ -245,15 +245,6 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
             aLabel="Completed"
             bLabel="Due"
           />
-
-          <div className="mini-stats">
-            <Mini icon="calendar" tone="info" label="Meetings this week" value={metrics.meetingsThisWeek} />
-            <Mini icon="users" tone={metrics.liveActivities ? 'ok' : 'info'} label="Activities today" value={metrics.activitiesToday} />
-            <Mini icon="clipboard" tone={metrics.dueToday ? 'warn' : 'info'} label="Due today" value={metrics.dueToday} />
-            <Mini icon="check" tone="ok" label="Completed" value={breakdown.completed} />
-            <Mini icon="clock" tone="info" label="In progress" value={metrics.inProgress} />
-            <Mini icon="alert" tone={metrics.overdue ? 'danger' : 'ok'} label="Overdue" value={metrics.overdue} />
-          </div>
         </section>
 
         <section className="paper traffic-card">
@@ -555,30 +546,6 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
       {reportOpen && (
         <WeeklyReportModal onClose={() => setReportOpen(false)} />
       )}
-    </div>
-  )
-}
-
-function Mini({
-  icon,
-  tone,
-  label,
-  value,
-}: {
-  icon: 'calendar' | 'clipboard' | 'clock' | 'alert' | 'users' | 'check'
-  tone: 'info' | 'warn' | 'danger' | 'ok'
-  label: string
-  value: number
-}) {
-  return (
-    <div className={`mini mini-${tone}`}>
-      <span>
-        <Icon name={icon} size={16} />
-      </span>
-      <div>
-        <strong>{value}</strong>
-        <em>{label}</em>
-      </div>
     </div>
   )
 }

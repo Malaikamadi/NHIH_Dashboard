@@ -601,48 +601,6 @@ button { cursor: pointer; }
 .chart-grid { stroke: var(--grid); stroke-width: 1; }
 .chart-label { fill: var(--muted); font-size: 11px; }
 
-.mini-stats {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 8px;
-}
-
-.mini {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.mini span {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  background: var(--icon-bg);
-  color: var(--icon-fg);
-}
-
-.mini-info span {
-  color: var(--info);
-  background: color-mix(in srgb, var(--info) 12%, var(--paper));
-}
-.mini-warn span {
-  color: var(--warn);
-  background: color-mix(in srgb, var(--warn) 12%, var(--paper));
-}
-.mini-danger span {
-  color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 12%, var(--paper));
-}
-.mini-ok span {
-  color: var(--ok);
-  background: color-mix(in srgb, var(--ok) 12%, var(--paper));
-}
-.mini strong { display: block; font-size: 16px; }
-.mini em { color: var(--muted); font-size: 11px; font-style: normal; }
-
 .traffic-card { display: flex; flex-direction: column; align-items: center; }
 .donut { width: 180px; height: 180px; }
 .traffic-legend {
