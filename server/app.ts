@@ -3,7 +3,7 @@ import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { streamSSE } from 'hono/streaming'
 import { z } from 'zod'
-import { buildWeeklyReport, reportToHtml } from '../src/utils/report'
+import { buildOpsReport, parseReportPeriod, reportToHtml } from '../src/utils/report'
 import { uid } from '../src/utils/time'
 import * as repo from './db'
 import { HttpError } from './errors'
@@ -115,18 +115,20 @@ api.post('/operator/unlock', async (c) => {
 api.get('/state', async (c) => c.json(await repo.getState()))
 
 api.get('/report', async (c) => {
-  const report = buildWeeklyReport(await repo.getState())
+  const period = parseReportPeriod(c.req.query('period'))
+  const report = buildOpsReport(await repo.getState(), period)
   if (c.req.query('format') === 'html') {
-    c.header('Content-Disposition', `inline; filename="NHIH-weekly-ops-report.html"`)
+    c.header('Content-Disposition', `inline; filename="NHIH-${period.toLowerCase()}-ops-report.html"`)
     return c.html(reportToHtml(report))
   }
   return c.json(report)
 })
 
 api.get('/reports/weekly', async (c) => {
-  const report = buildWeeklyReport(await repo.getState())
+  const period = parseReportPeriod(c.req.query('period') ?? 'Weekly')
+  const report = buildOpsReport(await repo.getState(), period)
   if (c.req.query('format') === 'html') {
-    c.header('Content-Disposition', `inline; filename="NHIH-weekly-ops-report.html"`)
+    c.header('Content-Disposition', `inline; filename="NHIH-${period.toLowerCase()}-ops-report.html"`)
     return c.html(reportToHtml(report))
   }
   return c.json(report)

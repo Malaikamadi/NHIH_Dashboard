@@ -1,6 +1,7 @@
 import { getOperatorCode, setOperatorCode } from './access'
 import type { ActionItem, HubLogEntry, Meeting, OpsState, Task, TeamActivity } from './types'
 import type { WeeklyReport } from './utils/report'
+import type { PeriodId } from './types'
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers: Record<string, string> = {
@@ -133,8 +134,8 @@ export function deleteHubLog(id: string): Promise<OpsState> {
   return request<OpsState>(`/api/log?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
 }
 
-export function fetchWeeklyReport(): Promise<WeeklyReport> {
-  return request<WeeklyReport>('/api/report')
+export function fetchWeeklyReport(period: PeriodId = 'Weekly'): Promise<WeeklyReport> {
+  return request<WeeklyReport>(`/api/report?period=${encodeURIComponent(period)}`)
 }
 
 export function restoreHub(state: OpsState): Promise<OpsState> {
@@ -151,8 +152,8 @@ export function restoreHub(state: OpsState): Promise<OpsState> {
   })
 }
 
-export async function fetchWeeklyReportHtml(): Promise<string> {
-  const res = await fetch('/api/report?format=html')
+export async function fetchWeeklyReportHtml(period: PeriodId = 'Weekly'): Promise<string> {
+  const res = await fetch(`/api/report?period=${encodeURIComponent(period)}&format=html`)
   if (!res.ok) throw new Error(`${res.status} /api/report`)
   return res.text()
 }

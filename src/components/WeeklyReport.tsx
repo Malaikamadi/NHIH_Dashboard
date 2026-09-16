@@ -1,19 +1,30 @@
 import { useEffect, useState } from 'react'
 import { fetchWeeklyReport, fetchWeeklyReportHtml } from '../api'
+import type { PeriodId } from '../types'
 import type { WeeklyReport as WeeklyReportData } from '../utils/report'
 import { downloadReport, printReport } from '../utils/download'
 import { reportFileName } from '../utils/report'
-import { agendaLines } from '../utils/metrics'
+import { PERIODS, agendaLines } from '../utils/metrics'
 import { Icon } from './Icons'
 
 interface Props {
   onClose: () => void
+  initialPeriod?: PeriodId
 }
 
-export function WeeklyReportModal({ onClose }: Props) {
+const PERIOD_SCOPE: Record<PeriodId, string> = {
+  Daily: 'today',
+  Weekly: 'this week',
+  Monthly: 'this month',
+  Yearly: 'this year',
+}
+
+export function WeeklyReportModal({ onClose, initialPeriod = 'Weekly' }: Props) {
+  const [period, setPeriod] = useState<PeriodId>(initialPeriod)
   const [report, setReport] = useState<WeeklyReportData | null>(null)
   const [html, setHtml] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -25,28 +36,51 @@ export function WeeklyReportModal({ onClose }: Props) {
 
   useEffect(() => {
     let cancelled = false
-    Promise.all([fetchWeeklyReport(), fetchWeeklyReportHtml()])
+    setLoading(true)
+    setError('')
+    Promise.all([fetchWeeklyReport(period), fetchWeeklyReportHtml(period)])
       .then(([next, markup]) => {
         if (cancelled) return
         setReport(next)
         setHtml(markup)
       })
       .catch(() => {
-        if (!cancelled) setError('Could not load the weekly report from the server.')
+        if (!cancelled) {
+          setReport(null)
+          setHtml('')
+          setError('Could not load the operations report from the server.')
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
       })
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [period])
+
+  const scope = PERIOD_SCOPE[period]
 
   return (
     <div className="report-scrim" onClick={onClose}>
       <article className="report-panel" onClick={(e) => e.stopPropagation()}>
         <header className="report-h">
           <div>
-            <div className="hdr-kicker">Weekly operations report</div>
+            <div className="hdr-kicker">{period} operations report</div>
             <h2>Team performance, hub incident log, meetings, and minutes</h2>
             <p className="muted">{report?.rangeLabel ?? 'Loading from the operations API'}</p>
+            <div className="log-type-tabs report-period-tabs" role="tablist" aria-label="Report period">
+              {PERIODS.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  className={period === item ? 'is-on' : ''}
+                  onClick={() => setPeriod(item)}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="report-actions">
             <button
@@ -67,9 +101,11 @@ export function WeeklyReportModal({ onClose }: Props) {
         </header>
 
         {error && <p className="danger-text">{error}</p>}
-        {!report && !error && <p className="muted">Building this week’s performance, meetings, and minutes…</p>}
+        {loading && !error && (
+          <p className="muted">Building {period.toLowerCase()} performance, meetings, and minutes…</p>
+        )}
 
-        {report && (
+        {report && !loading && (
           <>
             <section className="report-kpis">
               <div>
@@ -78,7 +114,7 @@ export function WeeklyReportModal({ onClose }: Props) {
               </div>
               <div>
                 <strong>{report.performance.closed}</strong>
-                <span>Closed this week</span>
+                <span>Closed {scope}</span>
               </div>
               <div>
                 <strong>{report.performance.onTime}</strong>
@@ -111,7 +147,7 @@ export function WeeklyReportModal({ onClose }: Props) {
             <section>
               <h3>Hub incident log</h3>
               {report.hubLog.length === 0 ? (
-                <p className="muted">No extract, late-reporting, or incident entries this week.</p>
+                <p className="muted">No extract, late-reporting, or incident entries {scope}.</p>
               ) : (
                 <div className="data-table">
                   <div className="data-head report-log-head">
@@ -204,7 +240,7 @@ export function WeeklyReportModal({ onClose }: Props) {
             <section>
               <h3>Team activities</h3>
               {report.activities.length === 0 ? (
-                <p className="muted">No trainings, field visits, or other activities this week.</p>
+                <p className="muted">No trainings, field visits, or other activities {scope}.</p>
               ) : (
                 <div className="data-table">
                   <div className="data-head report-log-head">
