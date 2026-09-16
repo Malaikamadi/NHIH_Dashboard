@@ -1,34 +1,35 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { get, put } from '@vercel/blob'
-import type { OpsState } from '../src/types'
 import { hubHasWork } from '../src/utils/hub'
+import {
+  postgresActive,
+  readPostgresSnapshot,
+  writePostgresSnapshot,
+} from './postgres'
+import {
+  BLOB_PATH,
+  SEED_VERSION,
+  type Snapshot,
+  type SnapshotRead,
+} from './snapshot'
 
-export const SEED_VERSION = 'live-empty-1'
-export const BLOB_PATH = 'ops-state.json'
-
-export interface Snapshot {
-  version: string
-  state: OpsState
-}
+export { BLOB_PATH, SEED_VERSION, type Snapshot, type SnapshotRead }
 
 const KEY = 'nhih-ops-state'
 const LOCAL_FILE = process.env.VERCEL
   ? path.join('/tmp', 'ops-state.json')
   : path.join(process.cwd(), 'data', 'ops-state.json')
 
-export type SnapshotRead =
-  | { ok: true; snapshot: Snapshot }
-  | { ok: false; missing: true }
-  | { ok: false; missing: false; error: string }
-
-/** Blob is optional recovery only. Prefer Redis/KV for durable hub data. */
+/** Blob is optional recovery only. Prefer Redis/KV for durable hub data (production). */
 const blobAllowed =
   process.env.ENABLE_BLOB === '1' || process.env.ENABLE_BLOB === 'true'
 
 let blobBroken = false
 
 function kvConfig() {
+  // Local Postgres mode must never touch production Redis/KV.
+  if (postgresActive()) return null
   const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
   const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
   if (!url || !token) return null
@@ -36,6 +37,7 @@ function kvConfig() {
 }
 
 function blobConfigured(): boolean {
+  if (postgresActive()) return false
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID)
 }
 
@@ -43,18 +45,20 @@ function blobEnabled(): boolean {
   return blobAllowed && blobConfigured() && !blobBroken
 }
 
-export function storageKind(): 'kv' | 'blob' | 'file' {
+export function storageKind(): 'postgres' | 'kv' | 'blob' | 'file' {
+  if (postgresActive()) return 'postgres'
   if (kvConfig()) return 'kv'
   if (blobEnabled()) return 'blob'
   return 'file'
 }
 
 export function storageStatus(): {
-  kind: 'kv' | 'blob' | 'file'
+  kind: 'postgres' | 'kv' | 'blob' | 'file'
   blobConfigured: boolean
   blobBroken: boolean
   blobAllowed: boolean
   kvConfigured: boolean
+  postgresConfigured: boolean
 } {
   return {
     kind: storageKind(),
@@ -62,6 +66,7 @@ export function storageStatus(): {
     blobBroken,
     blobAllowed,
     kvConfigured: Boolean(kvConfig()),
+    postgresConfigured: postgresActive(),
   }
 }
 
@@ -171,7 +176,11 @@ function writeFileStore(snapshot: Snapshot): void {
 }
 
 export async function readSnapshot(): Promise<SnapshotRead> {
-  // Durable store first: Upstash Redis / Vercel KV
+  if (postgresActive()) {
+    return readPostgresSnapshot()
+  }
+
+  // Durable store first: Upstash Redis / Vercel KV (production)
   if (kvConfig()) {
     const kv = await readKv()
     if (kv.ok || !kv.missing) return kv
@@ -188,6 +197,13 @@ export async function readSnapshot(): Promise<SnapshotRead> {
 }
 
 export async function writeSnapshot(snapshot: Snapshot): Promise<void> {
+  if (postgresActive()) {
+    await writePostgresSnapshot(snapshot)
+    // Mirror to local file as a secondary local backup (never cloud).
+    writeFileStore(snapshot)
+    return
+  }
+
   if (kvConfig()) {
     await redis(['SET', KEY, JSON.stringify(snapshot)])
     writeFileStore(snapshot)

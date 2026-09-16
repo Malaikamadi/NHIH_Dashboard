@@ -3,7 +3,10 @@ import { serve } from '@hono/node-server'
 import { serveStatic } from '@hono/node-server/serve-static'
 import { app } from './app'
 import * as repo from './db'
+import { loadLocalEnv } from './env'
 import { broadcast } from './hub'
+
+loadLocalEnv()
 
 const PORT = Number(process.env.PORT ?? 8787)
 
