@@ -8,9 +8,9 @@ type NodeReq = {
 }
 
 type NodeRes = {
-  statusCode: number
+  statusCode: number 
   setHeader: (key: string, value: string) => void
-  end: (chunk?: string | Buffer) => void
+  end: (chunk?: string | Buffer) => void 
 }
 
 function headerValue(value: string | string[] | undefined): string | undefined {

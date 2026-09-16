@@ -1,0 +1,18 @@
+{
+  "exportedAt": "2026-09-16T10:27:16.429Z",
+  "source": "upstash-redis-GET-only",
+  "key": "nhih-ops-state",
+  "bytes": 5726,
+  "sha256": "21bf788ba9c46e0f7a2fde7f02aff214b35b0d322c5c2ad35179f3556f484d12",
+  "version": "live-empty-1",
+  "counts": {
+    "members": 16,
+    "tasks": 3,
+    "meetings": 2,
+    "activities": 2,
+    "actionItems": 0,
+    "hubLog": 2,
+    "events": 12
+  },
+  "restoreNote": "To restore to Redis later: SET nhih-ops-state <file contents>. Do NOT run unless recovering production. Local restore: import into Postgres or copy to data/ops-state.json as {version,state}."
+}
