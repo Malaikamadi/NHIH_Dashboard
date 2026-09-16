@@ -135,6 +135,15 @@ export function formatDue(iso: string, now = new Date()): string {
   return `${formatDate(iso)} ${formatTime(iso)}`
 }
 
+/** Relative day label: Today, Tomorrow, or weekday short (Mon, Tue…). */
+export function formatDayLabel(iso: string, now = new Date()): string {
+  const day = new Date(iso)
+  if (isSameDay(day, now)) return 'Today'
+  if (isSameDay(day, addDays(now, 1))) return 'Tomorrow'
+  if (isSameDay(day, addDays(now, -1))) return 'Yesterday'
+  return day.toLocaleDateString('en-US', { weekday: 'short' })
+}
+
 export function countdown(toIso: string, now = new Date()): string {
   const diff = new Date(toIso).getTime() - now.getTime()
   const abs = Math.abs(diff)

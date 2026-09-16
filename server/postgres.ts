@@ -50,7 +50,7 @@ export async function readPostgresSnapshot(): Promise<SnapshotRead> {
       const versionRes = await client.query<{ value: string }>(
         `SELECT value FROM meta WHERE key = 'seed_version'`,
       )
-      const membersRes = await client.query<TeamMemberRow>(`SELECT * FROM members ORDER BY id`)
+      const membersRes = await client.query<MemberRow>(`SELECT * FROM members ORDER BY id`)
       if (membersRes.rowCount === 0 && versionRes.rowCount === 0) {
         return { ok: false, missing: true }
       }

@@ -12,7 +12,7 @@ import {
   weeksActivities,
   weeksMeetings,
 } from '../utils/metrics'
-import { countdown, formatTime, isSameDay, weekDays } from '../utils/time'
+import { countdown, formatDayLabel, formatTime, isSameDay, weekDays } from '../utils/time'
 import { useOps } from '../store/OpsContext'
 import { Icon } from './Icons'
 
@@ -77,7 +77,7 @@ export function HubBrief({
           <strong>{focus ? focus.item.title : 'No remaining meetings or activities this week'}</strong>
           <span className="muted">
             {focus
-              ? `${formatTime(focus.item.startTime)} – ${formatTime(focus.item.endTime)} · ${
+              ? `${formatDayLabel(focus.item.startTime, now)} · ${formatTime(focus.item.startTime)} – ${formatTime(focus.item.endTime)} · ${
                   live
                     ? `${countdown(focus.item.endTime, now)} remaining`
                     : `starts in ${countdown(focus.item.startTime, now)}`
@@ -123,7 +123,9 @@ export function HubBrief({
             return (
               <li key={day.toISOString()} className={isSameDay(day, now) ? 'is-today' : ''}>
                 <span>
-                  {day.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })}
+                  {isSameDay(day, now)
+                    ? 'Today'
+                    : day.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })}
                 </span>
                 {items.length === 0 ? (
                   <em className="week-empty">—</em>

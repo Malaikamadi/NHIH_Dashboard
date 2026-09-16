@@ -27,9 +27,9 @@ import {
   periodClosedCount,
   periodCompletionRate,
   periodSeries,
+  periodStatusBreakdown,
   priorityBand,
   startingSoon,
-  statusBreakdown,
   teamMetrics,
   completedThisWeek,
 } from '../utils/metrics'
@@ -56,7 +56,9 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
 
   const metrics = teamMetrics(state, now)
   const series = periodSeries(period, state.tasks, now)
-  const breakdown = statusBreakdown(state.tasks, now)
+  const breakdown = periodStatusBreakdown(state.tasks, period, now)
+  const mixTotal =
+    breakdown.completed + breakdown.in_progress + breakdown.not_started + breakdown.overdue
   const completedSeries = series.map((d) => d.completed)
   const dueSeries = series.map((d) => d.due)
   const closedInPeriod = periodClosedCount(state.tasks, period, now)
@@ -252,11 +254,31 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
           <header className="paper-h">
             <div>
               <h2>Task Mix</h2>
-              <p>Current board distribution</p>
+              <p>
+                {period === 'Daily'
+                  ? 'Status mix · due or closed today'
+                  : period === 'Weekly'
+                    ? 'Status mix · last 7 days'
+                    : period === 'Monthly'
+                      ? 'Status mix · this month'
+                      : 'Status mix · this year'}
+              </p>
+            </div>
+            <div className="period-tabs">
+              {PERIODS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className={period === p ? 'is-active' : ''}
+                  onClick={() => setPeriod(p)}
+                >
+                  {p}
+                </button>
+              ))}
             </div>
           </header>
           <StatusDonut
-            total={metrics.total}
+            total={mixTotal}
             segments={[
               { value: breakdown.completed, color: 'var(--ok)' },
               { value: breakdown.in_progress, color: 'var(--warn)' },
@@ -265,10 +287,10 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
             ]}
           />
           <div className="traffic-legend">
-            <LegendDot color="var(--ok)" label="Completed" value={breakdown.completed} total={metrics.total} />
-            <LegendDot color="var(--warn)" label="In progress" value={breakdown.in_progress} total={metrics.total} />
-            <LegendDot color="var(--muted)" label="Pending" value={breakdown.not_started} total={metrics.total} />
-            <LegendDot color="var(--danger)" label="Overdue" value={breakdown.overdue} total={metrics.total} />
+            <LegendDot color="var(--ok)" label="Completed" value={breakdown.completed} total={mixTotal} />
+            <LegendDot color="var(--warn)" label="In progress" value={breakdown.in_progress} total={mixTotal} />
+            <LegendDot color="var(--muted)" label="Pending" value={breakdown.not_started} total={mixTotal} />
+            <LegendDot color="var(--danger)" label="Overdue" value={breakdown.overdue} total={mixTotal} />
           </div>
         </section>
       </div>

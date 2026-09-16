@@ -410,6 +410,28 @@ export function statusBreakdown(tasks: Task[], now = new Date()) {
   return counts
 }
 
+/** Status mix for tasks due or completed within the selected period. */
+export function periodStatusBreakdown(tasks: Task[], period: PeriodId, now = new Date()) {
+  const { start, end } = periodBounds(period, now)
+  const scoped = tasks.filter(
+    (t) => isInRange(t.dueDate, start, end) || Boolean(t.completedAt && isInRange(t.completedAt, start, end)),
+  )
+  return statusBreakdown(scoped, now)
+}
+
+export function hubLogStatus(entry: HubLogEntry): 'open' | 'completed' | 'overdue' {
+  if (entry.status) return entry.status
+  if (entry.kind === 'extract_restored') return 'completed'
+  if (entry.kind === 'extract_failed' || entry.kind === 'late_reporting') return 'overdue'
+  return 'open'
+}
+
+export function defaultHubLogStatus(kind: HubLogEntry['kind']): 'open' | 'completed' | 'overdue' {
+  if (kind === 'extract_restored') return 'completed'
+  if (kind === 'extract_failed' || kind === 'late_reporting') return 'overdue'
+  return 'open'
+}
+
 export function priorityBand(priority: Priority): 'high' | 'medium' | 'low' {
   if (priority === 'critical' || priority === 'high') return 'high'
   if (priority === 'medium') return 'medium'

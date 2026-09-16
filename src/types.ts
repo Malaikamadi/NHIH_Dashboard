@@ -43,6 +43,8 @@ export type DistrictId =
 
 export type HubLogKind = 'incident' | 'late_reporting' | 'extract_failed' | 'extract_restored' | 'note'
 
+export type HubLogStatus = 'open' | 'completed' | 'overdue'
+
 export type ActivityKind =
   | 'field_visit'
   | 'training'
@@ -124,6 +126,8 @@ export interface HubLogEntry {
   id: string
   at: string
   kind: HubLogKind
+  /** Defaults from kind when missing on older snapshots. */
+  status?: HubLogStatus
   title: string
   detail: string
   district: DistrictId

@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS activity_events (
   id TEXT PRIMARY KEY,
   at TIMESTAMPTZ NOT NULL,
   message TEXT NOT NULL,
-  tone TEXT NOT NULL
+  tone TEXT NOT NULL 
 );
 
 CREATE INDEX IF NOT EXISTS tasks_assigned_to_idx ON tasks (assigned_to);

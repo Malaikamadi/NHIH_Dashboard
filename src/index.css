@@ -462,8 +462,8 @@ button { cursor: pointer; }
   border-radius: 8px;
 }
 .week-strip li.is-today {
-  background: color-mix(in srgb, var(--accent) 8%, var(--paper));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
+  background: color-mix(in srgb, var(--accent) 22%, var(--paper));
+  box-shadow: inset 0 0 0 2px var(--accent);
 }
 .week-strip li > span {
   color: var(--muted);
@@ -471,6 +471,10 @@ button { cursor: pointer; }
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+.week-strip li.is-today > span {
+  color: var(--accent);
+  font-weight: 900;
 }
 .week-empty { color: var(--muted); font-style: normal; font-size: 12px; }
 .week-meet {
