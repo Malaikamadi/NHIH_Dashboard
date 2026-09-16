@@ -211,7 +211,7 @@ export function addHubLog(state: OpsState, entry: HubLogEntry): OpsState {
             ? 'Incident'
             : 'Hub note'
   return pushEvent(
-    { ...state, hubLog: [entry, ...(state.hubLog ?? [])].slice(0, 40) },
+    { ...state, hubLog: [entry, ...(state.hubLog ?? [])] },
     `${prefix} · ${entry.title}`,
     entry.kind === 'extract_failed' || entry.kind === 'incident' ? 'danger' : 'info',
   )

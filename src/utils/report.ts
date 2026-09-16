@@ -1,6 +1,8 @@
 import { activityKindLabel, districtLabel, logKindLabel, placeLine } from '../data/catalog'
-import type { OpsState } from '../types'
+import type { OpsState, PeriodId } from '../types'
 import {
+  PERIOD_CLOSED_LABEL,
+  PERIODS,
   agendaLines,
   completedOnTime,
   meetingStatus,
@@ -58,6 +60,7 @@ export interface WeeklyReportActivity {
 
 export interface WeeklyReport {
   generatedAt: string
+  period: PeriodId
   rangeLabel: string
   performance: {
     completionRate: number
@@ -76,14 +79,28 @@ export interface WeeklyReport {
   activities: WeeklyReportActivity[]
 }
 
-export function buildWeeklyReport(state: OpsState, now = new Date()): WeeklyReport {
-  const { start, end } = periodBounds('Weekly', now)
+export type OpsReport = WeeklyReport
+
+const PERIOD_SCOPE: Record<PeriodId, string> = {
+  Daily: 'today',
+  Weekly: 'this week',
+  Monthly: 'this month',
+  Yearly: 'this year',
+}
+
+export function parseReportPeriod(value: string | null | undefined): PeriodId {
+  if (value && (PERIODS as string[]).includes(value)) return value as PeriodId
+  return 'Weekly'
+}
+
+export function buildOpsReport(state: OpsState, period: PeriodId = 'Weekly', now = new Date()): WeeklyReport {
+  const { start, end } = periodBounds(period, now)
   const metrics = teamMetrics(state, now)
   const closed = state.tasks.filter((t) => t.completedAt && isInRange(t.completedAt, start, end))
   const meetings = state.meetings
     .filter((m) => isInRange(m.startTime, start, end))
     .sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime))
-  const weekActivities = [...(state.activities ?? [])]
+  const periodActivities = [...(state.activities ?? [])]
     .filter((item) => isInRange(item.startTime, start, end))
     .sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime))
   const people = memberWorkloads(state, now).map((row) => ({
@@ -112,6 +129,7 @@ export function buildWeeklyReport(state: OpsState, now = new Date()): WeeklyRepo
 
   return {
     generatedAt: now.toISOString(),
+    period,
     rangeLabel: formatRange(start, end),
     performance: {
       completionRate: metrics.completionRate,
@@ -120,7 +138,7 @@ export function buildWeeklyReport(state: OpsState, now = new Date()): WeeklyRepo
       inProgress: metrics.inProgress,
       onTime: closed.filter((t) => completedOnTime(t)).length,
       meetings: meetings.length,
-      activities: weekActivities.length,
+      activities: periodActivities.length,
       openActions: state.actionItems.filter((a) => a.status !== 'completed').length,
       hubLog: hubLog.length,
     },
@@ -144,7 +162,7 @@ export function buildWeeklyReport(state: OpsState, now = new Date()): WeeklyRepo
         })),
       }
     }),
-    activities: weekActivities.map((item) => ({
+    activities: periodActivities.map((item) => ({
       id: item.id,
       title: item.title,
       kind: activityKindLabel(item.kind, item.kindOther),
@@ -158,12 +176,17 @@ export function buildWeeklyReport(state: OpsState, now = new Date()): WeeklyRepo
   }
 }
 
+export function buildWeeklyReport(state: OpsState, now = new Date()): WeeklyReport {
+  return buildOpsReport(state, 'Weekly', now)
+}
+
 export function reportFileName(report: WeeklyReport): string {
   const stamp = report.rangeLabel.replace(/[–—]/g, 'to').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '')
-  return `NHIH-weekly-ops-report-${stamp}.html`
+  return `NHIH-${report.period.toLowerCase()}-ops-report-${stamp}.html`
 }
 
 export function reportToHtml(report: WeeklyReport): string {
+  const scope = PERIOD_SCOPE[report.period]
   const peopleRows = report.people
     .map(
       (p) =>
@@ -210,7 +233,7 @@ export function reportToHtml(report: WeeklyReport): string {
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>NHIH Weekly Operations Report · ${esc(report.rangeLabel)}</title>
+  <title>NHIH ${esc(report.period)} Operations Report · ${esc(report.rangeLabel)}</title>
   <style>
     body { font-family: Inter, "Segoe UI", sans-serif; color: #1f2933; background: #fff; margin: 0; padding: 32px; }
     h1 { font-size: 22px; margin: 0 0 4px; }
@@ -235,18 +258,18 @@ export function reportToHtml(report: WeeklyReport): string {
 </head>
 <body>
   <div class="kicker">NHIH Team Operations</div>
-  <h1>Weekly operations report</h1>
+  <h1>${esc(report.period)} operations report</h1>
   <p class="meta">${esc(report.rangeLabel)} · Generated ${esc(new Date(report.generatedAt).toLocaleString())}</p>
 
   <h2>Team performance</h2>
   <div class="kpis">
     <div class="kpi"><strong>${report.performance.completionRate}%</strong><span>Completion rate</span></div>
-    <div class="kpi"><strong>${report.performance.closed}</strong><span>Tasks closed this week</span></div>
+    <div class="kpi"><strong>${report.performance.closed}</strong><span>${esc(PERIOD_CLOSED_LABEL[report.period])}</span></div>
     <div class="kpi"><strong>${report.performance.onTime}</strong><span>Closed on time</span></div>
     <div class="kpi"><strong>${report.performance.overdue}</strong><span>Still overdue</span></div>
     <div class="kpi"><strong>${report.performance.inProgress}</strong><span>In progress</span></div>
-    <div class="kpi"><strong>${report.performance.meetings}</strong><span>Meetings this week</span></div>
-    <div class="kpi"><strong>${report.performance.activities}</strong><span>Activities this week</span></div>
+    <div class="kpi"><strong>${report.performance.meetings}</strong><span>Meetings ${esc(scope)}</span></div>
+    <div class="kpi"><strong>${report.performance.activities}</strong><span>Activities ${esc(scope)}</span></div>
     <div class="kpi"><strong>${report.performance.openActions}</strong><span>Open action items</span></div>
     <div class="kpi"><strong>${report.performance.hubLog}</strong><span>Hub incident log entries</span></div>
   </div>
@@ -255,12 +278,12 @@ export function reportToHtml(report: WeeklyReport): string {
   ${
     hubLogRows
       ? `<table><thead><tr><th>When</th><th>Kind</th><th>What happened</th><th>Where</th><th>Detail</th><th>Logged by</th></tr></thead><tbody>${hubLogRows}</tbody></table>`
-      : '<p class="mute">No extract, late-reporting, or incident entries this week.</p>'
+      : `<p class="mute">No extract, late-reporting, or incident entries ${esc(scope)}.</p>`
   }
 
   <h2>Individual performance</h2>
   <table>
-    <thead><tr><th>Name</th><th>Role</th><th>Closed this week</th><th>Open</th><th>Overdue</th></tr></thead>
+    <thead><tr><th>Name</th><th>Role</th><th>Closed ${esc(scope)}</th><th>Open</th><th>Overdue</th></tr></thead>
     <tbody>${peopleRows}</tbody>
   </table>
 
