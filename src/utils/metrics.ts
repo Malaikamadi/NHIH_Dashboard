@@ -484,7 +484,7 @@ export function todaysHubLog(log: HubLogEntry[], now = new Date()): HubLogEntry[
 }
 
 /** Open/overdue entries for alerts. Full history stays in state until deleted. */
-export function activeHubLog(log: HubLogEntry[], now = new Date()): HubLogEntry[] {
+export function activeHubLog(log: HubLogEntry[]): HubLogEntry[] {
   return [...(log ?? [])]
     .filter((entry) => hubLogStatus(entry) !== 'completed')
     .sort((a, b) => +new Date(b.at) - +new Date(a.at))
@@ -500,7 +500,7 @@ export function visibleHubLog(log: HubLogEntry[], now = new Date()): HubLogEntry
 
 export function pipeStatus(log: HubLogEntry[], now = new Date()): HubLogEntry | null {
   const today = todaysHubLog(log, now)
-  const open = activeHubLog(log, now)
+  const open = activeHubLog(log)
   const pick = (kind: HubLogEntry['kind']) =>
     today.find((entry) => entry.kind === kind) ?? open.find((entry) => entry.kind === kind)
 
