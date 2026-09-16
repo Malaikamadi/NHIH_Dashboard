@@ -460,12 +460,24 @@ button { cursor: pointer; }
   padding: 6px 7px;
   background: var(--row);
   border-radius: 8px;
+  max-height: 132px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 .week-strip li.is-today {
-  background: color-mix(in srgb, var(--accent) 22%, var(--paper));
-  box-shadow: inset 0 0 0 2px var(--accent);
+  background: var(--accent);
+  color: #fff;
+  box-shadow: none;
 }
 .week-strip li > span {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: -6px -7px 0;
+  padding: 6px 7px 2px;
+  background: var(--row);
   color: var(--muted);
   font-size: 10px;
   font-weight: 800;
@@ -473,10 +485,14 @@ button { cursor: pointer; }
   text-transform: uppercase;
 }
 .week-strip li.is-today > span {
-  color: var(--accent);
+  background: var(--accent);
+  color: #fff;
   font-weight: 900;
 }
 .week-empty { color: var(--muted); font-style: normal; font-size: 12px; }
+.week-strip li.is-today .week-empty {
+  color: color-mix(in srgb, #fff 72%, transparent);
+}
 .week-meet {
   display: grid;
   gap: 1px;
@@ -498,6 +514,15 @@ button { cursor: pointer; }
 .week-meet.is-activity { color: var(--info); }
 .week-meet.is-live { color: var(--ok); }
 .week-meet.is-completed { opacity: 0.55; font-weight: 600; }
+.week-strip li.is-today .week-meet,
+.week-strip li.is-today .week-meet b,
+.week-strip li.is-today .week-meet.is-activity,
+.week-strip li.is-today .week-meet.is-live {
+  color: #fff;
+}
+.week-strip li.is-today .week-meet.is-completed {
+  color: color-mix(in srgb, #fff 78%, transparent);
+}
 .agenda-item {
   flex: none;
   display: grid;
