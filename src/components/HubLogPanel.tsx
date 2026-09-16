@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { DISTRICTS, LOG_KINDS, districtLabel, logKindLabel } from '../data/catalog'
 import { useOps } from '../store/OpsContext'
 import type { DistrictId, HubLogEntry, HubLogKind, HubLogStatus } from '../types'
-import { defaultHubLogStatus, hubLogStatus, memberName, visibleHubLog } from '../utils/metrics'
+import { defaultHubLogStatus, hubLogStatus, memberName } from '../utils/metrics'
 import { formatDate, formatTime } from '../utils/time'
 import { DeskDeleteButton } from './DeskDeleteButton'
 import { StatusPill } from './Header'
@@ -14,20 +14,25 @@ const LOG_STATUSES: { id: HubLogStatus; label: string }[] = [
   { id: 'overdue', label: 'Overdue' },
 ]
 
-export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput?: boolean }) {
+export function HubLogPanel({ allowInput = false }: { now?: Date; allowInput?: boolean }) {
   const { state, addHubLog } = useOps()
   const [typeFilter, setTypeFilter] = useState<HubLogKind | 'all'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'completed'>('all')
   const authorId =
     state.members.find((m) => m.role === 'Operations Manager')?.id ??
     state.members.find((m) => m.role === 'Team Lead')?.id ??
     state.members[0]?.id ??
     ''
   const entries = useMemo(() => {
-    const list = allowInput
-      ? [...(state.hubLog ?? [])].sort((a, b) => +new Date(b.at) - +new Date(a.at)).slice(0, 40)
-      : visibleHubLog(state.hubLog, now)
-    return typeFilter === 'all' ? list : list.filter((entry) => entry.kind === typeFilter)
-  }, [allowInput, state.hubLog, now, typeFilter])
+    const list = [...(state.hubLog ?? [])].sort((a, b) => +new Date(b.at) - +new Date(a.at))
+    return list.filter((entry) => {
+      if (typeFilter !== 'all' && entry.kind !== typeFilter) return false
+      if (statusFilter === 'all') return true
+      const status = hubLogStatus(entry)
+      if (statusFilter === 'completed') return status === 'completed'
+      return status !== 'completed'
+    })
+  }, [state.hubLog, typeFilter, statusFilter])
 
   const groups = LOG_KINDS.map((kind) => ({
     id: kind.id,
@@ -40,7 +45,7 @@ export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput
       <header className="paper-h">
         <div>
           <h2>Hub incident log</h2>
-          <p>Grouped by incident type — extracts, late reporting, and incidents</p>
+          <p>Full history kept until deleted — use filters for open items or report periods</p>
         </div>
       </header>
 
@@ -76,6 +81,25 @@ export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput
         </form>
       )}
 
+      <div className="log-type-tabs" role="tablist" aria-label="Incident status">
+        {(
+          [
+            { id: 'all', label: 'All history' },
+            { id: 'open', label: 'Open' },
+            { id: 'completed', label: 'Completed' },
+          ] as const
+        ).map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={statusFilter === item.id ? 'is-on' : ''}
+            onClick={() => setStatusFilter(item.id)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
       <div className="log-type-tabs" role="tablist" aria-label="Incident type">
         <button
           type="button"
@@ -99,16 +123,20 @@ export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput
       {entries.length === 0 && (
         <ul className="activity hub-log">
           <li>
-            <span className="activity-time">Today</span>
+            <span className="activity-time">Log</span>
             <span className="activity-dot">
               <Icon name="clipboard" size={14} />
             </span>
             <div>
-              <strong>No {typeFilter === 'all' ? 'pipe events' : logKindLabel(typeFilter).toLowerCase()} yet</strong>
+              <strong>
+                No{' '}
+                {typeFilter === 'all' ? 'pipe events' : logKindLabel(typeFilter).toLowerCase()}
+                {statusFilter === 'all' ? '' : ` (${statusFilter})`} yet
+              </strong>
               <p>
                 {allowInput
-                  ? 'Choose an incident type, then log what happened.'
-                  : 'Nothing open or logged for this type yet.'}
+                  ? 'Choose an incident type, then log what happened. Entries stay until deleted.'
+                  : 'Nothing matches this filter. Logged issues stay until they are deleted.'}
               </p>
             </div>
           </li>

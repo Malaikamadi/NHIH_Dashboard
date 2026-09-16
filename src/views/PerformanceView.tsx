@@ -36,7 +36,7 @@ export function PerformanceView() {
           <p className="muted">Closed work, on-time delivery, and load by person</p>
         </div>
         <button type="button" className="primary-btn sm" onClick={() => setReportOpen(true)}>
-          Weekly report
+          Ops report
         </button>
       </div>
       <section className="metric-strip">

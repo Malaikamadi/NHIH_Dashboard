@@ -234,7 +234,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
               <span>{PERIOD_CLOSED_LABEL[period]}</span>
             </div>
             <button type="button" className="primary-btn" onClick={() => setReportOpen(true)}>
-              Weekly report
+              Ops report
             </button>
           </div>
 

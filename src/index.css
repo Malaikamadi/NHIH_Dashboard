@@ -1473,6 +1473,7 @@ button { cursor: pointer; }
   margin-bottom: 18px;
 }
 .report-h h2 { margin: 4px 0 2px; font-size: 20px; }
+.report-period-tabs { margin-top: 10px; }
 .report-actions { display: flex; gap: 8px; flex-shrink: 0; }
 .report-actions .primary-btn,
 .report-actions .ghost-btn {

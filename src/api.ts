@@ -1,7 +1,6 @@
 import { getOperatorCode, setOperatorCode } from './access'
-import type { ActionItem, HubLogEntry, Meeting, OpsState, Task, TeamActivity } from './types'
+import type { ActionItem, HubLogEntry, Meeting, OpsState, PeriodId, Task, TeamActivity } from './types'
 import type { WeeklyReport } from './utils/report'
-import type { PeriodId } from './types'
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers: Record<string, string> = {
