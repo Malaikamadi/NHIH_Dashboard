@@ -302,7 +302,8 @@ button { cursor: pointer; }
   align-items: stretch;
 }
 .hub-brief-stack.has-pipe {
-  grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.9fr);
+  /* Brief can grow; incident log keeps a fixed side column */
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
 }
 .hub-brief {
   display: grid;
@@ -324,30 +325,32 @@ button { cursor: pointer; }
   background: none;
   text-align: left;
   display: grid;
-  gap: 4px;
+  gap: 6px;
   min-width: 0;
 }
 .brief-focus strong {
-  font-size: 26px;
+  font-size: 30px;
   font-weight: 900;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--ink);
 }
 .brief-focus .muted {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--muted);
 }
 .brief-kicker {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--accent);
 }
 .brief-kicker.is-live { color: var(--ok); }
 .brief-stats {
   display: flex;
-  gap: 22px;
+  gap: 24px;
   justify-content: flex-end;
 }
 .brief-stats div,
@@ -363,23 +366,25 @@ button { cursor: pointer; }
 .brief-stats button:disabled { cursor: default; }
 .brief-stats strong {
   display: block;
-  font-size: 30px;
+  font-size: 36px;
   font-weight: 900;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--ink);
 }
 .brief-stats span {
   color: var(--muted);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 800;
 }
 .brief-stats .is-late strong { color: var(--danger); }
 .brief-pipe-card {
   display: grid;
   align-content: start;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
-  padding: 14px 16px;
+  height: 100%;
+  padding: 20px 18px;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   background: var(--paper);
@@ -393,21 +398,21 @@ button { cursor: pointer; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted);
 }
-.brief-pipe-card strong { font-size: 16px; line-height: 1.25; }
+.brief-pipe-card strong { font-size: 20px; font-weight: 900; line-height: 1.2; }
 .brief-pipe-card p {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.4;
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 700;
 }
-.brief-pipe-meta { color: var(--muted); font-size: 12px; }
+.brief-pipe-meta { color: var(--muted); font-size: 14px; font-weight: 700; }
 .brief-pipe-card.is-extract_failed,
 .brief-pipe-card.is-incident {
   border-left-color: var(--danger);
@@ -479,7 +484,8 @@ button { cursor: pointer; }
   padding: 8px 9px;
   background: var(--row);
   border-radius: 10px;
-  max-height: 160px;
+  min-height: 168px;
+  max-height: 220px;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -495,28 +501,28 @@ button { cursor: pointer; }
   top: 0;
   z-index: 1;
   margin: -8px -9px 0;
-  padding: 8px 9px 3px;
+  padding: 8px 9px 4px;
   background: var(--row);
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 .week-strip li.is-today > span {
   background: var(--accent);
   color: #fff;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
 }
-.week-empty { color: var(--muted); font-style: normal; font-size: 14px; font-weight: 700; }
+.week-empty { color: var(--muted); font-style: normal; font-size: 16px; font-weight: 800; }
 .week-strip li.is-today .week-empty {
   color: #fff;
-  font-weight: 800;
+  font-weight: 900;
 }
 .week-meet {
   display: grid;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
   border: 0;
   background: none;
@@ -524,35 +530,34 @@ button { cursor: pointer; }
   text-align: left;
   font: inherit;
   color: inherit;
-  font-size: 13px;
-  font-weight: 800;
-  line-height: 1.3;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
-.week-meet b { color: var(--muted); font-size: 11px; font-weight: 900; display: flex; gap: 6px; align-items: baseline; }
-.week-meet b i { font-style: normal; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+.week-meet b { color: var(--muted); font-size: 12px; font-weight: 900; display: flex; gap: 6px; align-items: baseline; }
+.week-meet b i { font-style: normal; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase; }
 .week-meet.is-activity { color: var(--info); }
 .week-meet.is-live { color: var(--ok); }
-.week-meet.is-completed { opacity: 0.55; font-weight: 600; }
+.week-meet.is-completed { opacity: 0.55; font-weight: 700; }
 .week-strip li.is-today .week-meet,
 .week-strip li.is-today .week-meet b,
 .week-strip li.is-today .week-meet.is-activity,
 .week-strip li.is-today .week-meet.is-live,
 .week-strip li.is-today .week-meet.is-completed {
   color: #fff;
-  font-weight: 800;
+  font-weight: 900;
 }
 .week-strip li.is-today .week-meet {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 900;
 }
 .week-strip li.is-today .week-meet b {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
 }
 .week-strip li.is-today .week-meet.is-completed {
-  opacity: 0.85;
+  opacity: 0.9;
 }
 .agenda-item {
   flex: none;
@@ -1573,8 +1578,14 @@ button { cursor: pointer; }
 }
 
 @media (max-width: 1200px) {
-  .hero-row, .gcard-row, .bottom-row, .perf-grid, .people-stats, .workload-grid, .report-kpis, .hub-brief, .hub-brief-stack.has-pipe { grid-template-columns: 1fr; }
+  .hero-row, .gcard-row, .bottom-row, .perf-grid, .people-stats, .workload-grid, .report-kpis, .hub-brief { grid-template-columns: 1fr; }
+  /* Keep incident log beside the brief until the layout is truly narrow */
+  .hub-brief-stack.has-pipe { grid-template-columns: minmax(0, 1fr) minmax(240px, 300px); }
   .week-strip { overflow: auto; }
   .shell, .shell.is-collapsed { grid-template-columns: 1fr; }
   .sidenav { position: sticky; top: 0; flex-direction: row; overflow: auto; }
+}
+
+@media (max-width: 900px) {
+  .hub-brief-stack.has-pipe { grid-template-columns: 1fr; }
 }
