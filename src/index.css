@@ -595,8 +595,9 @@ button { cursor: pointer; }
 
 .hero-row {
   display: grid;
-  grid-template-columns: 1.7fr 0.8fr;
+  grid-template-columns: 1.15fr 1.2fr;
   gap: 16px;
+  align-items: stretch;
 }
 
 .period-tabs { display: flex; gap: 8px; }
@@ -733,7 +734,7 @@ button { cursor: pointer; }
 
 .bottom-row {
   display: grid;
-  grid-template-columns: 0.85fr 1.4fr;
+  grid-template-columns: 1.2fr 0.9fr;
   gap: 16px;
   min-height: 0;
 }
@@ -871,6 +872,12 @@ button { cursor: pointer; }
 .search input { border: 0; background: transparent; outline: none; width: 160px; }
 
 .data-table { border-radius: 12px; overflow: hidden; }
+.data-table.table-scroll {
+  /* Header + ~5 task rows; scroll for the rest */
+  max-height: calc(42px + 5 * 64px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 .data-head, .data-row {
   display: grid;
   grid-template-columns: 1.4fr 1fr 0.55fr 0.7fr 0.7fr 1.2fr;

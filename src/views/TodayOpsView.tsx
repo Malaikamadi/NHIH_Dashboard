@@ -247,47 +247,158 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
           />
         </section>
 
-        <section className="paper traffic-card">
+        <section className="paper table-card" ref={detailRef}>
           <header className="paper-h">
             <div>
-              <h2>Task Mix</h2>
-              <p>
-                {mixPeriod === 'Daily'
-                  ? 'Status mix · due or closed today'
-                  : mixPeriod === 'Weekly'
-                    ? 'Status mix · last 7 days'
-                    : mixPeriod === 'Monthly'
-                      ? 'Status mix · this month'
-                      : 'Status mix · this year'}
-              </p>
+              <h2>{tableTitle}</h2>
+              <p>{tableHint}</p>
             </div>
-            <div className="period-tabs">
-              {PERIODS.map((p) => (
+            <div className="table-tools">
+              {spotlight === 'due' && (
+                <div className="day-picks" aria-label="Due day">
+                  {dueDays.map((day) => (
+                    <button
+                      key={toDateInput(day)}
+                      type="button"
+                      className={isSameDay(day, dueDay) ? 'is-on' : ''}
+                      onClick={() => setDueDay(day)}
+                    >
+                      {isSameDay(day, now) ? 'Today' : day.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })}
+                    </button>
+                  ))}
+                  <label className="day-pick-date">
+                    <span>Pick day</span>
+                    <input
+                      type="date"
+                      value={toDateInput(dueDay)}
+                      onChange={(e) => setDueDay(parseDateInput(e.target.value, dueDay))}
+                    />
+                  </label>
+                </div>
+              )}
+              {(spotlight || districtFilter) && (
                 <button
-                  key={p}
                   type="button"
-                  className={mixPeriod === p ? 'is-active' : ''}
-                  onClick={() => setMixPeriod(p)}
+                  className="ghost-btn"
+                  onClick={() => {
+                    setSpotlight(null)
+                    setDistrictFilter(null)
+                  }}
                 >
-                  {p}
+                  Clear filter
                 </button>
-              ))}
+              )}
+              {spotlight !== 'meetings' && spotlight !== 'activities' && (
+                <label className="search">
+                  <Icon name="search" size={14} />
+                  <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search tasks" />
+                </label>
+              )}
             </div>
           </header>
-          <StatusDonut
-            total={mixTotal}
-            segments={[
-              { value: mixBreakdown.completed, color: 'var(--ok)' },
-              { value: mixBreakdown.in_progress, color: 'var(--warn)' },
-              { value: mixBreakdown.not_started, color: 'var(--muted)' },
-              { value: mixBreakdown.overdue, color: 'var(--danger)' },
-            ]}
-          />
-          <div className="traffic-legend">
-            <LegendDot color="var(--ok)" label="Completed" value={mixBreakdown.completed} total={mixTotal} />
-            <LegendDot color="var(--warn)" label="In progress" value={mixBreakdown.in_progress} total={mixTotal} />
-            <LegendDot color="var(--muted)" label="Pending" value={mixBreakdown.not_started} total={mixTotal} />
-            <LegendDot color="var(--danger)" label="Overdue" value={mixBreakdown.overdue} total={mixTotal} />
+          {spotlight === 'meetings' ? (
+            <div className="data-table table-scroll">
+              <div className="data-head meet-head">
+                <span>Meeting</span>
+                <span>Time</span>
+                <span>Participants</span>
+                <span>Status</span>
+              </div>
+              {meetings.map((meeting) => (
+                <MeetingSession key={meeting.id} meeting={meeting} now={now} readOnly />
+              ))}
+              {meetings.length === 0 && (
+                <div className="data-row meet-row">
+                  <span className="muted table-empty">No remaining meetings this week.</span>
+                </div>
+              )}
+            </div>
+          ) : spotlight === 'activities' ? (
+            <div className="data-table table-scroll">
+              <div className="data-head activity-row">
+                <span>Activity</span>
+                <span>Type / place</span>
+                <span>Time</span>
+                <span>Attending</span>
+                <span>Status</span>
+              </div>
+              {activities.map((activity) => (
+                <ActivitySession key={activity.id} activity={activity} now={now} readOnly />
+              ))}
+              {activities.length === 0 && (
+                <div className="data-row activity-row">
+                  <span className="muted table-empty">No remaining activities today.</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="data-table is-view table-scroll">
+              <div className="data-head">
+                <span>Task</span>
+                <span>Assigned</span>
+                <span>Priority</span>
+                <span>Due</span>
+                <span>Status</span>
+              </div>
+              {tasks.length === 0 && (
+                <div className="data-row">
+                  <span className="muted table-empty">
+                    {spotlight === 'due'
+                      ? `No open tasks due ${formatDate(dueDay.toISOString())}.`
+                      : spotlight === 'completed'
+                        ? 'No completed tasks yet. Closed work will stay listed here.'
+                        : 'No live tasks yet. Prince can add them from the operator desk.'}
+                  </span>
+                </div>
+              )}
+              {tasks.map((task) => {
+                const owner = memberById(state.members, task.assignedTo)
+                return (
+                  <div
+                    key={task.id}
+                    className={`data-row ${displayStatus(task, now) === 'completed' ? 'is-done' : ''}`}
+                  >
+                    <div className="task-cell">
+                      <strong>{task.title}</strong>
+                      <PlaceLine
+                        workKind={task.workKind}
+                        workKindOther={task.workKindOther}
+                        district={task.district}
+                        facility={task.facility}
+                      />
+                    </div>
+                    <span className="who">
+                      {owner && (
+                        <Avatar
+                          name={owner.name}
+                          initials={owner.initials}
+                          index={memberIndex(state.members, owner.id)}
+                        />
+                      )}
+                      {memberName(state.members, task.assignedTo)}
+                    </span>
+                    <PriorityMark priority={priorityBand(task.priority)} />
+                    <span>{formatDate(task.dueDate)}</span>
+                    <span className="status-stack">
+                      <StatusPill status={displayStatus(task, now)} />
+                      <em className="muted">{task.progress}%</em>
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+          <div className="table-foot">
+            {spotlight === 'meetings'
+              ? `Showing ${meetings.length} remaining meetings this week`
+              : spotlight === 'activities'
+                ? `Showing ${activities.length} activities`
+              : spotlight === 'completed'
+                ? `Showing ${tasks.length} completed tasks`
+              : `Showing ${tasks.length} tasks`}
+            <button type="button" className="link-btn" onClick={() => onOpenView('workload')}>
+              View team load
+            </button>
           </div>
         </section>
       </div>
@@ -382,164 +493,47 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
       <div className="bottom-row">
         <HubLogPanel now={now} />
 
-        <section className="paper table-card" ref={detailRef}>
+        <section className="paper traffic-card">
           <header className="paper-h">
             <div>
-              <h2>{tableTitle}</h2>
-              <p>{tableHint}</p>
+              <h2>Task Mix</h2>
+              <p>
+                {mixPeriod === 'Daily'
+                  ? 'Status mix · due or closed today'
+                  : mixPeriod === 'Weekly'
+                    ? 'Status mix · last 7 days'
+                    : mixPeriod === 'Monthly'
+                      ? 'Status mix · this month'
+                      : 'Status mix · this year'}
+              </p>
             </div>
-            <div className="table-tools">
-              {spotlight === 'due' && (
-                <div className="day-picks" aria-label="Due day">
-                  {dueDays.map((day) => (
-                    <button
-                      key={toDateInput(day)}
-                      type="button"
-                      className={isSameDay(day, dueDay) ? 'is-on' : ''}
-                      onClick={() => setDueDay(day)}
-                    >
-                      {isSameDay(day, now) ? 'Today' : day.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })}
-                    </button>
-                  ))}
-                  <label className="day-pick-date">
-                    <span>Pick day</span>
-                    <input
-                      type="date"
-                      value={toDateInput(dueDay)}
-                      onChange={(e) => setDueDay(parseDateInput(e.target.value, dueDay))}
-                    />
-                  </label>
-                </div>
-              )}
-              {(spotlight || districtFilter) && (
+            <div className="period-tabs">
+              {PERIODS.map((p) => (
                 <button
+                  key={p}
                   type="button"
-                  className="ghost-btn"
-                  onClick={() => {
-                    setSpotlight(null)
-                    setDistrictFilter(null)
-                  }}
+                  className={mixPeriod === p ? 'is-active' : ''}
+                  onClick={() => setMixPeriod(p)}
                 >
-                  Clear filter
+                  {p}
                 </button>
-              )}
-              {spotlight !== 'meetings' && spotlight !== 'activities' && (
-                <label className="search">
-                  <Icon name="search" size={14} />
-                  <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search tasks" />
-                </label>
-              )}
+              ))}
             </div>
           </header>
-          {spotlight === 'meetings' ? (
-            <>
-              <div className="data-table">
-                <div className="data-head meet-head">
-                  <span>Meeting</span>
-                  <span>Time</span>
-                  <span>Participants</span>
-                  <span>Status</span>
-                </div>
-                {meetings.map((meeting) => (
-                  <MeetingSession key={meeting.id} meeting={meeting} now={now} readOnly />
-                ))}
-                {meetings.length === 0 && (
-                  <div className="data-row meet-row">
-                    <span className="muted table-empty">No remaining meetings this week.</span>
-                  </div>
-                )}
-              </div>
-            </>
-          ) : spotlight === 'activities' ? (
-            <>
-              <div className="data-table">
-                <div className="data-head activity-row">
-                  <span>Activity</span>
-                  <span>Type / place</span>
-                  <span>Time</span>
-                  <span>Attending</span>
-                  <span>Status</span>
-                </div>
-                {activities.map((activity) => (
-                  <ActivitySession key={activity.id} activity={activity} now={now} readOnly />
-                ))}
-                {activities.length === 0 && (
-                  <div className="data-row activity-row">
-                    <span className="muted table-empty">No remaining activities today.</span>
-                  </div>
-                )}
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="data-table is-view">
-              <div className="data-head">
-                <span>Task</span>
-                <span>Assigned</span>
-                <span>Priority</span>
-                <span>Due</span>
-                <span>Status</span>
-              </div>
-              {tasks.length === 0 && (
-                <div className="data-row">
-                  <span className="muted table-empty">
-                    {spotlight === 'due'
-                      ? `No open tasks due ${formatDate(dueDay.toISOString())}.`
-                      : spotlight === 'completed'
-                        ? 'No completed tasks yet. Closed work will stay listed here.'
-                        : 'No live tasks yet. Prince can add them from the operator desk.'}
-                  </span>
-                </div>
-              )}
-              {tasks.map((task) => {
-                const owner = memberById(state.members, task.assignedTo)
-                return (
-                  <div
-                    key={task.id}
-                    className={`data-row ${displayStatus(task, now) === 'completed' ? 'is-done' : ''}`}
-                  >
-                    <div className="task-cell">
-                      <strong>{task.title}</strong>
-                      <PlaceLine
-                        workKind={task.workKind}
-                        workKindOther={task.workKindOther}
-                        district={task.district}
-                        facility={task.facility}
-                      />
-                    </div>
-                    <span className="who">
-                      {owner && (
-                        <Avatar
-                          name={owner.name}
-                          initials={owner.initials}
-                          index={memberIndex(state.members, owner.id)}
-                        />
-                      )}
-                      {memberName(state.members, task.assignedTo)}
-                    </span>
-                    <PriorityMark priority={priorityBand(task.priority)} />
-                    <span>{formatDate(task.dueDate)}</span>
-                    <span className="status-stack">
-                      <StatusPill status={displayStatus(task, now)} />
-                      <em className="muted">{task.progress}%</em>
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-            </>
-          )}
-          <div className="table-foot">
-            {spotlight === 'meetings'
-              ? `Showing ${meetings.length} remaining meetings this week`
-              : spotlight === 'activities'
-                ? `Showing ${activities.length} activities`
-              : spotlight === 'completed'
-                ? `Showing ${tasks.length} completed tasks`
-              : `Showing ${tasks.length} tasks`}
-            <button type="button" className="link-btn" onClick={() => onOpenView('workload')}>
-              View team load
-            </button>
+          <StatusDonut
+            total={mixTotal}
+            segments={[
+              { value: mixBreakdown.completed, color: 'var(--ok)' },
+              { value: mixBreakdown.in_progress, color: 'var(--warn)' },
+              { value: mixBreakdown.not_started, color: 'var(--muted)' },
+              { value: mixBreakdown.overdue, color: 'var(--danger)' },
+            ]}
+          />
+          <div className="traffic-legend">
+            <LegendDot color="var(--ok)" label="Completed" value={mixBreakdown.completed} total={mixTotal} />
+            <LegendDot color="var(--warn)" label="In progress" value={mixBreakdown.in_progress} total={mixTotal} />
+            <LegendDot color="var(--muted)" label="Pending" value={mixBreakdown.not_started} total={mixTotal} />
+            <LegendDot color="var(--danger)" label="Overdue" value={mixBreakdown.overdue} total={mixTotal} />
           </div>
         </section>
       </div>
