@@ -1,11 +1,18 @@
 import { useMemo, useRef, useState } from 'react'
 import { DISTRICTS, LOG_KINDS, districtLabel, logKindLabel } from '../data/catalog'
 import { useOps } from '../store/OpsContext'
-import type { DistrictId, HubLogEntry, HubLogKind } from '../types'
-import { memberName, todaysHubLog } from '../utils/metrics'
+import type { DistrictId, HubLogEntry, HubLogKind, HubLogStatus } from '../types'
+import { defaultHubLogStatus, hubLogStatus, memberName, todaysHubLog } from '../utils/metrics'
 import { formatDate, formatTime } from '../utils/time'
 import { DeskDeleteButton } from './DeskDeleteButton'
+import { StatusPill } from './Header'
 import { Icon } from './Icons'
+
+const LOG_STATUSES: { id: HubLogStatus; label: string }[] = [
+  { id: 'open', label: 'Open' },
+  { id: 'completed', label: 'Completed' },
+  { id: 'overdue', label: 'Overdue' },
+]
 
 export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput?: boolean }) {
   const { state, addHubLog } = useOps()
@@ -48,8 +55,11 @@ export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput
             const title = String(data.get('title')).trim()
             if (!title || !authorId) return
             const facility = String(data.get('facility') || '').trim()
+            const kind = String(data.get('kind')) as HubLogKind
+            const status = String(data.get('status') || '') as HubLogStatus
             addHubLog({
-              kind: String(data.get('kind')) as HubLogKind,
+              kind,
+              status: status || defaultHubLogStatus(kind),
               title,
               detail: String(data.get('detail') || '').trim(),
               district: String(data.get('district')) as DistrictId,
@@ -109,41 +119,47 @@ export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput
         <div key={group.id} className="hub-log-group">
           <h3>{group.label}</h3>
           <ul className="activity hub-log">
-            {group.items.map((entry) => (
-              <li key={entry.id} className={`tone-${logTone(entry.kind)}`}>
-                <span className="activity-time">
-                  {formatTime(entry.at)}
-                  {allowInput ? ` · ${formatDate(entry.at)}` : ''}
-                </span>
-                <span className="activity-dot">
-                  <Icon
-                    name={
-                      entry.kind === 'extract_restored'
-                        ? 'check'
-                        : entry.kind === 'extract_failed' || entry.kind === 'incident'
-                          ? 'alert'
-                          : 'clipboard'
-                    }
-                    size={14}
-                  />
-                </span>
-                <div>
-                  {allowInput ? (
-                    <HubLogEditForm entry={entry} />
-                  ) : (
-                    <>
-                      <strong>{entry.title}</strong>
-                      <p>
-                        {districtLabel(entry.district)}
-                        {entry.facility ? ` · ${entry.facility}` : ''}
-                        {entry.detail ? ` · ${entry.detail}` : ''}
-                        {` · ${memberName(state.members, entry.authorId)}`}
-                      </p>
-                    </>
-                  )}
-                </div>
-              </li>
-            ))}
+            {group.items.map((entry) => {
+              const status = hubLogStatus(entry)
+              return (
+                <li key={entry.id} className={`tone-${logTone(entry.kind)}`}>
+                  <span className="activity-time">
+                    {formatTime(entry.at)}
+                    {allowInput ? ` · ${formatDate(entry.at)}` : ''}
+                  </span>
+                  <span className="activity-dot">
+                    <Icon
+                      name={
+                        entry.kind === 'extract_restored'
+                          ? 'check'
+                          : entry.kind === 'extract_failed' || entry.kind === 'incident'
+                            ? 'alert'
+                            : 'clipboard'
+                      }
+                      size={14}
+                    />
+                  </span>
+                  <div>
+                    {allowInput ? (
+                      <HubLogEditForm entry={entry} />
+                    ) : (
+                      <>
+                        <span className="status-stack">
+                          <strong>{entry.title}</strong>
+                          <StatusPill status={status} />
+                        </span>
+                        <p>
+                          {districtLabel(entry.district)}
+                          {entry.facility ? ` · ${entry.facility}` : ''}
+                          {entry.detail ? ` · ${entry.detail}` : ''}
+                          {` · ${memberName(state.members, entry.authorId)}`}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         </div>
       ))}
@@ -152,6 +168,7 @@ export function HubLogPanel({ now, allowInput = false }: { now: Date; allowInput
 }
 
 function HubLogFields({ entry }: { entry?: HubLogEntry }) {
+  const defaultStatus = entry ? hubLogStatus(entry) : defaultHubLogStatus(entry?.kind ?? 'incident')
   return (
     <>
       <div className="admin-split">
@@ -166,6 +183,18 @@ function HubLogFields({ entry }: { entry?: HubLogEntry }) {
           </select>
         </label>
         <label>
+          Status
+          <select name="status" defaultValue={defaultStatus} required>
+            {LOG_STATUSES.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <div className="admin-split">
+        <label>
           District
           <select name="district" defaultValue={entry?.district ?? 'western_urban'}>
             {DISTRICTS.map((item) => (
@@ -174,6 +203,10 @@ function HubLogFields({ entry }: { entry?: HubLogEntry }) {
               </option>
             ))}
           </select>
+        </label>
+        <label>
+          Facility
+          <input name="facility" defaultValue={entry?.facility ?? ''} placeholder="PHU / hospital (optional)" />
         </label>
       </div>
       <label>
@@ -184,10 +217,6 @@ function HubLogFields({ entry }: { entry?: HubLogEntry }) {
           defaultValue={entry?.title}
           placeholder="Late PHUs, extract failed, restored…"
         />
-      </label>
-      <label>
-        Facility
-        <input name="facility" defaultValue={entry?.facility ?? ''} placeholder="PHU / hospital (optional)" />
       </label>
       <label>
         Detail
@@ -220,6 +249,7 @@ function HubLogEditForm({ entry }: { entry: HubLogEntry }) {
         const facility = String(data.get('facility') || '').trim()
         updateHubLog(entry.id, {
           kind: String(data.get('kind')) as HubLogKind,
+          status: String(data.get('status')) as HubLogStatus,
           title,
           detail: String(data.get('detail') || '').trim(),
           district: String(data.get('district')) as DistrictId,
@@ -229,6 +259,9 @@ function HubLogEditForm({ entry }: { entry: HubLogEntry }) {
         window.setTimeout(() => setSaved(false), 2000)
       }}
     >
+      <span className="status-stack" style={{ marginBottom: 8 }}>
+        <StatusPill status={hubLogStatus(entry)} />
+      </span>
       <HubLogFields entry={entry} />
       <div className="meeting-composer-actions">
         <button type="button" className="primary-btn sm" onClick={() => formRef.current?.requestSubmit()}>
