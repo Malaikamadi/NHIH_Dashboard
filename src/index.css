@@ -914,6 +914,9 @@ button { cursor: pointer; }
 }
 
 .data-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   background: var(--navy);
   color: #fff;
   font-size: 11px;

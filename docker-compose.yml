@@ -1,0 +1,49 @@
+# NHIH Ops Dashboard — office / portable deploy
+#
+# First time on a machine that already has entered data:
+#   1. Copy this repo including the local `data/` folder (ops-state.json)
+#   2. docker compose up -d --build
+#   3. Open http://localhost:8787  (or http://<server-ip>:8787)
+#
+# Postgres keeps durable state in the `nhih_pgdata` volume.
+# `./data` is also mounted so ops-state.json stays backed up on the host.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nhih}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nhih_ops_change_me}
+      POSTGRES_DB: ${POSTGRES_DB:-nhih_ops}
+    volumes:
+      - nhih_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    # Uncomment to reach Postgres from the host (backups / admin tools):
+    # ports:
+    #   - '5432:5432'
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - '${HOST_PORT:-8787}:8787'
+    environment:
+      PERSISTENCE: postgres
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nhih}:${POSTGRES_PASSWORD:-nhih_ops_change_me}@db:5432/${POSTGRES_DB:-nhih_ops}
+      OPERATOR_CODE: ${OPERATOR_CODE:-nhih-ops}
+      PORT: '8787'
+    volumes:
+      - ./data:/app/data
+      - ./backups:/app/backups
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  nhih_pgdata:
