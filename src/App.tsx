@@ -27,7 +27,7 @@ function Board() {
   const [view, setView] = useState<ViewId>(initialView)
   const [paused, setPaused] = useState(() => params.get('rotate') !== '1')
   const [progress, setProgress] = useState(0)
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => window.matchMedia('(max-width: 1440px)').matches)
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const fromUrl = new URLSearchParams(window.location.search).get('theme')
     if (fromUrl === 'dark' || fromUrl === 'light') return fromUrl
