@@ -105,6 +105,11 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
               if (Number.isNaN(due.getTime())) return
               const assignedTo = assigneesFromForm(data, [lead])
               if (!assignedTo.length) return
+              const status = String(data.get('status')) as TaskStatus
+              const progress =
+                status === 'completed'
+                  ? 100
+                  : Number(data.get('progress') || 0)
               addTask({
                 title: String(data.get('title')),
                 description: String(data.get('description')),
@@ -112,8 +117,8 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
                 assignedBy: String(data.get('assignedBy')),
                 priority: String(data.get('priority')) as Priority,
                 dueDate: due.toISOString(),
-                status: String(data.get('status')) as TaskStatus,
-                progress: Number(data.get('progress') || 0),
+                status,
+                progress,
                 ...placeFromForm(data),
               })
               form.reset()
@@ -157,7 +162,20 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
               </label>
               <label>
                 Status
-                <select name="status" defaultValue="not_started">
+                <select
+                  name="status"
+                  defaultValue="not_started"
+                  onChange={(e) => {
+                    const form = e.currentTarget.form
+                    const progress = form?.elements.namedItem('progress')
+                    if (
+                      e.currentTarget.value === 'completed' &&
+                      progress instanceof HTMLInputElement
+                    ) {
+                      progress.value = '100'
+                    }
+                  }}
+                >
                   {STATUSES.map((s) => (
                     <option key={s} value={s}>
                       {taskStatusLabel(s)}

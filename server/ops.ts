@@ -56,10 +56,14 @@ export function tickOverdue(state: OpsState, now = new Date()): OpsState {
 }
 
 export function addTask(state: OpsState, task: Task): OpsState {
+  const next: Task =
+    task.status === 'completed'
+      ? { ...task, progress: 100, completedAt: task.completedAt ?? nowIso() }
+      : task
   return pushEvent(
-    { ...state, tasks: [task, ...state.tasks] },
-    `New task assigned · ${task.title}`,
-    task.priority === 'critical' ? 'danger' : 'info',
+    { ...state, tasks: [next, ...state.tasks] },
+    `New task assigned · ${next.title}`,
+    next.priority === 'critical' ? 'danger' : 'info',
   )
 }
 
@@ -171,7 +175,20 @@ export function updateActionItem(state: OpsState, id: string, patch: Partial<Act
       ...following,
       tasks: following.tasks.map((task) =>
         task.id === current.convertedToTaskId
-          ? { ...task, assignedTo: [...patch.assignedTo!] }
+          ? {
+              ...task,
+              assignedTo: [...patch.assignedTo!],
+              ...(patch.district ? { district: [...patch.district] } : {}),
+            }
+          : task,
+      ),
+    }
+  } else if (patch.district && current.convertedToTaskId) {
+    following = {
+      ...following,
+      tasks: following.tasks.map((task) =>
+        task.id === current.convertedToTaskId
+          ? { ...task, district: [...patch.district!] }
           : task,
       ),
     }
@@ -197,7 +214,7 @@ export function convertAction(state: OpsState, actionId: string, assignedBy: str
     fromActionItemId: actionId,
     workKind: item.workKind,
     workKindOther: item.workKindOther,
-    district: item.district,
+    district: [...item.district],
     facility: item.facility,
   }
   return pushEvent(

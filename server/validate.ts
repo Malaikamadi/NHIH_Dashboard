@@ -63,7 +63,12 @@ export const taskCreate = z
     fromActionItemId: z.string().optional(),
     workKind: workKind.optional().default('facility_followup'),
     workKindOther: z.string().optional().default(''),
-    district: districtId.optional().default('national'),
+    district: z
+      .union([districtId, z.array(districtId)])
+      .transform((value) => (Array.isArray(value) ? value : [value]))
+      .pipe(z.array(districtId).min(1))
+      .optional()
+      .default(['national']),
     facility: z.string().optional().default(''),
   })
   .refine((value) => value.workKind !== 'other' || Boolean(value.workKindOther?.trim()), {
@@ -87,7 +92,10 @@ export const taskPatch = z
     completedAt: z.string().optional(),
     workKind: workKind.optional(),
     workKindOther: z.string().optional(),
-    district: districtId.optional(),
+    district: z
+      .union([districtId, z.array(districtId)])
+      .transform((value) => (Array.isArray(value) ? value : [value]))
+      .optional(),
     facility: z.string().optional(),
   })
   .refine((value) => Object.keys(value).length > 0, 'No fields to update')
@@ -131,7 +139,12 @@ export const actionCreate = z
     assignedBy: z.string().min(1).optional(),
     workKind: workKind.optional().default('facility_followup'),
     workKindOther: z.string().optional().default(''),
-    district: districtId.optional().default('national'),
+    district: z
+      .union([districtId, z.array(districtId)])
+      .transform((value) => (Array.isArray(value) ? value : [value]))
+      .pipe(z.array(districtId).min(1))
+      .optional()
+      .default(['national']),
     facility: z.string().optional().default(''),
   })
   .refine((value) => value.workKind !== 'other' || Boolean(value.workKindOther?.trim()), {
@@ -152,7 +165,10 @@ export const actionPatch = z
     meetingTitle: z.string().optional(),
     workKind: workKind.optional(),
     workKindOther: z.string().optional(),
-    district: districtId.optional(),
+    district: z
+      .union([districtId, z.array(districtId)])
+      .transform((value) => (Array.isArray(value) ? value : [value]))
+      .optional(),
     facility: z.string().optional(),
   })
   .refine((value) => Object.keys(value).length > 0, 'No fields to update')

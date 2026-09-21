@@ -76,7 +76,8 @@ export interface Task {
   fromActionItemId?: string
   workKind: WorkKind
   workKindOther?: string
-  district: DistrictId
+  /** One or more districts covered by the task. */
+  district: DistrictId[]
   facility?: string
 }
 
@@ -107,7 +108,8 @@ export interface ActionItem {
   convertedToTaskId?: string
   workKind: WorkKind
   workKindOther?: string
-  district: DistrictId
+  /** One or more districts covered by the action. */
+  district: DistrictId[]
   facility?: string
 }
 

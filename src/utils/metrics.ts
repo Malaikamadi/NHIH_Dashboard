@@ -1,4 +1,4 @@
-import { districtLabel } from '../data/catalog'
+import { districtIds, districtLabel } from '../data/catalog'
 import type {
   ActionItem,
   DistrictId,
@@ -498,15 +498,17 @@ export function districtWorkload(tasks: Task[], now = new Date()): DistrictLoad[
   const map = new Map<DistrictId, DistrictLoad>()
   for (const task of tasks) {
     if (displayStatus(task, now) === 'completed') continue
-    const current = map.get(task.district) ?? {
-      id: task.district,
-      label: districtLabel(task.district),
-      open: 0,
-      overdue: 0,
+    for (const district of districtIds(task.district)) {
+      const current = map.get(district) ?? {
+        id: district,
+        label: districtLabel(district),
+        open: 0,
+        overdue: 0,
+      }
+      current.open += 1
+      if (displayStatus(task, now) === 'overdue') current.overdue += 1
+      map.set(district, current)
     }
-    current.open += 1
-    if (displayStatus(task, now) === 'overdue') current.overdue += 1
-    map.set(task.district, current)
   }
   return [...map.values()].sort(
     (a, b) =>

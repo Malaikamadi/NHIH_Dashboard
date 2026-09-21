@@ -31,7 +31,8 @@ import {
   restoreHub,
 } from '../api'
 import { clearHubCache, readHubCache, writeHubCache } from './cache'
-import { hubHasWork } from '../utils/hub'
+import { districtIds } from '../data/catalog'
+import { MEMBERS } from '../data/seed'
 import type {
   ActionItem,
   ActivityEvent,
@@ -45,8 +46,8 @@ import type {
   TeamActivity,
   WorkKind,
 } from '../types'
+import { hubHasWork } from '../utils/hub'
 import { assigneeIds, memberNames } from '../utils/metrics'
-import { MEMBERS } from '../data/seed'
 import { nowIso, uid } from '../utils/time'
 
 const EMPTY: OpsState = {
@@ -93,10 +94,13 @@ function reducer(state: OpsState, action: Action): OpsState {
         tasks: action.state.tasks.map((task) => ({
           ...task,
           assignedTo: assigneeIds(task.assignedTo as string | string[]),
+          district: districtIds(task.district as string | string[]),
+          progress: task.status === 'completed' ? 100 : task.progress,
         })),
         actionItems: action.state.actionItems.map((item) => ({
           ...item,
           assignedTo: assigneeIds(item.assignedTo as string | string[]),
+          district: districtIds(item.district as string | string[]),
         })),
       }
     case 'add_task':
@@ -246,7 +250,7 @@ function reducer(state: OpsState, action: Action): OpsState {
       const actionItems = state.actionItems.map((item) =>
         item.id === action.id ? { ...item, ...action.patch } : item,
       )
-      if (!current?.convertedToTaskId || !action.patch.assignedTo) {
+      if (!current?.convertedToTaskId || (!action.patch.assignedTo && !action.patch.district)) {
         return { ...state, actionItems }
       }
       return {
@@ -254,7 +258,11 @@ function reducer(state: OpsState, action: Action): OpsState {
         actionItems,
         tasks: state.tasks.map((task) =>
           task.id === current.convertedToTaskId
-            ? { ...task, assignedTo: [...action.patch.assignedTo!] }
+            ? {
+                ...task,
+                ...(action.patch.assignedTo ? { assignedTo: [...action.patch.assignedTo] } : {}),
+                ...(action.patch.district ? { district: [...action.patch.district] } : {}),
+              }
             : task,
         ),
       }
@@ -336,7 +344,7 @@ interface OpsContextValue {
     progress: number
     workKind: WorkKind
     workKindOther?: string
-    district: DistrictId
+    district: DistrictId[]
     facility?: string
   }) => void
   updateTask: (id: string, patch: Partial<Task>) => void
@@ -423,11 +431,14 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
 
   const addTask = useCallback<OpsContextValue['addTask']>(
     (input) => {
+      const completed = input.status === 'completed'
       const task: Task = {
         ...input,
+        district: districtIds(input.district),
+        progress: completed ? 100 : input.progress,
         id: uid('t'),
         createdAt: nowIso(),
-        completedAt: input.status === 'completed' ? nowIso() : undefined,
+        completedAt: completed ? nowIso() : undefined,
       }
       dispatch({ type: 'add_task', task })
       void createTask(task).then(hydrate).catch(refresh)
@@ -438,6 +449,7 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
   const updateTask = useCallback(
     (id: string, patch: Partial<Task>) => {
       const next = { ...patch }
+      if (patch.district) next.district = districtIds(patch.district)
       if (patch.status === 'completed') {
         next.progress = 100
         next.completedAt = nowIso()
@@ -503,7 +515,7 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
         fromActionItemId: item.id,
         workKind: item.workKind,
         workKindOther: item.workKindOther,
-        district: item.district,
+        district: [...item.district],
         facility: item.facility,
       }
       dispatch({ type: 'add_action', item })
@@ -539,7 +551,7 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
         fromActionItemId: item.id,
         workKind: item.workKind,
         workKindOther: item.workKindOther,
-        district: item.district,
+        district: [...item.district],
         facility: item.facility,
       }
       dispatch({ type: 'convert_action', actionId, task })

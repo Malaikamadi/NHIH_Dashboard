@@ -12,6 +12,7 @@ import type {
   TeamMember,
 } from '../src/types'
 import { assigneeIds } from '../src/utils/metrics'
+import { districtIds } from '../src/data/catalog'
 import { SEED_VERSION, type Snapshot, type SnapshotRead } from './snapshot'
 
 const { Pool } = pg
@@ -44,7 +45,7 @@ export async function migratePostgres(): Promise<void> {
   await getPool().query(
     `ALTER TABLE hub_log ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'open'`,
   )
-  // Multi-assignee: store JSON arrays in assigned_to (drop single-member FKs if present).
+  // Multi-assignee / multi-district: store JSON arrays in TEXT columns.
   await getPool().query(`ALTER TABLE tasks DROP CONSTRAINT IF EXISTS tasks_assigned_to_fkey`)
   await getPool().query(
     `ALTER TABLE action_items DROP CONSTRAINT IF EXISTS action_items_assigned_to_fkey`,
@@ -164,7 +165,7 @@ export async function writePostgresSnapshot(snapshot: Snapshot): Promise<void> {
           task.fromActionItemId ?? null,
           task.workKind,
           task.workKindOther ?? null,
-          task.district,
+          JSON.stringify(districtIds(task.district)),
           task.facility ?? null,
         ],
       )
@@ -234,7 +235,7 @@ export async function writePostgresSnapshot(snapshot: Snapshot): Promise<void> {
           item.convertedToTaskId ?? null,
           item.workKind,
           item.workKindOther ?? null,
-          item.district,
+          JSON.stringify(districtIds(item.district)),
           item.facility ?? null,
         ],
       )
@@ -408,7 +409,7 @@ function mapTask(row: TaskRow): Task {
     fromActionItemId: row.from_action_item_id ?? undefined,
     workKind: row.work_kind as Task['workKind'],
     workKindOther: row.work_kind_other ?? undefined,
-    district: row.district as Task['district'],
+    district: districtIds(row.district),
     facility: row.facility ?? undefined,
   }
 }
@@ -453,7 +454,7 @@ function mapAction(row: ActionRow): ActionItem {
     convertedToTaskId: row.converted_to_task_id ?? undefined,
     workKind: row.work_kind as ActionItem['workKind'],
     workKindOther: row.work_kind_other ?? undefined,
-    district: row.district as ActionItem['district'],
+    district: districtIds(row.district),
     facility: row.facility ?? undefined,
   }
 }

@@ -29,11 +29,10 @@ CREATE TABLE IF NOT EXISTS tasks (
   from_action_item_id TEXT,
   work_kind TEXT NOT NULL,
   work_kind_other TEXT,
+  -- JSON array of district ids, e.g. ["bo","kenema"]
   district TEXT NOT NULL,
   facility TEXT
 );
-
-CREATE TABLE IF NOT EXISTS meetings (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
   start_time TIMESTAMPTZ NOT NULL,
@@ -79,6 +78,7 @@ CREATE TABLE IF NOT EXISTS action_items (
   converted_to_task_id TEXT,
   work_kind TEXT NOT NULL,
   work_kind_other TEXT,
+  -- JSON array of district ids, e.g. ["bo","kenema"]
   district TEXT NOT NULL,
   facility TEXT
 );

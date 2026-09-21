@@ -133,7 +133,13 @@ function TaskUpdateCard({
         <select
           value={task.status}
           aria-label={`Status for ${task.title}`}
-          onChange={(e) => updateTask(task.id, { status: e.target.value as TaskStatus })}
+          onChange={(e) => {
+            const status = e.target.value as TaskStatus
+            updateTask(
+              task.id,
+              status === 'completed' ? { status, progress: 100 } : { status },
+            )
+          }}
         >
           {STATUSES.map((item) => (
             <option key={item} value={item}>
@@ -157,8 +163,12 @@ function TaskUpdateCard({
             const data = new FormData(e.currentTarget)
             const due = new Date(String(data.get('dueDate')))
             if (Number.isNaN(due.getTime())) return
-            const progress = Number(data.get('progress') || task.progress)
+            const progressRaw = Number(data.get('progress') || task.progress)
             const nextStatus = String(data.get('status')) as TaskStatus
+            const progress =
+              nextStatus === 'completed'
+                ? 100
+                : Math.min(100, Math.max(0, Math.round(progressRaw)))
             const assignedTo = assigneesFromForm(data, task.assignedTo)
             if (!assignedTo.length) return
             updateTask(task.id, {
@@ -169,7 +179,7 @@ function TaskUpdateCard({
               priority: String(data.get('priority')) as Priority,
               dueDate: due.toISOString(),
               status: nextStatus,
-              progress: Math.min(100, Math.max(0, Math.round(progress))),
+              progress,
               ...placeFromForm(data),
             })
             setSaved(true)
@@ -218,7 +228,17 @@ function TaskUpdateCard({
             </label>
             <label>
               Status
-              <select name="status" defaultValue={task.status}>
+              <select
+                name="status"
+                defaultValue={task.status}
+                onChange={(e) => {
+                  const form = e.currentTarget.form
+                  const progress = form?.elements.namedItem('progress')
+                  if (e.currentTarget.value === 'completed' && progress instanceof HTMLInputElement) {
+                    progress.value = '100'
+                  }
+                }}
+              >
                 {STATUSES.map((item) => (
                   <option key={item} value={item}>
                     {taskStatusLabel(item)}
@@ -234,7 +254,14 @@ function TaskUpdateCard({
             </label>
             <label>
               Progress %
-              <input name="progress" type="number" min={0} max={100} defaultValue={task.progress} />
+              <input
+                key={`${task.id}-${task.progress}-${task.status}`}
+                name="progress"
+                type="number"
+                min={0}
+                max={100}
+                defaultValue={task.status === 'completed' ? 100 : task.progress}
+              />
             </label>
           </div>
           <PlaceFields

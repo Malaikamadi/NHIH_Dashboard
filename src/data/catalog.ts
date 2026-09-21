@@ -75,6 +75,37 @@ export function districtLabel(id: DistrictId): string {
   return DISTRICT_LABEL[id] ?? id
 }
 
+export function districtIds(
+  district: DistrictId | DistrictId[] | string | string[] | undefined | null,
+): DistrictId[] {
+  if (district == null) return ['national']
+  const raw = Array.isArray(district) ? district : [district]
+  const ids = raw
+    .flatMap((value) => {
+      const text = String(value).trim()
+      if (!text) return []
+      if (text.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(text) as unknown
+          if (Array.isArray(parsed)) return parsed.map(String)
+        } catch {
+          /* treat as a single district id */
+        }
+      }
+      return [text]
+    })
+    .filter(Boolean) as DistrictId[]
+  return ids.length ? ids : ['national']
+}
+
+export function districtLabels(
+  district: DistrictId | DistrictId[] | string | string[] | undefined | null,
+): string {
+  return districtIds(district)
+    .map((id) => districtLabel(id))
+    .join(', ')
+}
+
 export function logKindLabel(id: HubLogKind): string {
   return LOG_KIND_LABEL[id] ?? id
 }
@@ -89,10 +120,10 @@ export function activityKindLabel(id: ActivityKind, other?: string): string {
 
 export function placeLine(
   workKind: WorkKind,
-  district: DistrictId,
+  district: DistrictId | DistrictId[],
   facility?: string,
   workKindOther?: string,
 ): string {
-  const base = `${workTypeLabel(workKind, workKindOther)} · ${districtLabel(district)}`
+  const base = `${workTypeLabel(workKind, workKindOther)} · ${districtLabels(district)}`
   return facility?.trim() ? `${base} · ${facility.trim()}` : base
 }

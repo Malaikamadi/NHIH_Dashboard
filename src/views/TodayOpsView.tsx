@@ -7,7 +7,7 @@ import { MeetingSession } from '../components/MeetingActions'
 import { HubBrief } from '../components/HubBrief'
 import { PlaceLine } from '../components/PlaceFields'
 import { WeeklyReportModal } from '../components/WeeklyReport'
-import { placeLine } from '../data/catalog'
+import { districtIds, placeLine } from '../data/catalog'
 import { useOps } from '../store/OpsContext'
 import type { DistrictId, PeriodId, ViewId } from '../types'
 import {
@@ -104,7 +104,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
                   ...done.filter((t) => completedThisWeek(t, now)),
                 ]
 
-    if (districtFilter) list = list.filter((t) => t.district === districtFilter)
+    if (districtFilter) list = list.filter((t) => districtIds(t.district).includes(districtFilter))
     const q = query.trim().toLowerCase()
     return list.filter((t) => {
       if (!q) return true

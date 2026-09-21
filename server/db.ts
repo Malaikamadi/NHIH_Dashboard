@@ -1,5 +1,6 @@
 import { buildSeed, MEMBERS } from '../src/data/seed'
 import type { ActionItem, HubLogEntry, Meeting, OpsState, Task, TeamActivity } from '../src/types'
+import { districtIds } from '../src/data/catalog'
 import { hubHasWork } from '../src/utils/hub'
 import { assigneeIds } from '../src/utils/metrics'
 import { HttpError } from './errors'
@@ -15,10 +16,13 @@ function normalizeAssigneesInState(state: OpsState): OpsState {
     tasks: state.tasks.map((task) => ({
       ...task,
       assignedTo: assigneeIds(task.assignedTo as string | string[]),
+      district: districtIds(task.district as string | string[]),
+      progress: task.status === 'completed' ? 100 : task.progress,
     })),
     actionItems: state.actionItems.map((item) => ({
       ...item,
       assignedTo: assigneeIds(item.assignedTo as string | string[]),
+      district: districtIds(item.district as string | string[]),
     })),
   }
 }

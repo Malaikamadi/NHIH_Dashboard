@@ -52,7 +52,7 @@ export function TaskActions({ task }: { task: Task }) {
       <button
         type="button"
         className="complete-btn"
-        onClick={() => updateTask(task.id, { status: 'completed' })}
+        onClick={() => updateTask(task.id, { status: 'completed', progress: 100 })}
       >
         Complete
       </button>
