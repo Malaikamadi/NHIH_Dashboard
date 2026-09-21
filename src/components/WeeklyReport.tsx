@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react'
-import { fetchWeeklyReport, fetchWeeklyReportHtml } from '../api'
+import { useEffect, useMemo, useState } from 'react'
 import type { PeriodId } from '../types'
-import type { WeeklyReport as WeeklyReportData } from '../utils/report'
 import { downloadReport, printReport } from '../utils/download'
-import { reportFileName } from '../utils/report'
+import { buildOpsReport, reportFileName, reportToHtml } from '../utils/report'
 import { PERIODS, agendaLines } from '../utils/metrics'
+import { useOps } from '../store/OpsContext'
 import { Icon } from './Icons'
 
 interface Props {
@@ -20,11 +19,27 @@ const PERIOD_SCOPE: Record<PeriodId, string> = {
 }
 
 export function WeeklyReportModal({ onClose, initialPeriod = 'Weekly' }: Props) {
+  const { state } = useOps()
   const [period, setPeriod] = useState<PeriodId>(initialPeriod)
-  const [report, setReport] = useState<WeeklyReportData | null>(null)
-  const [html, setHtml] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(true)
+
+  const report = useMemo(() => {
+    try {
+      return buildOpsReport(state, period)
+    } catch (err) {
+      console.error(err)
+      return null
+    }
+  }, [state, period])
+
+  const html = useMemo(() => {
+    if (!report) return ''
+    try {
+      return reportToHtml(report)
+    } catch (err) {
+      console.error(err)
+      return ''
+    }
+  }, [report])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -33,31 +48,6 @@ export function WeeklyReportModal({ onClose, initialPeriod = 'Weekly' }: Props) 
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
-
-  useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-    setError('')
-    Promise.all([fetchWeeklyReport(period), fetchWeeklyReportHtml(period)])
-      .then(([next, markup]) => {
-        if (cancelled) return
-        setReport(next)
-        setHtml(markup)
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setReport(null)
-          setHtml('')
-          setError('Could not load the operations report from the server.')
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [period])
 
   const scope = PERIOD_SCOPE[period]
 
@@ -68,7 +58,7 @@ export function WeeklyReportModal({ onClose, initialPeriod = 'Weekly' }: Props) 
           <div>
             <div className="hdr-kicker">{period} operations report</div>
             <h2>Team performance, hub incident log, meetings, and minutes</h2>
-            <p className="muted">{report?.rangeLabel ?? 'Loading from the operations API'}</p>
+            <p className="muted">{report?.rangeLabel ?? 'Building from current hub data'}</p>
             <div className="log-type-tabs report-period-tabs" role="tablist" aria-label="Report period">
               {PERIODS.map((item) => (
                 <button
@@ -100,12 +90,11 @@ export function WeeklyReportModal({ onClose, initialPeriod = 'Weekly' }: Props) 
           </div>
         </header>
 
-        {error && <p className="danger-text">{error}</p>}
-        {loading && !error && (
-          <p className="muted">Building {period.toLowerCase()} performance, meetings, and minutes…</p>
+        {!report && (
+          <p className="danger-text">Could not build the operations report from the current hub data.</p>
         )}
 
-        {report && !loading && (
+        {report && (
           <>
             <section className="report-kpis">
               <div>

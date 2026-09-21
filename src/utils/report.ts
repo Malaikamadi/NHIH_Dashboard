@@ -98,17 +98,19 @@ export function parseReportPeriod(value: string | null | undefined): PeriodId {
 export function buildOpsReport(state: OpsState, period: PeriodId = 'Weekly', now = new Date()): WeeklyReport {
   const { start, end } = periodBounds(period, now)
   const metrics = teamMetrics(state, now)
-  const closed = state.tasks.filter((t) => t.completedAt && isInRange(t.completedAt, start, end))
-  const meetings = state.meetings
+  const tasks = state.tasks ?? []
+  const meetings = [...(state.meetings ?? [])]
     .filter((m) => isInRange(m.startTime, start, end))
     .sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime))
+  const actionItems = state.actionItems ?? []
+  const closed = tasks.filter((t) => t.completedAt && isInRange(t.completedAt, start, end))
   const periodActivities = [...(state.activities ?? [])]
     .filter((item) => isInRange(item.startTime, start, end))
     .sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime))
   const people = memberWorkloads(state, now).map((row) => ({
     name: row.member.name,
     role: row.member.role,
-    closed: state.tasks.filter(
+    closed: tasks.filter(
       (t) =>
         isAssignedTo(t.assignedTo, row.member.id) &&
         t.completedAt &&
@@ -144,25 +146,25 @@ export function buildOpsReport(state: OpsState, period: PeriodId = 'Weekly', now
       onTime: closed.filter((t) => completedOnTime(t)).length,
       meetings: meetings.length,
       activities: periodActivities.length,
-      openActions: state.actionItems.filter((a) => a.status !== 'completed').length,
+      openActions: actionItems.filter((a) => a.status !== 'completed').length,
       hubLog: hubLog.length,
     },
     people,
     hubLog,
     meetings: meetings.map((meeting) => {
-      const actions = state.actionItems.filter((a) => a.meetingId === meeting.id)
+      const actions = actionItems.filter((a) => a.meetingId === meeting.id)
       return {
         id: meeting.id,
         title: meeting.title,
         when: `${formatDate(meeting.startTime)} · ${formatTimeRange(meeting.startTime, meeting.endTime)} · ${meetingStatus(meeting, now)}`,
-        attendees: meeting.participantIds.map((id) => memberName(state.members, id)).join(', '),
+        attendees: (meeting.participantIds ?? []).map((id) => memberName(state.members, id)).join(', '),
         agenda: meeting.agenda?.trim() ?? '',
         notes: meeting.notes?.trim() ?? '',
         actions: actions.map((item) => ({
           title: item.title,
           place: placeLine(item.workKind, item.district, item.facility, item.workKindOther),
           owner: memberNames(state.members, item.assignedTo),
-          status: item.status.replace('_', ' '),
+          status: (item.status ?? 'open').replace('_', ' '),
           deadline: formatDate(item.deadline),
         })),
       }
@@ -175,7 +177,7 @@ export function buildOpsReport(state: OpsState, period: PeriodId = 'Weekly', now
       place: item.facility
         ? `${districtLabel(item.district)} · ${item.facility}`
         : districtLabel(item.district),
-      attendees: item.participantIds.map((id) => memberName(state.members, id)).join(', '),
+      attendees: (item.participantIds ?? []).map((id) => memberName(state.members, id)).join(', '),
       notes: item.notes?.trim() ?? '',
     })),
   }
@@ -191,7 +193,7 @@ export function reportFileName(report: WeeklyReport): string {
 }
 
 export function reportToHtml(report: WeeklyReport): string {
-  const scope = PERIOD_SCOPE[report.period]
+  const scope = PERIOD_SCOPE[report.period] ?? 'this week'
   const peopleRows = report.people
     .map(
       (p) =>
@@ -269,7 +271,7 @@ export function reportToHtml(report: WeeklyReport): string {
   <h2>Team performance</h2>
   <div class="kpis">
     <div class="kpi"><strong>${report.performance.completionRate}%</strong><span>Completion rate</span></div>
-    <div class="kpi"><strong>${report.performance.closed}</strong><span>${esc(PERIOD_CLOSED_LABEL[report.period])}</span></div>
+    <div class="kpi"><strong>${report.performance.closed}</strong><span>${esc(PERIOD_CLOSED_LABEL[report.period] ?? 'Tasks closed')}</span></div>
     <div class="kpi"><strong>${report.performance.onTime}</strong><span>Closed on time</span></div>
     <div class="kpi"><strong>${report.performance.overdue}</strong><span>Still overdue</span></div>
     <div class="kpi"><strong>${report.performance.inProgress}</strong><span>In progress</span></div>
@@ -301,8 +303,8 @@ export function reportToHtml(report: WeeklyReport): string {
 </html>`
 }
 
-function esc(value: string): string {
-  return value
+function esc(value: string | number | null | undefined): string {
+  return String(value ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')

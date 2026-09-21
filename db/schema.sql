@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS tasks (
   district TEXT NOT NULL,
   facility TEXT
 );
+
+CREATE TABLE IF NOT EXISTS meetings (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
   start_time TIMESTAMPTZ NOT NULL,
