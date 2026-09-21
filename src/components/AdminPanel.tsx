@@ -4,6 +4,7 @@ import { DeskDeleteButton } from './DeskDeleteButton'
 import { HubLogPanel } from './HubLogPanel'
 import { MeetingActions } from './MeetingActions'
 import { MeetingForm } from './MeetingForm'
+import { ParticipantPicker } from './ParticipantPicker'
 import { PlaceFields, placeFromForm } from './PlaceFields'
 import { TaskUpdatePanel } from './TaskUpdatePanel'
 import { useOps } from '../store/OpsContext'
@@ -12,6 +13,11 @@ import { readHubCache } from '../store/cache'
 import type { ActionItem, ActionStatus, Meeting, Priority, TaskStatus } from '../types'
 import { meetingStatus, taskStatusLabel, weeksActivities, weeksMeetings } from '../utils/metrics'
 import { toDatetimeLocal } from '../utils/time'
+
+function assigneesFromForm(data: FormData, fallback: string[] = []): string[] {
+  const selected = data.getAll('assignees').map(String).filter(Boolean)
+  return selected.length ? selected : fallback
+}
 
 interface Props {
   open: boolean
@@ -97,10 +103,12 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
               const data = new FormData(form)
               const due = new Date(String(data.get('dueDate')))
               if (Number.isNaN(due.getTime())) return
+              const assignedTo = assigneesFromForm(data, [lead])
+              if (!assignedTo.length) return
               addTask({
                 title: String(data.get('title')),
                 description: String(data.get('description')),
-                assignedTo: String(data.get('assignedTo')),
+                assignedTo,
                 assignedBy: String(data.get('assignedBy')),
                 priority: String(data.get('priority')) as Priority,
                 dueDate: due.toISOString(),
@@ -120,28 +128,22 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
               Description
               <textarea name="description" rows={2} placeholder="What needs to happen" />
             </label>
-            <div className="admin-split">
-              <label>
-                Assigned to
-                <select name="assignedTo" required>
-                  {state.members.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name} ({m.role})
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Assigned by
-                <select name="assignedBy" defaultValue={lead}>
-                  {state.members.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name} ({m.role})
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
+            <ParticipantPicker
+              members={state.members}
+              name="assignees"
+              legend="Assigned to"
+              selectedIds={lead ? [lead] : []}
+            />
+            <label>
+              Assigned by
+              <select name="assignedBy" defaultValue={lead}>
+                {state.members.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name} ({m.role})
+                  </option>
+                ))}
+              </select>
+            </label>
             <div className="admin-split">
               <label>
                 Priority
@@ -249,16 +251,19 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
               const meeting = state.meetings.find(
                 (item) => item.id === String(data.get('meetingId')) || item.title === meetingTitle,
               )
+              const assignedTo = assigneesFromForm(data, [lead])
+              if (!assignedTo.length) return
               addActionItem({
                 meetingId: meeting?.id ?? 'adhoc',
                 meetingTitle: meeting?.title ?? meetingTitle,
                 title: String(data.get('title')),
-                assignedTo: String(data.get('assignedTo')),
+                assignedTo,
                 deadline: new Date(String(data.get('deadline'))).toISOString(),
                 status: 'open',
                 ...placeFromForm(data),
               })
               form.reset()
+              setSaved('Action saved and converted to a task on the board.')
             }}
           >
             <label>
@@ -266,22 +271,16 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
               <input name="title" required placeholder="Follow up on..." />
             </label>
             <MeetingField meetings={state.meetings} />
-            <div className="admin-split">
-              <label>
-                Owner
-                <select name="assignedTo">
-                  {state.members.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name} ({m.role})
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Deadline
-                <input name="deadline" type="datetime-local" required />
-              </label>
-            </div>
+            <ParticipantPicker
+              members={state.members}
+              name="assignees"
+              legend="Owners"
+              selectedIds={lead ? [lead] : []}
+            />
+            <label>
+              Deadline
+              <input name="deadline" type="datetime-local" required />
+            </label>
             <PlaceFields />
             <button type="submit" className="primary-btn">
               Create action item
@@ -294,11 +293,13 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
         {tab === 'action' && (
           <section className="admin-live">
             <h3>Action items</h3>
-            <p className="admin-help">Each posted action is open to edit. Convert it when it should become a task.</p>
+            <p className="admin-help">
+              Each action is saved as a task automatically. Edit owners or details below if needed.
+            </p>
             <div className="admin-list">
               {deskActions.length === 0 && <p className="muted">No action items yet.</p>}
               {deskActions.map((item) => (
-                <ActionItemEdit key={item.id} item={item} lead={lead} meetings={state.meetings} />
+                <ActionItemEdit key={item.id} item={item} meetings={state.meetings} />
               ))}
             </div>
           </section>
@@ -409,16 +410,15 @@ function MeetingField({ meetings, defaultTitle = '' }: { meetings: Meeting[]; de
 
 function ActionItemEdit({
   item,
-  lead,
   meetings,
 }: {
   item: ActionItem
-  lead: string
   meetings: Meeting[]
 }) {
   const { state, updateActionItem, convertActionToTask, removeActionItem } = useOps()
   const [saved, setSaved] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
+  const lead = state.members.find((m) => m.role === 'Team Lead')?.id ?? state.members[0]?.id ?? 'm1'
 
   return (
     <div className="admin-item admin-meeting">
@@ -428,7 +428,7 @@ function ActionItemEdit({
           <em className="muted">
             {' '}
             · {item.status}
-            {item.convertedToTaskId ? ' · converted' : ''}
+            {item.convertedToTaskId ? ' · on board as task' : ''}
           </em>
         </span>
         <DeskDeleteButton label={item.title} onDelete={() => removeActionItem(item.id)} />
@@ -447,11 +447,13 @@ function ActionItemEdit({
           )
           const deadline = new Date(String(data.get('deadline')))
           if (Number.isNaN(deadline.getTime())) return
+          const assignedTo = assigneesFromForm(data, item.assignedTo)
+          if (!assignedTo.length) return
           updateActionItem(item.id, {
             title: String(data.get('title')).trim(),
             meetingId: meeting?.id ?? item.meetingId,
             meetingTitle: meeting?.title ?? meetingTitle,
-            assignedTo: String(data.get('assignedTo')),
+            assignedTo,
             deadline: deadline.toISOString(),
             status: String(data.get('status')) as ActionStatus,
             ...placeFromForm(data),
@@ -465,26 +467,20 @@ function ActionItemEdit({
           <input name="title" required defaultValue={item.title} />
         </label>
         <MeetingField meetings={meetings} defaultTitle={item.meetingTitle} />
-        <div className="admin-split">
-          <label>
-            Owner
-            <select name="assignedTo" defaultValue={item.assignedTo}>
-              {state.members.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.name} ({member.role})
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Status
-            <select name="status" defaultValue={item.status}>
-              <option value="open">open</option>
-              <option value="in_progress">in progress</option>
-              <option value="completed">completed</option>
-            </select>
-          </label>
-        </div>
+        <ParticipantPicker
+          members={state.members}
+          name="assignees"
+          legend="Owners"
+          selectedIds={item.assignedTo}
+        />
+        <label>
+          Status
+          <select name="status" defaultValue={item.status}>
+            <option value="open">open</option>
+            <option value="in_progress">in progress</option>
+            <option value="completed">completed</option>
+          </select>
+        </label>
         <label>
           Deadline
           <input

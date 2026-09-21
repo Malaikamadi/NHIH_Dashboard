@@ -7,7 +7,7 @@ import type {
   Task,
   TeamActivity,
 } from '../src/types'
-import { displayStatus, memberName } from '../src/utils/metrics'
+import { displayStatus, memberNames } from '../src/utils/metrics'
 import { atTime, nowIso, uid } from '../src/utils/time'
 import { HttpError } from './errors'
 
@@ -78,7 +78,7 @@ export function updateTask(state: OpsState, id: string, patch: Partial<Task>): O
   if (current.status !== next.status && next.status === 'completed') {
     following = pushEvent(
       following,
-      `${memberName(state.members, next.assignedTo)} completed · ${next.title}`,
+      `${memberNames(state.members, next.assignedTo)} completed · ${next.title}`,
       'success',
     )
   } else if (current.status !== next.status) {
@@ -87,7 +87,9 @@ export function updateTask(state: OpsState, id: string, patch: Partial<Task>): O
       `Status change · ${next.title}`,
       next.status === 'overdue' ? 'danger' : 'info',
     )
-  } else if (current.assignedTo !== next.assignedTo) {
+  } else if (
+    JSON.stringify(current.assignedTo) !== JSON.stringify(next.assignedTo)
+  ) {
     following = pushEvent(following, `Reassigned · ${next.title}`, 'info')
   }
   return following
@@ -145,22 +147,36 @@ export function updateActivity(state: OpsState, id: string, patch: Partial<TeamA
   return following
 }
 
-export function addActionItem(state: OpsState, item: ActionItem): OpsState {
-  return pushEvent(
-    { ...state, actionItems: [item, ...state.actionItems] },
-    `Action item created · ${item.title}`,
-    'info',
-  )
+export function addActionItem(state: OpsState, item: ActionItem, assignedBy?: string): OpsState {
+  const withItem = { ...state, actionItems: [item, ...state.actionItems] }
+  const by =
+    assignedBy ||
+    state.members.find((member) => member.role === 'Team Lead')?.id ||
+    state.members[0]?.id ||
+    'm1'
+  // New action points become tasks immediately.
+  return convertAction(withItem, item.id, by)
 }
 
 export function updateActionItem(state: OpsState, id: string, patch: Partial<ActionItem>): OpsState {
   const current = state.actionItems.find((item) => item.id === id)
   if (!current) throw new HttpError(404, 'Action item not found')
   const next = { ...current, ...patch }
-  return {
+  let following: OpsState = {
     ...state,
     actionItems: state.actionItems.map((item) => (item.id === id ? next : item)),
   }
+  if (patch.assignedTo && current.convertedToTaskId) {
+    following = {
+      ...following,
+      tasks: following.tasks.map((task) =>
+        task.id === current.convertedToTaskId
+          ? { ...task, assignedTo: [...patch.assignedTo!] }
+          : task,
+      ),
+    }
+  }
+  return following
 }
 
 export function convertAction(state: OpsState, actionId: string, assignedBy: string): OpsState {
@@ -171,7 +187,7 @@ export function convertAction(state: OpsState, actionId: string, assignedBy: str
     id: uid('t'),
     title: item.title,
     description: `Converted from meeting action · ${item.meetingTitle}`,
-    assignedTo: item.assignedTo,
+    assignedTo: [...item.assignedTo],
     assignedBy,
     priority: 'high',
     dueDate: item.deadline,

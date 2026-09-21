@@ -57,6 +57,45 @@ export function memberName(members: TeamMember[], id: string): string {
   return memberById(members, id)?.name ?? 'Unassigned'
 }
 
+/** Normalize legacy single-id assignees and JSON-stored postgres values. */
+export function assigneeIds(assignedTo: string | string[] | undefined | null): string[] {
+  if (assignedTo == null) return []
+  if (Array.isArray(assignedTo)) return assignedTo.map(String).filter(Boolean)
+  const raw = String(assignedTo).trim()
+  if (!raw) return []
+  if (raw.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(raw) as unknown
+      if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean)
+    } catch {
+      /* treat as a single member id */
+    }
+  }
+  return [raw]
+}
+
+export function isAssignedTo(
+  assignedTo: string | string[] | undefined | null,
+  memberId: string,
+): boolean {
+  return assigneeIds(assignedTo).includes(memberId)
+}
+
+export function memberNames(
+  members: TeamMember[],
+  assignedTo: string | string[] | undefined | null,
+): string {
+  const ids = assigneeIds(assignedTo)
+  if (ids.length === 0) return 'Unassigned'
+  return ids.map((id) => memberName(members, id)).join(', ')
+}
+
+export function primaryAssigneeId(
+  assignedTo: string | string[] | undefined | null,
+): string | undefined {
+  return assigneeIds(assignedTo)[0]
+}
+
 export function memberLabel(member: TeamMember): string {
   return `${member.name} (${member.role})`
 }
@@ -257,7 +296,7 @@ export interface MemberWorkload {
 
 export function memberWorkloads(state: OpsState, now = new Date()): MemberWorkload[] {
   return state.members.map((member) => {
-    const assigned = state.tasks.filter((t) => t.assignedTo === member.id)
+    const assigned = state.tasks.filter((t) => isAssignedTo(t.assignedTo, member.id))
     const overdue = assigned.filter((t) => displayStatus(t, now) === 'overdue').length
     const completed = assigned.filter((t) => displayStatus(t, now) === 'completed').length
     const active = assigned.filter((t) => {

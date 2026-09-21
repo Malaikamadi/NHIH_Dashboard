@@ -53,7 +53,9 @@ export function createMeeting(meeting: Meeting): Promise<OpsState> {
   })
 }
 
-export function createActionItem(item: ActionItem): Promise<OpsState> {
+export function createActionItem(
+  item: ActionItem & { assignedBy?: string },
+): Promise<OpsState> {
   return request<OpsState>('/api/actions', {
     method: 'POST',
     body: JSON.stringify(item),

@@ -11,6 +11,7 @@ import type {
   TeamActivity,
   TeamMember,
 } from '../src/types'
+import { assigneeIds } from '../src/utils/metrics'
 import { SEED_VERSION, type Snapshot, type SnapshotRead } from './snapshot'
 
 const { Pool } = pg
@@ -42,6 +43,11 @@ export async function migratePostgres(): Promise<void> {
   await getPool().query(sql)
   await getPool().query(
     `ALTER TABLE hub_log ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'open'`,
+  )
+  // Multi-assignee: store JSON arrays in assigned_to (drop single-member FKs if present).
+  await getPool().query(`ALTER TABLE tasks DROP CONSTRAINT IF EXISTS tasks_assigned_to_fkey`)
+  await getPool().query(
+    `ALTER TABLE action_items DROP CONSTRAINT IF EXISTS action_items_assigned_to_fkey`,
   )
 }
 
@@ -147,7 +153,7 @@ export async function writePostgresSnapshot(snapshot: Snapshot): Promise<void> {
           task.id,
           task.title,
           task.description,
-          task.assignedTo,
+          JSON.stringify(assigneeIds(task.assignedTo)),
           task.assignedBy,
           task.priority,
           task.dueDate,
@@ -222,7 +228,7 @@ export async function writePostgresSnapshot(snapshot: Snapshot): Promise<void> {
           item.meetingId,
           item.meetingTitle,
           item.title,
-          item.assignedTo,
+          JSON.stringify(assigneeIds(item.assignedTo)),
           item.deadline,
           item.status,
           item.convertedToTaskId ?? null,
@@ -391,7 +397,7 @@ function mapTask(row: TaskRow): Task {
     id: row.id,
     title: row.title,
     description: row.description,
-    assignedTo: row.assigned_to,
+    assignedTo: assigneeIds(row.assigned_to),
     assignedBy: row.assigned_by,
     priority: row.priority as Task['priority'],
     dueDate: iso(row.due_date),
@@ -441,7 +447,7 @@ function mapAction(row: ActionRow): ActionItem {
     meetingId: row.meeting_id,
     meetingTitle: row.meeting_title,
     title: row.title,
-    assignedTo: row.assigned_to,
+    assignedTo: assigneeIds(row.assigned_to),
     deadline: iso(row.deadline),
     status: row.status as ActionItem['status'],
     convertedToTaskId: row.converted_to_task_id ?? undefined,

@@ -49,7 +49,10 @@ export const taskCreate = z
     id: z.string().optional(),
     title: z.string().trim().min(1, 'Title is required'),
     description: z.string().optional().default(''),
-    assignedTo: z.string().min(1, 'Assignee is required'),
+    assignedTo: z
+      .union([z.string().min(1), z.array(z.string().min(1))])
+      .transform((value) => (Array.isArray(value) ? value : [value]))
+      .pipe(z.array(z.string().min(1)).min(1, 'Assignee is required')),
     assignedBy: z.string().min(1, 'Assigner is required'),
     priority,
     dueDate: isoDate,
@@ -72,7 +75,10 @@ export const taskPatch = z
   .object({
     title: z.string().trim().min(1).optional(),
     description: z.string().optional(),
-    assignedTo: z.string().optional(),
+    assignedTo: z
+      .union([z.string().min(1), z.array(z.string().min(1))])
+      .transform((value) => (Array.isArray(value) ? value : [value]))
+      .optional(),
     assignedBy: z.string().optional(),
     priority: priority.optional(),
     dueDate: isoDate.optional(),
@@ -115,9 +121,14 @@ export const actionCreate = z
     meetingId: z.string().min(1),
     meetingTitle: z.string().min(1),
     title: z.string().trim().min(1, 'Title is required'),
-    assignedTo: z.string().min(1),
+    assignedTo: z
+      .union([z.string().min(1), z.array(z.string().min(1))])
+      .transform((value) => (Array.isArray(value) ? value : [value]))
+      .pipe(z.array(z.string().min(1)).min(1, 'Assignee is required')),
     deadline: isoDate,
     status: actionStatus.optional().default('open'),
+    /** Who assigns the auto-created task when the action is converted. */
+    assignedBy: z.string().min(1).optional(),
     workKind: workKind.optional().default('facility_followup'),
     workKindOther: z.string().optional().default(''),
     district: districtId.optional().default('national'),
@@ -131,7 +142,10 @@ export const actionCreate = z
 export const actionPatch = z
   .object({
     title: z.string().trim().min(1).optional(),
-    assignedTo: z.string().optional(),
+    assignedTo: z
+      .union([z.string().min(1), z.array(z.string().min(1))])
+      .transform((value) => (Array.isArray(value) ? value : [value]))
+      .optional(),
     deadline: isoDate.optional(),
     status: actionStatus.optional(),
     meetingId: z.string().optional(),

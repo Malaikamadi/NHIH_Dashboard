@@ -1,12 +1,27 @@
 import { buildSeed, MEMBERS } from '../src/data/seed'
 import type { ActionItem, HubLogEntry, Meeting, OpsState, Task, TeamActivity } from '../src/types'
 import { hubHasWork } from '../src/utils/hub'
+import { assigneeIds } from '../src/utils/metrics'
 import { HttpError } from './errors'
 import * as ops from './ops'
 import { readSnapshot, SEED_VERSION, storageKind, storageStatus, writeSnapshot, type Snapshot } from './persist'
 
 let memory: Snapshot | null = null
 let loading: Promise<Snapshot> | null = null
+
+function normalizeAssigneesInState(state: OpsState): OpsState {
+  return {
+    ...state,
+    tasks: state.tasks.map((task) => ({
+      ...task,
+      assignedTo: assigneeIds(task.assignedTo as string | string[]),
+    })),
+    actionItems: state.actionItems.map((item) => ({
+      ...item,
+      assignedTo: assigneeIds(item.assignedTo as string | string[]),
+    })),
+  }
+}
 
 function withRoster(state: OpsState): { state: OpsState; changed: boolean } {
   const current = state.members
@@ -21,14 +36,16 @@ function withRoster(state: OpsState): { state: OpsState; changed: boolean } {
         member.initials === next.initials
       )
     })
+  const normalized = normalizeAssigneesInState({
+    ...state,
+    hubLog: state.hubLog ?? [],
+    activities: state.activities ?? [],
+  })
   if (same) {
-    return {
-      state: { ...state, hubLog: state.hubLog ?? [], activities: state.activities ?? [] },
-      changed: false,
-    }
+    return { state: normalized, changed: false }
   }
   return {
-    state: { ...state, members: MEMBERS, hubLog: state.hubLog ?? [], activities: state.activities ?? [] },
+    state: { ...normalized, members: MEMBERS },
     changed: true,
   }
 }
@@ -139,9 +156,9 @@ export async function updateActivity(id: string, patch: Partial<TeamActivity>): 
   return commit(ops.updateActivity(current.state, id, patch))
 }
 
-export async function addActionItem(item: ActionItem): Promise<OpsState> {
+export async function addActionItem(item: ActionItem, assignedBy?: string): Promise<OpsState> {
   const current = await snapshot()
-  return commit(ops.addActionItem(current.state, item))
+  return commit(ops.addActionItem(current.state, item, assignedBy))
 }
 
 export async function updateActionItem(id: string, patch: Partial<ActionItem>): Promise<OpsState> {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { MeetingForm } from './MeetingForm'
+import { ParticipantPicker } from './ParticipantPicker'
 import { PlaceFields, placeFromForm } from './PlaceFields'
 import { useOps } from '../store/OpsContext'
 import type { Meeting, MeetingStatus } from '../types'
@@ -177,11 +178,18 @@ function MeetingTools({
             e.stopPropagation()
             const form = e.currentTarget
             const data = new FormData(form)
+            const selected = data.getAll('assignees').map(String).filter(Boolean)
+            const assignedTo = selected.length
+              ? selected
+              : defaultOwner
+                ? [defaultOwner]
+                : []
+            if (!assignedTo.length) return
             addActionItem({
               meetingId: meeting.id,
               meetingTitle: meeting.title,
               title: String(data.get('title')),
-              assignedTo: String(data.get('assignedTo')),
+              assignedTo,
               deadline: new Date(String(data.get('deadline'))).toISOString(),
               status: 'open',
               ...placeFromForm(data),
@@ -190,22 +198,19 @@ function MeetingTools({
           }}
         >
           <input name="title" required placeholder="Action point" aria-label="Action point" />
-          <div className="meeting-tool-split">
-            <select name="assignedTo" defaultValue={defaultOwner} aria-label="Owner">
-              {state.members.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.name.split(' ')[0]}
-                </option>
-              ))}
-            </select>
-            <input
-              name="deadline"
-              type="datetime-local"
-              required
-              defaultValue={defaultDeadline()}
-              aria-label="Deadline"
-            />
-          </div>
+          <ParticipantPicker
+            members={state.members}
+            name="assignees"
+            legend="Owners"
+            selectedIds={defaultOwner ? [defaultOwner] : []}
+          />
+          <input
+            name="deadline"
+            type="datetime-local"
+            required
+            defaultValue={defaultDeadline()}
+            aria-label="Deadline"
+          />
           <PlaceFields />
           <button type="submit" className="complete-btn">
             Add action

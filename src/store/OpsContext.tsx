@@ -45,7 +45,7 @@ import type {
   TeamActivity,
   WorkKind,
 } from '../types'
-import { memberName } from '../utils/metrics'
+import { assigneeIds, memberNames } from '../utils/metrics'
 import { MEMBERS } from '../data/seed'
 import { nowIso, uid } from '../utils/time'
 
@@ -90,6 +90,14 @@ function reducer(state: OpsState, action: Action): OpsState {
         members: MEMBERS,
         hubLog: action.state.hubLog ?? [],
         activities: action.state.activities ?? [],
+        tasks: action.state.tasks.map((task) => ({
+          ...task,
+          assignedTo: assigneeIds(task.assignedTo as string | string[]),
+        })),
+        actionItems: action.state.actionItems.map((item) => ({
+          ...item,
+          assignedTo: assigneeIds(item.assignedTo as string | string[]),
+        })),
       }
     case 'add_task':
       return pushEvent(
@@ -114,7 +122,7 @@ function reducer(state: OpsState, action: Action): OpsState {
           {
             id: uid('e'),
             at: nowIso(),
-            message: `${memberName(state.members, next.assignedTo)} completed · ${next.title}`,
+            message: `${memberNames(state.members, next.assignedTo)} completed · ${next.title}`,
             tone: 'success',
           },
         )
@@ -233,13 +241,24 @@ function reducer(state: OpsState, action: Action): OpsState {
         ...state,
         actionItems: [action.item, ...state.actionItems],
       }
-    case 'update_action':
+    case 'update_action': {
+      const current = state.actionItems.find((item) => item.id === action.id)
+      const actionItems = state.actionItems.map((item) =>
+        item.id === action.id ? { ...item, ...action.patch } : item,
+      )
+      if (!current?.convertedToTaskId || !action.patch.assignedTo) {
+        return { ...state, actionItems }
+      }
       return {
         ...state,
-        actionItems: state.actionItems.map((item) =>
-          item.id === action.id ? { ...item, ...action.patch } : item,
+        actionItems,
+        tasks: state.tasks.map((task) =>
+          task.id === current.convertedToTaskId
+            ? { ...task, assignedTo: [...action.patch.assignedTo!] }
+            : task,
         ),
       }
+    }
     case 'convert_action':
       return {
         ...state,
@@ -309,7 +328,7 @@ interface OpsContextValue {
   addTask: (input: {
     title: string
     description: string
-    assignedTo: string
+    assignedTo: string[]
     assignedBy: string
     priority: Priority
     dueDate: string
@@ -466,8 +485,30 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
   const addActionItem = useCallback(
     (input: Omit<ActionItem, 'id' | 'convertedToTaskId'>) => {
       const item: ActionItem = { ...input, id: uid('a') }
+      const lead =
+        stateRef.current.members.find((member) => member.role === 'Team Lead')?.id ??
+        stateRef.current.members[0]?.id ??
+        'm1'
+      const task: Task = {
+        id: uid('t'),
+        title: item.title,
+        description: `Converted from meeting action · ${item.meetingTitle}`,
+        assignedTo: [...item.assignedTo],
+        assignedBy: lead,
+        priority: 'high',
+        dueDate: item.deadline,
+        status: 'not_started',
+        progress: 0,
+        createdAt: nowIso(),
+        fromActionItemId: item.id,
+        workKind: item.workKind,
+        workKindOther: item.workKindOther,
+        district: item.district,
+        facility: item.facility,
+      }
       dispatch({ type: 'add_action', item })
-      void createActionItem(item).then(hydrate).catch(refresh)
+      dispatch({ type: 'convert_action', actionId: item.id, task })
+      void createActionItem({ ...item, assignedBy: lead }).then(hydrate).catch(refresh)
     },
     [hydrate, refresh],
   )

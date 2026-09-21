@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS tasks (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
   description TEXT NOT NULL DEFAULT '',
-  assigned_to TEXT NOT NULL REFERENCES members (id),
+  -- JSON array of member ids, e.g. ["m1","m2"]
+  assigned_to TEXT NOT NULL,
   assigned_by TEXT NOT NULL REFERENCES members (id),
   priority TEXT NOT NULL,
   due_date TIMESTAMPTZ NOT NULL,
@@ -71,7 +72,8 @@ CREATE TABLE IF NOT EXISTS action_items (
   meeting_id TEXT NOT NULL,
   meeting_title TEXT NOT NULL,
   title TEXT NOT NULL,
-  assigned_to TEXT NOT NULL REFERENCES members (id),
+  -- JSON array of member ids, e.g. ["m1","m2"]
+  assigned_to TEXT NOT NULL,
   deadline TIMESTAMPTZ NOT NULL,
   status TEXT NOT NULL,
   converted_to_task_id TEXT,

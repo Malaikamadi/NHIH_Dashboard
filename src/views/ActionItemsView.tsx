@@ -3,7 +3,7 @@ import { Avatar, StatusPill } from '../components/Header'
 import { PlaceLine } from '../components/PlaceFields'
 import { useOps } from '../store/OpsContext'
 import type { ActionStatus } from '../types'
-import { memberIndex, memberName, openActionItems } from '../utils/metrics'
+import { memberIndex, memberNames, openActionItems, primaryAssigneeId } from '../utils/metrics'
 import { formatDue } from '../utils/time'
 
 const ACTION_STATUS: Record<ActionStatus, 'open' | 'in_progress' | 'completed'> = {
@@ -60,6 +60,10 @@ export function ActionItemsView() {
           )}
           {items.map((item) => {
             const overdue = item.status !== 'completed' && new Date(item.deadline) < now
+            const primaryId = primaryAssigneeId(item.assignedTo)
+            const primary = primaryId
+              ? state.members.find((m) => m.id === primaryId)
+              : undefined
             return (
               <div key={item.id} className={`action-row ${overdue ? 'is-late' : ''}`}>
                 <div className="action-title">
@@ -73,14 +77,14 @@ export function ActionItemsView() {
                 </div>
                 <div className="muted">{item.meetingTitle}</div>
                 <div className="task-meta">
-                  <Avatar
-                    name={memberName(state.members, item.assignedTo)}
-                    initials={
-                      state.members.find((m) => m.id === item.assignedTo)?.initials ?? '?'
-                    }
-                    index={memberIndex(state.members, item.assignedTo)}
-                  />
-                  {memberName(state.members, item.assignedTo)}
+                  {primary && (
+                    <Avatar
+                      name={primary.name}
+                      initials={primary.initials}
+                      index={memberIndex(state.members, primary.id)}
+                    />
+                  )}
+                  {memberNames(state.members, item.assignedTo)}
                 </div>
                 <div className={overdue ? 'warn-text' : ''}>{formatDue(item.deadline, now)}</div>
                 <StatusPill status={ACTION_STATUS[item.status]} />
@@ -88,7 +92,7 @@ export function ActionItemsView() {
                   {item.convertedToTaskId ? (
                     <span className="pill pill-completed">On board</span>
                   ) : (
-                    <span className="muted">Not converted</span>
+                    <span className="muted">Pending</span>
                   )}
                 </div>
               </div>

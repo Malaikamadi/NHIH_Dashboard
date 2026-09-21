@@ -1,3 +1,4 @@
+import { ParticipantPicker } from './ParticipantPicker'
 import { PlaceFields, placeFromForm } from './PlaceFields'
 import { useOps } from '../store/OpsContext'
 import type { Priority } from '../types'
@@ -28,10 +29,13 @@ export function TaskForm({
         e.preventDefault()
         const form = e.currentTarget
         const data = new FormData(form)
+        const selected = data.getAll('assignees').map(String).filter(Boolean)
+        const assignedTo = selected.length ? selected : lead ? [lead] : []
+        if (!assignedTo.length) return
         addTask({
           title: String(data.get('title')).trim(),
           description: String(data.get('description') || '').trim(),
-          assignedTo: String(data.get('assignedTo')),
+          assignedTo,
           assignedBy: lead,
           priority: String(data.get('priority')) as Priority,
           dueDate: new Date(String(data.get('dueDate'))).toISOString(),
@@ -51,28 +55,22 @@ export function TaskForm({
         Notes
         <textarea name="description" rows={2} placeholder="Optional detail" />
       </label>
-      <div className="admin-split">
-        <label>
-          Assigned to
-          <select name="assignedTo" required defaultValue={lead}>
-            {state.members.map((member) => (
-              <option key={member.id} value={member.id}>
-                {member.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Priority
-          <select name="priority" defaultValue="high">
-            {PRIORITIES.map((priority) => (
-              <option key={priority} value={priority}>
-                {priority}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      <ParticipantPicker
+        members={state.members}
+        name="assignees"
+        legend="Assigned to"
+        selectedIds={lead ? [lead] : []}
+      />
+      <label>
+        Priority
+        <select name="priority" defaultValue="high">
+          {PRIORITIES.map((priority) => (
+            <option key={priority} value={priority}>
+              {priority}
+            </option>
+          ))}
+        </select>
+      </label>
       <label>
         Due
         <input name="dueDate" type="datetime-local" required defaultValue={defaultDue()} />

@@ -1,12 +1,18 @@
 import { useMemo, useRef, useState } from 'react'
 import { DeskDeleteButton } from './DeskDeleteButton'
+import { ParticipantPicker } from './ParticipantPicker'
 import { PlaceFields, PlaceLine, placeFromForm } from './PlaceFields'
 import { StatusPill } from './Header'
 import { TaskActions } from './TaskActions'
 import { useOps } from '../store/OpsContext'
 import type { Priority, Task, TaskStatus } from '../types'
-import { displayStatus, memberName, taskStatusLabel } from '../utils/metrics'
+import { displayStatus, memberNames, taskStatusLabel } from '../utils/metrics'
 import { formatDue, toDatetimeLocal } from '../utils/time'
+
+function assigneesFromForm(data: FormData, fallback: string[] = []): string[] {
+  const selected = data.getAll('assignees').map(String).filter(Boolean)
+  return selected.length ? selected : fallback
+}
 
 const STATUSES: TaskStatus[] = [
   'not_started',
@@ -32,7 +38,7 @@ export function TaskUpdatePanel() {
         const status = displayStatus(task, now)
         if (filter === 'open' && status === 'completed') return false
         if (!q) return true
-        const owner = memberName(state.members, task.assignedTo).toLowerCase()
+        const owner = memberNames(state.members, task.assignedTo).toLowerCase()
         return (
           task.title.toLowerCase().includes(q) ||
           task.description.toLowerCase().includes(q) ||
@@ -113,7 +119,7 @@ function TaskUpdateCard({
             facility={task.facility}
           />
           <p className="muted">
-            {memberName(state.members, task.assignedTo)} · {formatDue(task.dueDate, now)}
+            {memberNames(state.members, task.assignedTo)} · {formatDue(task.dueDate, now)}
           </p>
         </div>
         <div className="admin-item-head">
@@ -153,10 +159,12 @@ function TaskUpdateCard({
             if (Number.isNaN(due.getTime())) return
             const progress = Number(data.get('progress') || task.progress)
             const nextStatus = String(data.get('status')) as TaskStatus
+            const assignedTo = assigneesFromForm(data, task.assignedTo)
+            if (!assignedTo.length) return
             updateTask(task.id, {
               title: String(data.get('title')).trim(),
               description: String(data.get('description') || '').trim(),
-              assignedTo: String(data.get('assignedTo')),
+              assignedTo,
               assignedBy: String(data.get('assignedBy')),
               priority: String(data.get('priority')) as Priority,
               dueDate: due.toISOString(),
@@ -181,28 +189,22 @@ function TaskUpdateCard({
               placeholder="What changed, blocker, next step…"
             />
           </label>
-          <div className="admin-split">
-            <label>
-              Assigned to
-              <select name="assignedTo" defaultValue={task.assignedTo}>
-                {state.members.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.name} ({member.role})
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Assigned by
-              <select name="assignedBy" defaultValue={task.assignedBy}>
-                {state.members.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.name} ({member.role})
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+          <ParticipantPicker
+            members={state.members}
+            name="assignees"
+            legend="Assigned to"
+            selectedIds={task.assignedTo}
+          />
+          <label>
+            Assigned by
+            <select name="assignedBy" defaultValue={task.assignedBy}>
+              {state.members.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.name} ({member.role})
+                </option>
+              ))}
+            </select>
+          </label>
           <div className="admin-split">
             <label>
               Priority

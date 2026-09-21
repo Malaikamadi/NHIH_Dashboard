@@ -17,7 +17,7 @@ import {
   hotspotDistrict,
   memberById,
   memberIndex,
-  memberName,
+  memberNames,
   openTodayActivities,
   openWeekMeetings,
   overdueTasks,
@@ -28,6 +28,7 @@ import {
   periodCompletionRate,
   periodSeries,
   periodStatusBreakdown,
+  primaryAssigneeId,
   priorityBand,
   startingSoon,
   statusBreakdown,
@@ -352,7 +353,8 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
                 </div>
               )}
               {tasks.map((task) => {
-                const owner = memberById(state.members, task.assignedTo)
+                const primaryId = primaryAssigneeId(task.assignedTo)
+                const owner = primaryId ? memberById(state.members, primaryId) : undefined
                 return (
                   <div
                     key={task.id}
@@ -375,7 +377,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
                           index={memberIndex(state.members, owner.id)}
                         />
                       )}
-                      {memberName(state.members, task.assignedTo)}
+                      {memberNames(state.members, task.assignedTo)}
                     </span>
                     <PriorityMark priority={priorityBand(task.priority)} />
                     <span>{formatDate(task.dueDate)}</span>

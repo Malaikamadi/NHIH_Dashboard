@@ -1,4 +1,4 @@
-import { displayStatus, memberById, memberName } from '../utils/metrics'
+import { displayStatus, memberById, memberNames, primaryAssigneeId } from '../utils/metrics'
 import { formatDue, formatTimeRange } from '../utils/time'
 import { Avatar, PriorityMark, StatusPill } from './Header'
 import type { Meeting, MeetingStatus, Task, TeamMember } from '../types'
@@ -72,9 +72,10 @@ export function TaskRow({
   members: TeamMember[]
   now: Date
 }) {
-  const owner = memberById(members, task.assignedTo)
+  const primaryId = primaryAssigneeId(task.assignedTo)
+  const owner = primaryId ? memberById(members, primaryId) : undefined
   const status = displayStatus(task, now)
-  const idx = members.findIndex((m) => m.id === task.assignedTo)
+  const idx = primaryId ? members.findIndex((m) => m.id === primaryId) : 0
 
   return (
     <article className={`task-row is-${status}`}>
@@ -82,7 +83,7 @@ export function TaskRow({
         <h3>{task.title}</h3>
         <div className="task-meta">
           {owner && <Avatar name={owner.name} initials={owner.initials} index={Math.max(idx, 0)} />}
-          <span>{memberName(members, task.assignedTo)}</span>
+          <span>{memberNames(members, task.assignedTo)}</span>
           <span className="dot" />
           <span>{formatDue(task.dueDate, now)}</span>
         </div>

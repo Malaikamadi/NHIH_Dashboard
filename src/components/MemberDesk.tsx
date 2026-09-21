@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { PlaceLine } from './PlaceFields'
 import { useOps } from '../store/OpsContext'
 import type { TeamMember } from '../types'
-import { displayStatus } from '../utils/metrics'
+import { displayStatus, isAssignedTo } from '../utils/metrics'
 import { formatDue } from '../utils/time'
 import { PriorityMark, StatusPill } from './Header'
 
@@ -15,7 +15,7 @@ export function MemberDesk({
 }) {
   const { state } = useOps()
   const now = useMemo(() => new Date(), [state.tasks])
-  const mine = state.tasks.filter((t) => t.assignedTo === member.id)
+  const mine = state.tasks.filter((t) => isAssignedTo(t.assignedTo, member.id))
   const open = mine
     .filter((t) => displayStatus(t, now) !== 'completed')
     .sort((a, b) => +new Date(a.dueDate) - +new Date(b.dueDate))

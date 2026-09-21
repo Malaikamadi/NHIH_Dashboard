@@ -226,12 +226,16 @@ api.patch('/activity', async (c) => {
 
 api.post('/actions', async (c) => {
   const body = await readBody(c, actionCreate)
+  const { assignedBy, ...item } = body
   return c.json(
     await push(
-      await repo.addActionItem({
-        ...body,
-        id: body.id || uid('a'),
-      }),
+      await repo.addActionItem(
+        {
+          ...item,
+          id: item.id || uid('a'),
+        },
+        assignedBy,
+      ),
     ),
   )
 })

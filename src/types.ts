@@ -64,7 +64,8 @@ export interface Task {
   id: string
   title: string
   description: string
-  assignedTo: string
+  /** One or more member ids responsible for the task. */
+  assignedTo: string[]
   assignedBy: string
   priority: Priority
   dueDate: string
@@ -99,7 +100,8 @@ export interface ActionItem {
   meetingId: string
   meetingTitle: string
   title: string
-  assignedTo: string
+  /** One or more member ids responsible for the action. */
+  assignedTo: string[]
   deadline: string
   status: ActionStatus
   convertedToTaskId?: string

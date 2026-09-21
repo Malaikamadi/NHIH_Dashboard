@@ -5,8 +5,10 @@ import {
   PERIODS,
   agendaLines,
   completedOnTime,
+  isAssignedTo,
   meetingStatus,
   memberName,
+  memberNames,
   memberWorkloads,
   periodBounds,
   teamMetrics,
@@ -107,7 +109,10 @@ export function buildOpsReport(state: OpsState, period: PeriodId = 'Weekly', now
     name: row.member.name,
     role: row.member.role,
     closed: state.tasks.filter(
-      (t) => t.assignedTo === row.member.id && t.completedAt && isInRange(t.completedAt, start, end),
+      (t) =>
+        isAssignedTo(t.assignedTo, row.member.id) &&
+        t.completedAt &&
+        isInRange(t.completedAt, start, end),
     ).length,
     open: row.active,
     overdue: row.overdue,
@@ -156,7 +161,7 @@ export function buildOpsReport(state: OpsState, period: PeriodId = 'Weekly', now
         actions: actions.map((item) => ({
           title: item.title,
           place: placeLine(item.workKind, item.district, item.facility, item.workKindOther),
-          owner: memberName(state.members, item.assignedTo),
+          owner: memberNames(state.members, item.assignedTo),
           status: item.status.replace('_', ' '),
           deadline: formatDate(item.deadline),
         })),
