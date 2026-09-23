@@ -739,28 +739,28 @@ button { cursor: pointer; }
   justify-self: end;
   border: 1px solid color-mix(in srgb, #c4a35a 65%, var(--line));
   background: color-mix(in srgb, #1f4e79 6%, var(--paper));
-  border-radius: 12px;
-  padding: 8px 12px;
+  border-radius: 14px;
+  padding: 10px 14px;
   display: grid;
-  gap: 6px;
+  gap: 8px;
   text-align: left;
   cursor: pointer;
 }
 .brief-emr:disabled { cursor: default; }
 .brief-emr-clock {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 .brief-emr-unit {
   display: grid;
   justify-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 .brief-emr-clock .flip-group {
-  font-size: 26px;
+  font-size: 48px;
 }
 .brief-emr-clock small {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
