@@ -1,11 +1,14 @@
 import { districtLabel, logKindLabel } from '../data/catalog'
 import { EMR_GO_LIVE, emrRemaining } from '../data/emr'
+import { FlipValue } from './FlipClock'
+import { StatusPill } from './Header'
 import type { HubLogKind } from '../types'
 import {
+  activeHubLog,
   boardWeekAnchor,
   currentOrNextMeeting,
+  hubLogStatus,
   meetingStatus,
-  pipeStatus,
   recordedActivities,
   weeksActivities,
   weeksMeetings,
@@ -49,7 +52,7 @@ export function HubBrief({
             ? { kind: 'activity' as const, item: activityFocus }
             : null
   const live = focus ? meetingStatus(focus.item, now) === 'live' : false
-  const pipe = pipeStatus(state.hubLog, now)
+  const openLogs = activeHubLog(state.hubLog)
   const remaining = emrRemaining(EMR_GO_LIVE, now)
   const countdownUnits = [
     { value: String(remaining.days), label: 'Days' },
@@ -59,7 +62,7 @@ export function HubBrief({
   ]
 
   return (
-    <div className={`hub-brief-stack ${pipe ? 'has-pipe' : ''}`}>
+    <div className={`hub-brief-stack ${openLogs.length ? 'has-pipe' : ''}`}>
       <section className={`hub-brief ${live ? 'is-live' : ''}`}>
         <button
           type="button"
@@ -100,10 +103,10 @@ export function HubBrief({
           <span className="brief-kicker">EMR Launch</span>
           <span className="brief-emr-clock" role="timer" aria-label="EMR go-live countdown">
             {countdownUnits.map((unit) => (
-              <b key={unit.label}>
-                {unit.value}
+              <span key={unit.label} className="brief-emr-unit" aria-label={`${unit.value} ${unit.label}`}>
+                <FlipValue value={unit.value} />
                 <small>{unit.label}</small>
-              </b>
+              </span>
             ))}
           </span>
         </button>
@@ -151,20 +154,27 @@ export function HubBrief({
         </ol>
       </section>
 
-      {pipe && (
-        <a href="#hub-log" className={`brief-pipe-card is-${pipe.kind}`}>
-          <span className="brief-pipe-kicker">
-            <Icon name={pipeIcon(pipe.kind)} size={14} />
-            Hub incident log
-          </span>
-          <strong>{logKindLabel(pipe.kind)}</strong>
-          <p>{pipe.title}</p>
-          <span className="brief-pipe-meta">
-            {isSameDay(new Date(pipe.at), now) ? formatTime(pipe.at) : `${formatDate(pipe.at)} · ${formatTime(pipe.at)}`}
-            {` · ${districtLabel(pipe.district)}`}
-            {pipe.facility ? ` · ${pipe.facility}` : ''}
-          </span>
-        </a>
+      {openLogs.length > 0 && (
+        <div className="brief-pipe-stack" aria-label="Open hub incidents">
+          {openLogs.map((entry) => (
+            <a key={entry.id} href="#hub-log" className={`brief-pipe-card is-${entry.kind}`}>
+              <span className="brief-pipe-kicker">
+                <Icon name={pipeIcon(entry.kind)} size={14} />
+                Hub incident log
+              </span>
+              <strong>{logKindLabel(entry.kind)}</strong>
+              <p>{entry.title}</p>
+              <span className="brief-pipe-meta">
+                {isSameDay(new Date(entry.at), now)
+                  ? formatTime(entry.at)
+                  : `${formatDate(entry.at)} · ${formatTime(entry.at)}`}
+                {` · ${districtLabel(entry.district)}`}
+                {entry.facility ? ` · ${entry.facility}` : ''}
+              </span>
+              <StatusPill status={hubLogStatus(entry)} />
+            </a>
+          ))}
+        </div>
       )}
     </div>
   )

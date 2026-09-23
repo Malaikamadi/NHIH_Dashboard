@@ -749,20 +749,17 @@ button { cursor: pointer; }
 .brief-emr:disabled { cursor: default; }
 .brief-emr-clock {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
-.brief-emr-clock b {
+.brief-emr-unit {
   display: grid;
-  min-width: 36px;
-  font-size: 22px;
-  font-weight: 900;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  color: var(--accent);
+  justify-items: center;
+  gap: 4px;
+}
+.brief-emr-clock .flip-group {
+  font-size: 26px;
 }
 .brief-emr-clock small {
-  margin-top: 3px;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -770,12 +767,19 @@ button { cursor: pointer; }
   color: #8d6b24;
 }
 [data-theme="dark"] .brief-emr-clock small { color: #e0c36a; }
+.brief-pipe-stack {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+  max-height: 100%;
+  overflow: auto;
+}
 .brief-pipe-card {
   display: grid;
   align-content: start;
   gap: 8px;
   min-width: 0;
-  height: 100%;
   padding: 20px 18px;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
