@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ActivitySession } from '../components/ActivityForm'
 import { Avatar, PriorityMark, StatusPill } from '../components/Header'
 import { Icon } from '../components/Icons'
@@ -20,7 +20,6 @@ import {
   memberNames,
   overdueTasks,
   PERIOD_CLOSED_LABEL,
-  PERIOD_COPY,
   PERIODS,
   periodClosedCount,
   periodCompletionRate,
@@ -42,7 +41,6 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
   const { state } = useOps()
   const [now, setNow] = useState(() => new Date())
   const [period, setPeriod] = useState<PeriodId>('Weekly')
-  const [mixPeriod, setMixPeriod] = useState<PeriodId>('Weekly')
   const [query, setQuery] = useState('')
   const [spotlight, setSpotlight] = useState<Spotlight>(null)
   const [reportOpen, setReportOpen] = useState(false)
@@ -59,7 +57,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
   const metrics = teamMetrics(state, now)
   const series = periodSeries(period, state.tasks, now)
   const breakdown = statusBreakdown(state.tasks, now)
-  const mixBreakdown = periodStatusBreakdown(state.tasks, mixPeriod, now)
+  const mixBreakdown = periodStatusBreakdown(state.tasks, period, now)
   const mixTotal =
     mixBreakdown.completed +
     mixBreakdown.in_progress +
@@ -192,20 +190,22 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
             detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
           }, 50)
         }}
-        onOpenOverdue={() => {
-          setDistrictFilter(hotspot?.id ?? null)
-          setSpotlight('overdue')
-          window.setTimeout(() => {
-            detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-          }, 50)
-        }}
+        onOpenEmr={() => onOpenView('emr')}
       />
       <div className="hero-row">
         <section className="paper overview-card">
           <header className="paper-h">
             <div>
               <h2>Dashboard</h2>
-              <p>{PERIOD_COPY[period]}</p>
+              <p>
+                {period === 'Daily'
+                  ? 'Status mix · due or closed today'
+                  : period === 'Weekly'
+                    ? 'Status mix · last 7 days'
+                    : period === 'Monthly'
+                      ? 'Status mix · this month'
+                      : 'Status mix · this year'}
+              </p>
             </div>
             <div className="period-tabs">
               {PERIODS.map((p) => (
@@ -235,13 +235,23 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
             </button>
           </div>
 
-          <AreaChart
-            a={completedSeries}
-            b={dueSeries}
-            labels={series.map((d) => d.label)}
-            aLabel="Completed"
-            bLabel="Due"
-          />
+          <div className="overview-mix">
+            <StatusDonut
+              total={mixTotal}
+              segments={[
+                { value: mixBreakdown.completed, color: 'var(--ok)' },
+                { value: mixBreakdown.in_progress, color: 'var(--warn)' },
+                { value: mixBreakdown.not_started, color: 'var(--muted)' },
+                { value: mixBreakdown.overdue, color: 'var(--danger)' },
+              ]}
+            />
+            <div className="traffic-legend">
+              <LegendDot color="var(--ok)" label="Completed" value={mixBreakdown.completed} total={mixTotal} />
+              <LegendDot color="var(--warn)" label="In progress" value={mixBreakdown.in_progress} total={mixTotal} />
+              <LegendDot color="var(--muted)" label="Pending" value={mixBreakdown.not_started} total={mixTotal} />
+              <LegendDot color="var(--danger)" label="Overdue" value={mixBreakdown.overdue} total={mixTotal} />
+            </div>
+          </div>
         </section>
 
         <section className="paper table-card" ref={detailRef}>
@@ -488,53 +498,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
         </div>
       )}
 
-      <div className="bottom-row">
-        <HubLogPanel now={now} />
-
-        <section className="paper traffic-card">
-          <header className="paper-h">
-            <div>
-              <h2>Task Mix</h2>
-              <p>
-                {mixPeriod === 'Daily'
-                  ? 'Status mix · due or closed today'
-                  : mixPeriod === 'Weekly'
-                    ? 'Status mix · last 7 days'
-                    : mixPeriod === 'Monthly'
-                      ? 'Status mix · this month'
-                      : 'Status mix · this year'}
-              </p>
-            </div>
-            <div className="period-tabs">
-              {PERIODS.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  className={mixPeriod === p ? 'is-active' : ''}
-                  onClick={() => setMixPeriod(p)}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-          </header>
-          <StatusDonut
-            total={mixTotal}
-            segments={[
-              { value: mixBreakdown.completed, color: 'var(--ok)' },
-              { value: mixBreakdown.in_progress, color: 'var(--warn)' },
-              { value: mixBreakdown.not_started, color: 'var(--muted)' },
-              { value: mixBreakdown.overdue, color: 'var(--danger)' },
-            ]}
-          />
-          <div className="traffic-legend">
-            <LegendDot color="var(--ok)" label="Completed" value={mixBreakdown.completed} total={mixTotal} />
-            <LegendDot color="var(--warn)" label="In progress" value={mixBreakdown.in_progress} total={mixTotal} />
-            <LegendDot color="var(--muted)" label="Pending" value={mixBreakdown.not_started} total={mixTotal} />
-            <LegendDot color="var(--danger)" label="Overdue" value={mixBreakdown.overdue} total={mixTotal} />
-          </div>
-        </section>
-      </div>
+      <HubLogPanel now={now} />
       {reportOpen && (
         <WeeklyReportModal onClose={() => setReportOpen(false)} />
       )}
@@ -590,99 +554,6 @@ function Sparkline({ values }: { values: number[] }) {
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
       <path d={d} fill="none" stroke="var(--spark)" strokeWidth="2" />
     </svg>
-  )
-}
-
-function AreaChart({
-  a,
-  b,
-  labels,
-  aLabel,
-  bLabel,
-}: {
-  a: number[]
-  b: number[]
-  labels: string[]
-  aLabel: string
-  bLabel: string
-}) {
-  const uid = useId().replace(/:/g, '')
-  const fillA = `fillCompleted-${uid}`
-  const fillB = `fillDue-${uid}`
-  const w = 720
-  const h = 220
-  const left = 28
-  const right = 12
-  const top = 16
-  const bottom = 28
-  const max = Math.max(...a, ...b, 1)
-  const coords = (vals: number[]) =>
-    vals.map((v, i) => {
-      const x = left + (i / Math.max(vals.length - 1, 1)) * (w - left - right)
-      const y = top + (1 - v / max) * (h - top - bottom)
-      return [x, y] as const
-    })
-  const smooth = (pts: readonly (readonly [number, number])[]) => {
-    if (!pts.length) return ''
-    let d = `M ${pts[0][0]} ${pts[0][1]}`
-    for (let i = 0; i < pts.length - 1; i++) {
-      const cx = (pts[i][0] + pts[i + 1][0]) / 2
-      d += ` C ${cx} ${pts[i][1]}, ${cx} ${pts[i + 1][1]}, ${pts[i + 1][0]} ${pts[i + 1][1]}`
-    }
-    return d
-  }
-  const pa = coords(a)
-  const pb = coords(b)
-  const area = (pts: readonly (readonly [number, number])[]) => {
-    const line = smooth(pts)
-    const last = pts[pts.length - 1]
-    const first = pts[0]
-    return `${line} L ${last[0]} ${h - bottom} L ${first[0]} ${h - bottom} Z`
-  }
-  const grid = [0, 0.25, 0.5, 0.75, 1]
-
-  return (
-    <div className="chart-well">
-      <div className="chart-legend">
-        <span>
-          <i style={{ background: 'var(--ok)' }} /> {aLabel}
-        </span>
-        <span>
-          <i style={{ background: 'var(--muted)' }} /> {bLabel}
-        </span>
-      </div>
-      <svg className="area-chart" viewBox={`0 0 ${w} ${h}`} role="img" aria-label={`${aLabel} vs ${bLabel}`}>
-        <defs>
-          <linearGradient id={fillA} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--ok)" stopOpacity="0.28" />
-            <stop offset="100%" stopColor="var(--ok)" stopOpacity="0.02" />
-          </linearGradient>
-          <linearGradient id={fillB} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--muted)" stopOpacity="0.22" />
-            <stop offset="100%" stopColor="var(--muted)" stopOpacity="0.02" />
-          </linearGradient>
-        </defs>
-        {grid.map((g) => {
-          const y = top + (1 - g) * (h - top - bottom)
-          return <line key={g} x1={left} x2={w - right} y1={y} y2={y} className="chart-grid" />
-        })}
-        <path d={area(pa)} fill={`url(#${fillA})`} />
-        <path d={area(pb)} fill={`url(#${fillB})`} />
-        <path d={smooth(pa)} fill="none" stroke="var(--ok)" strokeWidth="2.5" />
-        <path d={smooth(pb)} fill="none" stroke="var(--muted)" strokeWidth="2.5" />
-        {pa.map(([x, y], i) => (
-          <circle key={`a-${labels[i]}-${i}`} cx={x} cy={y} r="3.5" fill="var(--ok)" />
-        ))}
-        {pb.map(([x, y], i) => (
-          <circle key={`b-${labels[i]}-${i}`} cx={x} cy={y} r="3.5" fill="var(--muted)" />
-        ))}
-        {labels.map((label, i) => (
-          <text key={`${label}-${i}`} x={pa[i]?.[0] ?? 0} y={h - 8} textAnchor="middle" className="chart-label">
-            {label}
-          </text>
-        ))}
-      </svg>
-    </div>
   )
 }
 

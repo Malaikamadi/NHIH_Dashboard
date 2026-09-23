@@ -1,12 +1,10 @@
 import { districtLabel, logKindLabel } from '../data/catalog'
+import { EMR_GO_LIVE, emrRemaining } from '../data/emr'
 import type { HubLogKind } from '../types'
 import {
   boardWeekAnchor,
   currentOrNextMeeting,
-  dueTodayTasks,
-  hotspotDistrict,
   meetingStatus,
-  overdueTasks,
   pipeStatus,
   recordedActivities,
   weeksActivities,
@@ -20,12 +18,12 @@ export function HubBrief({
   now,
   onOpenMeetings,
   onOpenActivities,
-  onOpenOverdue,
+  onOpenEmr,
 }: {
   now: Date
   onOpenMeetings: () => void
   onOpenActivities?: () => void
-  onOpenOverdue?: () => void
+  onOpenEmr?: () => void
 }) {
   const { state } = useOps()
   const stripAnchor = boardWeekAnchor(state.meetings, state.activities, now)
@@ -51,11 +49,14 @@ export function HubBrief({
             ? { kind: 'activity' as const, item: activityFocus }
             : null
   const live = focus ? meetingStatus(focus.item, now) === 'live' : false
-  const overdue = overdueTasks(state.tasks, now).length
-  const dueToday = dueTodayTasks(state.tasks, now).length
-  const hotspot = hotspotDistrict(state.tasks, now)
   const pipe = pipeStatus(state.hubLog, now)
-  const weekOpen = weekMeetings.length + weekActivities.length
+  const remaining = emrRemaining(EMR_GO_LIVE, now)
+  const countdownUnits = [
+    { value: String(remaining.days), label: 'Days' },
+    { value: String(remaining.hours).padStart(2, '0'), label: 'Hrs' },
+    { value: String(remaining.minutes).padStart(2, '0'), label: 'Min' },
+    { value: String(remaining.seconds).padStart(2, '0'), label: 'Sec' },
+  ]
 
   return (
     <div className={`hub-brief-stack ${pipe ? 'has-pipe' : ''}`}>
@@ -95,31 +96,17 @@ export function HubBrief({
                 : 'Mon–Fri meetings and activities sit in the strip below'}
           </span>
         </button>
-        <div className="brief-stats">
-          <div>
-            <strong>{weekOpen}</strong>
-            <span>{showingPastWeek ? 'Last recorded' : 'This week'}</span>
-          </div>
-          <button type="button" onClick={onOpenActivities} disabled={!onOpenActivities}>
-            <strong>{(state.activities ?? []).length}</strong>
-            <span>Activities</span>
-          </button>
-          <div>
-            <strong>{dueToday}</strong>
-            <span>Due today</span>
-          </div>
-          <button
-            type="button"
-            className={overdue ? 'is-late' : ''}
-            onClick={onOpenOverdue}
-            disabled={!onOpenOverdue}
-          >
-            <strong>{overdue}</strong>
-            <span>
-              {hotspot ? `${hotspot.label} still open` : overdue ? 'Overdue' : 'Clear'}
-            </span>
-          </button>
-        </div>
+        <button type="button" className="brief-emr" onClick={onOpenEmr} disabled={!onOpenEmr}>
+          <span className="brief-kicker">EMR Launch</span>
+          <span className="brief-emr-clock" role="timer" aria-label="EMR go-live countdown">
+            {countdownUnits.map((unit) => (
+              <b key={unit.label}>
+                {unit.value}
+                <small>{unit.label}</small>
+              </b>
+            ))}
+          </span>
+        </button>
         <ol className="week-strip" aria-label="Meetings and activities Monday to Friday">
           {weekdays.map((day) => {
             const items = [

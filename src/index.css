@@ -735,6 +735,41 @@ button { cursor: pointer; }
   font-weight: 800;
 }
 .brief-stats .is-late strong { color: var(--danger); }
+.brief-emr {
+  justify-self: end;
+  border: 1px solid color-mix(in srgb, #c4a35a 65%, var(--line));
+  background: color-mix(in srgb, #1f4e79 6%, var(--paper));
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: grid;
+  gap: 6px;
+  text-align: left;
+  cursor: pointer;
+}
+.brief-emr:disabled { cursor: default; }
+.brief-emr-clock {
+  display: flex;
+  gap: 10px;
+}
+.brief-emr-clock b {
+  display: grid;
+  min-width: 36px;
+  font-size: 22px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--accent);
+}
+.brief-emr-clock small {
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8d6b24;
+}
+[data-theme="dark"] .brief-emr-clock small { color: #e0c36a; }
 .brief-pipe-card {
   display: grid;
   align-content: start;
@@ -997,6 +1032,18 @@ button { cursor: pointer; }
 .primary-btn.sm, .pink-btn.sm { padding: 8px 12px; display: inline-flex; align-items: center; gap: 6px; }
 
 .area-chart { width: 100%; height: var(--chart-h); display: block; }
+.overview-mix {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  margin-top: 8px;
+}
+.overview-mix .traffic-legend {
+  width: auto;
+  min-width: 180px;
+  margin-top: 0;
+}
 .chart-well {
   background: var(--chart-well);
   border-radius: 14px;
