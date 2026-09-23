@@ -81,11 +81,14 @@ export function PlaceFields({
   workKindOther = '',
   district = 'national',
   facility = '',
+  lockWorkKind = false,
 }: {
   workKind?: WorkKind
   workKindOther?: string
   district?: DistrictId | DistrictId[]
   facility?: string
+  /** Keep the work type fixed. Used when a desk view owns the category. */
+  lockWorkKind?: boolean
 }) {
   const [kind, setKind] = useState<WorkKind>(workKind)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -101,22 +104,31 @@ export function PlaceFields({
 
   return (
     <div ref={rootRef}>
-      <label>
-        Work type
-        <select
-          name="workKind"
-          value={kind}
-          onChange={(e) => setKind(e.target.value as WorkKind)}
-        >
-          {WORK_TYPES.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      {lockWorkKind ? (
+        <>
+          <input type="hidden" name="workKind" value={workKind} />
+          {workKind === 'other' && (
+            <input type="hidden" name="workKindOther" value={workKindOther} />
+          )}
+        </>
+      ) : (
+        <label>
+          Work type
+          <select
+            name="workKind"
+            value={kind}
+            onChange={(e) => setKind(e.target.value as WorkKind)}
+          >
+            {WORK_TYPES.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <DistrictPicker selectedIds={selectedDistricts} />
-      {kind === 'other' && (
+      {!lockWorkKind && kind === 'other' && (
         <label>
           Other work type
           <input

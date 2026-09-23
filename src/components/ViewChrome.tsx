@@ -6,10 +6,11 @@ import { useOps } from '../store/OpsContext'
 interface Props {
   progress: number
   paused: boolean
+  pinned?: boolean
   onTogglePause: () => void
 }
 
-export function ViewChrome({ progress, paused, onTogglePause }: Props) {
+export function ViewChrome({ progress, paused, pinned = false, onTogglePause }: Props) {
   const { state } = useOps()
   const [now, setNow] = useState(() => new Date())
 
@@ -26,7 +27,11 @@ export function ViewChrome({ progress, paused, onTogglePause }: Props) {
     <footer className="slim-foot">
       <span>Live updates · Last updated {formatTime(now.toISOString())}</span>
       <button type="button" onClick={onTogglePause}>
-        {paused ? 'Auto-rotate off' : `Auto-rotating · next view in ${remaining}s`}
+        {pinned
+          ? 'Held for display'
+          : paused
+            ? 'Auto-rotate off'
+            : `Auto-rotating · next view in ${remaining}s`}
       </button>
       <strong className={live ? 'is-live' : ''}>
         {next

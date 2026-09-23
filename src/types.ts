@@ -156,4 +156,4 @@ export interface OpsState {
   events: ActivityEvent[]
 }
 
-export type ViewId = 'today' | 'performance' | 'workload' | 'actions'
+export type ViewId = 'today' | 'performance' | 'workload' | 'actions' | 'emr'

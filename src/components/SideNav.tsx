@@ -2,11 +2,12 @@ import mohsLogo from '../assets/mohs-logo.jpg'
 import type { ViewId } from '../types'
 import { Icon } from './Icons'
 
-const ITEMS: { id: ViewId; label: string; icon: 'home' | 'chart' | 'users' | 'list' }[] = [
+const ITEMS: { id: ViewId; label: string; icon: 'home' | 'chart' | 'users' | 'list' | 'emr' }[] = [
   { id: 'today', label: 'Overview', icon: 'home' },
   { id: 'performance', label: 'Performance', icon: 'chart' },
   { id: 'workload', label: 'Team', icon: 'users' },
   { id: 'actions', label: 'Actions', icon: 'list' },
+  { id: 'emr', label: 'EMR Launch', icon: 'emr' },
 ]
 
 interface Props {

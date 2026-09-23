@@ -160,6 +160,25 @@ export function openWeekMeetings(meetings: Meeting[], now = new Date()): Meeting
   return weeksMeetings(meetings, now).filter((meeting) => meetingStatus(meeting, now) !== 'completed')
 }
 
+export function recordedMeetings(meetings: Meeting[]): Meeting[] {
+  return [...meetings].sort((a, b) => +new Date(b.startTime) - +new Date(a.startTime))
+}
+
+export function recordedActivities(activities: TeamActivity[] | undefined): TeamActivity[] {
+  return [...(activities ?? [])].sort((a, b) => +new Date(b.startTime) - +new Date(a.startTime))
+}
+
+/** Current week if it has huddles; otherwise the week of the latest recorded item. */
+export function boardWeekAnchor(
+  meetings: Meeting[],
+  activities: TeamActivity[] | undefined,
+  now = new Date(),
+): Date {
+  if (weeksMeetings(meetings, now).length || weeksActivities(activities, now).length) return now
+  const latest = recordedMeetings(meetings)[0] ?? recordedActivities(activities)[0]
+  return latest ? new Date(latest.startTime) : now
+}
+
 export function todaysActivities(activities: TeamActivity[] | undefined, now = new Date()): TeamActivity[] {
   return [...(activities ?? [])]
     .filter((item) => isSameDay(new Date(item.startTime), now))
@@ -185,7 +204,8 @@ export function currentOrNextMeeting(
   const open = openWeekMeetings(meetings, now)
   return (
     open.find((m) => meetingStatus(m, now) === 'live') ??
-    open.find((m) => meetingStatus(m, now) === 'upcoming')
+    open.find((m) => meetingStatus(m, now) === 'upcoming') ??
+    recordedMeetings(meetings)[0]
   )
 }
 

@@ -6,11 +6,13 @@ import { ViewChrome } from './components/ViewChrome'
 import { OpsProvider } from './store/OpsContext'
 import type { ViewId } from './types'
 import { ActionItemsView } from './views/ActionItemsView'
+import { EmrImplementationView } from './views/EmrImplementationView'
 import { PerformanceView } from './views/PerformanceView'
 import { TodayOpsView } from './views/TodayOpsView'
 import { WorkloadView } from './views/WorkloadView'
 
 const VIEW_ORDER: ViewId[] = ['today', 'performance', 'workload', 'actions']
+const DIRECT_VIEWS: ViewId[] = [...VIEW_ORDER, 'emr']
 const ROTATE_MS = 25000
 
 function isDeskPath(): boolean {
@@ -19,7 +21,7 @@ function isDeskPath(): boolean {
 
 function initialView(): ViewId {
   const value = new URLSearchParams(window.location.search).get('view')
-  return VIEW_ORDER.includes(value as ViewId) ? (value as ViewId) : 'today'
+  return DIRECT_VIEWS.includes(value as ViewId) ? (value as ViewId) : 'today'
 }
 
 function Board() {
@@ -59,7 +61,7 @@ function Board() {
   }
 
   useEffect(() => {
-    if (paused) return
+    if (paused || view === 'emr') return
     const id = window.setInterval(() => {
       const p = (Date.now() - started.current) / ROTATE_MS
       if (p >= 1) {
@@ -85,6 +87,7 @@ function Board() {
       if (event.key >= '1' && event.key <= '4') {
         selectView(VIEW_ORDER[Number(event.key) - 1])
       }
+      if (event.key === '5') selectView('emr')
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -104,10 +107,12 @@ function Board() {
           {view === 'performance' && <PerformanceView />}
           {view === 'workload' && <WorkloadView />}
           {view === 'actions' && <ActionItemsView />}
+          {view === 'emr' && <EmrImplementationView />}
         </main>
         <ViewChrome
           progress={progress}
           paused={paused}
+          pinned={view === 'emr'}
           onTogglePause={() => setPaused((p) => !p)}
         />
       </div>

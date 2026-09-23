@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ActivityActions, ActivityForm } from './ActivityForm'
+import { EmrDesk } from './EmrDesk'
 import { DeskDeleteButton } from './DeskDeleteButton'
 import { HubLogPanel } from './HubLogPanel'
 import { MeetingActions } from './MeetingActions'
@@ -11,7 +12,7 @@ import { useOps } from '../store/OpsContext'
 import { hubHasWork } from '../utils/hub'
 import { readHubCache } from '../store/cache'
 import type { ActionItem, ActionStatus, Meeting, Priority, TaskStatus } from '../types'
-import { meetingStatus, taskStatusLabel, weeksActivities, weeksMeetings } from '../utils/metrics'
+import { meetingStatus, recordedActivities, recordedMeetings, taskStatusLabel } from '../utils/metrics'
 import { toDatetimeLocal } from '../utils/time'
 
 function assigneesFromForm(data: FormData, fallback: string[] = []): string[] {
@@ -39,13 +40,13 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
   const { state, addTask, addActionItem, removeMeeting, removeActivity, resetDemo, restoreFromBrowser } =
     useOps()
   const lead = state.members.find((m) => m.role === 'Team Lead')?.id ?? 'm1'
-  const [tab, setTab] = useState<'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log'>('task')
+  const [tab, setTab] = useState<'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | 'emr'>('task')
   const [saved, setSaved] = useState('')
   const [restoring, setRestoring] = useState(false)
   const browserBackup = readHubCache()
   const hasBrowserBackup = hubHasWork(browserBackup)
-  const todayMeetings = weeksMeetings(state.meetings)
-  const weekActivities = weeksActivities(state.activities)
+  const todayMeetings = recordedMeetings(state.meetings)
+  const weekActivities = recordedActivities(state.activities)
   const deskActions = [...state.actionItems].sort(
     (a, b) => +new Date(b.deadline) - +new Date(a.deadline),
   )
@@ -71,7 +72,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
         {saved && <p className="meet-saved">{saved}</p>}
 
         <div className="admin-tabs">
-          {(['task', 'update', 'meeting', 'activity', 'action', 'log'] as const).map((id) => (
+          {(['task', 'update', 'meeting', 'activity', 'action', 'log', 'emr'] as const).map((id) => (
             <button
               key={id}
               type="button"
@@ -88,7 +89,9 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
                       ? 'Activity'
                       : id === 'action'
                         ? 'Action item'
-                        : 'Hub incident log'}
+                        : id === 'log'
+                          ? 'Hub incident log'
+                          : 'EMR Launch'}
             </button>
           ))}
         </div>
@@ -203,17 +206,19 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
 
         {tab === 'update' && <TaskUpdatePanel />}
 
+        {tab === 'emr' && <EmrDesk onSaved={setSaved} />}
+
         {tab === 'meeting' && (
           <MeetingForm />
         )}
 
         {tab === 'meeting' && (
           <section className="admin-live">
-            <h3>This week's meetings</h3>
+            <h3>Meetings on the hub</h3>
             <p className="admin-help">Each meeting is open to edit. Save changes to update the dashboard.</p>
             <div className="admin-list">
               {todayMeetings.length === 0 && (
-                <p className="muted">No meetings on the board this week.</p>
+                <p className="muted">No meetings on the board yet.</p>
               )}
               {todayMeetings.map((meeting) => (
                 <div key={meeting.id} className="admin-item admin-meeting">
@@ -235,11 +240,11 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
 
         {tab === 'activity' && (
           <section className="admin-live">
-            <h3>This week's activities</h3>
+            <h3>Activities on the hub</h3>
             <p className="admin-help">Edit title, type, time, place, people, and notes. Changes show on the dashboard.</p>
             <div className="admin-list">
               {weekActivities.length === 0 && (
-                <p className="muted">No team activities on the board this week.</p>
+                <p className="muted">No team activities on the board yet.</p>
               )}
               {weekActivities.map((activity) => (
                 <div key={activity.id} className="admin-item admin-meeting">

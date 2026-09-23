@@ -1,18 +1,18 @@
 import { districtLabel, logKindLabel } from '../data/catalog'
 import type { HubLogKind } from '../types'
 import {
+  boardWeekAnchor,
   currentOrNextMeeting,
   dueTodayTasks,
   hotspotDistrict,
   meetingStatus,
-  openTodayActivities,
-  openWeekMeetings,
   overdueTasks,
   pipeStatus,
+  recordedActivities,
   weeksActivities,
   weeksMeetings,
 } from '../utils/metrics'
-import { countdown, formatDate, formatDayLabel, formatTime, isSameDay, weekDays } from '../utils/time'
+import { countdown, formatDate, formatDayLabel, formatTime, isSameDay, startOfWeek, weekDays } from '../utils/time'
 import { useOps } from '../store/OpsContext'
 import { Icon } from './Icons'
 
@@ -28,14 +28,16 @@ export function HubBrief({
   onOpenOverdue?: () => void
 }) {
   const { state } = useOps()
-  const weekMeetings = weeksMeetings(state.meetings, now)
-  const weekActivities = weeksActivities(state.activities, now)
-  const openMeetings = openWeekMeetings(state.meetings, now)
-  const weekdays = weekDays(now).slice(0, 5)
-  const activitiesToday = openTodayActivities(state.activities, now)
+  const stripAnchor = boardWeekAnchor(state.meetings, state.activities, now)
+  const showingPastWeek = startOfWeek(stripAnchor).getTime() !== startOfWeek(now).getTime()
+  const weekMeetings = weeksMeetings(state.meetings, stripAnchor)
+  const weekActivities = weeksActivities(state.activities, stripAnchor)
+  const weekdays = weekDays(stripAnchor).slice(0, 5)
   const meetingFocus = currentOrNextMeeting(state.meetings, now)
-  const activityFocus = weekActivities.find((item) => meetingStatus(item, now) === 'live')
-    ?? weekActivities.find((item) => meetingStatus(item, now) === 'upcoming')
+  const activityFocus =
+    weekActivities.find((item) => meetingStatus(item, now) === 'live') ??
+    weekActivities.find((item) => meetingStatus(item, now) === 'upcoming') ??
+    recordedActivities(state.activities)[0]
   const liveMeeting = Boolean(meetingFocus && meetingStatus(meetingFocus, now) === 'live')
   const liveActivity = Boolean(activityFocus && meetingStatus(activityFocus, now) === 'live')
   const focus =
@@ -53,7 +55,7 @@ export function HubBrief({
   const dueToday = dueTodayTasks(state.tasks, now).length
   const hotspot = hotspotDistrict(state.tasks, now)
   const pipe = pipeStatus(state.hubLog, now)
-  const weekOpen = openMeetings.length + weekActivities.filter((item) => meetingStatus(item, now) !== 'completed').length
+  const weekOpen = weekMeetings.length + weekActivities.length
 
   return (
     <div className={`hub-brief-stack ${pipe ? 'has-pipe' : ''}`}>
@@ -69,29 +71,37 @@ export function HubBrief({
                 ? 'Live activity'
                 : 'Live meeting'
               : focus
-                ? focus.kind === 'activity'
-                  ? 'Next activity'
-                  : 'Next meeting'
+                ? meetingStatus(focus.item, now) === 'upcoming'
+                  ? focus.kind === 'activity'
+                    ? 'Next activity'
+                    : 'Next meeting'
+                  : focus.kind === 'activity'
+                    ? 'Last activity'
+                    : 'Last meeting'
                 : 'This week'}
           </span>
-          <strong>{focus ? focus.item.title : 'No remaining meetings or activities this week'}</strong>
+          <strong>{focus ? focus.item.title : 'No meetings or activities on the hub yet'}</strong>
           <span className="muted">
             {focus
               ? `${formatDayLabel(focus.item.startTime, now)} · ${formatTime(focus.item.startTime)} – ${formatTime(focus.item.endTime)} · ${
                   live
                     ? `${countdown(focus.item.endTime, now)} remaining`
-                    : `starts in ${countdown(focus.item.startTime, now)}`
+                    : meetingStatus(focus.item, now) === 'upcoming'
+                      ? `starts in ${countdown(focus.item.startTime, now)}`
+                      : 'already on the hub'
                 }`
-              : 'Mon–Fri meetings and activities sit in the strip below'}
+              : showingPastWeek
+                ? 'Showing the last week with recorded huddles'
+                : 'Mon–Fri meetings and activities sit in the strip below'}
           </span>
         </button>
         <div className="brief-stats">
           <div>
             <strong>{weekOpen}</strong>
-            <span>This week</span>
+            <span>{showingPastWeek ? 'Last recorded' : 'This week'}</span>
           </div>
           <button type="button" onClick={onOpenActivities} disabled={!onOpenActivities}>
-            <strong>{activitiesToday.length}</strong>
+            <strong>{(state.activities ?? []).length}</strong>
             <span>Activities</span>
           </button>
           <div>

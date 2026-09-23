@@ -18,8 +18,6 @@ import {
   memberById,
   memberIndex,
   memberNames,
-  openTodayActivities,
-  openWeekMeetings,
   overdueTasks,
   PERIOD_CLOSED_LABEL,
   PERIOD_COPY,
@@ -30,10 +28,11 @@ import {
   periodStatusBreakdown,
   primaryAssigneeId,
   priorityBand,
+  recordedActivities,
+  recordedMeetings,
   startingSoon,
   statusBreakdown,
   teamMetrics,
-  completedThisWeek,
 } from '../utils/metrics'
 import { countdown, formatDate, isSameDay, parseDateInput, toDateInput, weekDays } from '../utils/time'
 
@@ -70,8 +69,8 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
   const dueSeries = series.map((d) => d.due)
   const closedInPeriod = periodClosedCount(state.tasks, period, now)
   const periodRate = periodCompletionRate(state.tasks, period, now)
-  const meetings = openWeekMeetings(state.meetings, now)
-  const activities = openTodayActivities(state.activities, now)
+  const meetings = recordedMeetings(state.meetings)
+  const activities = recordedActivities(state.activities)
   const soon = startingSoon(state.meetings, state.activities, now).filter(
     (item) => !dismissedSoon.includes(item.id),
   )
@@ -99,10 +98,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
               })
             : spotlight === 'overdue'
               ? overdueTasks(state.tasks, now)
-              : [
-                  ...open.sort((a, b) => +new Date(a.dueDate) - +new Date(b.dueDate)),
-                  ...done.filter((t) => completedThisWeek(t, now)),
-                ]
+              : [...open.sort((a, b) => +new Date(a.dueDate) - +new Date(b.dueDate)), ...done]
 
     if (districtFilter) list = list.filter((t) => districtIds(t.district).includes(districtFilter))
     const q = query.trim().toLowerCase()
@@ -128,9 +124,9 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
     selectedDistrict
       ? selectedDistrict.label
       : spotlight === 'meetings'
-      ? "This week's meetings"
+      ? 'Meetings'
       : spotlight === 'activities'
-        ? "Today's Activities"
+        ? 'Activities'
         : spotlight === 'due'
         ? `Tasks due · ${formatDate(dueDay.toISOString())}`
         : spotlight === 'progress'
@@ -147,9 +143,9 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
         ? `${selectedDistrict.label} still open`
         : `${selectedDistrict.open} open ${selectedDistrict.open === 1 ? 'item' : 'items'}`
       : spotlight === 'meetings'
-        ? 'Live and upcoming huddles this week — completed meetings drop off automatically'
+        ? 'Every meeting recorded on this office hub'
         : spotlight === 'activities'
-          ? 'Trainings, field visits, and other events the team is attending'
+          ? 'Trainings, field visits, and other events recorded on this hub'
         : spotlight === 'due'
           ? isSameDay(dueDay, now)
             ? 'Still open and due today'
@@ -162,7 +158,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
                 : 'Past due and still open'
               : spotlight === 'completed'
                 ? 'Closed work stays on the board — newest first'
-                : 'Open work first, then tasks completed this week'
+                : 'Open work first, then every completed task on the hub'
 
   return (
     <div className="view light-dash">
@@ -310,7 +306,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
               ))}
               {meetings.length === 0 && (
                 <div className="data-row meet-row">
-                  <span className="muted table-empty">No remaining meetings this week.</span>
+                  <span className="muted table-empty">No meetings recorded on the hub yet.</span>
                 </div>
               )}
             </div>
@@ -328,7 +324,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
               ))}
               {activities.length === 0 && (
                 <div className="data-row activity-row">
-                  <span className="muted table-empty">No remaining activities today.</span>
+                  <span className="muted table-empty">No activities recorded on the hub yet.</span>
                 </div>
               )}
             </div>
@@ -392,7 +388,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
           )}
           <div className="table-foot">
             {spotlight === 'meetings'
-              ? `Showing ${meetings.length} remaining meetings this week`
+              ? `Showing ${meetings.length} meetings`
               : spotlight === 'activities'
                 ? `Showing ${activities.length} activities`
               : spotlight === 'completed'
@@ -407,19 +403,19 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
 
       <div className="gcard-row">
         <StatusCard
-          tone={metrics.liveMeetings ? 'ok' : 'info'}
-          label="Meetings this week"
-          value={metrics.meetingsThisWeek}
-          hint={metrics.liveMeetings ? `${metrics.liveMeetings} live now` : 'Upcoming only'}
+          tone={state.meetings.length ? 'ok' : 'info'}
+          label="Meetings"
+          value={state.meetings.length}
+          hint={metrics.liveMeetings ? `${metrics.liveMeetings} live now` : 'All recorded huddles'}
           values={completedSeries}
           active={spotlight === 'meetings'}
           onClick={() => openSpotlight('meetings')}
         />
         <StatusCard
-          tone={metrics.liveActivities ? 'ok' : 'info'}
-          label="Activities Today"
-          value={metrics.activitiesToday}
-          hint={metrics.liveActivities ? `${metrics.liveActivities} happening now` : 'None happening now'}
+          tone={(state.activities ?? []).length ? 'ok' : 'info'}
+          label="Activities"
+          value={(state.activities ?? []).length}
+          hint={metrics.liveActivities ? `${metrics.liveActivities} happening now` : 'All recorded activities'}
           values={dueSeries}
           active={spotlight === 'activities'}
           onClick={() => openSpotlight('activities')}
