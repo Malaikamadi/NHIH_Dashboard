@@ -2,7 +2,7 @@ import { DeskDeleteButton } from './DeskDeleteButton'
 import { ParticipantPicker } from './ParticipantPicker'
 import { PlaceFields, placeFromForm } from './PlaceFields'
 import { StatusPill } from './Header'
-import { EMR_WORK_LABEL, isEmrTask } from '../data/emr'
+import { EMR_PHASES, EMR_WORK_LABEL, emrPhaseOf, isEmrTask } from '../data/emr'
 import { useOps } from '../store/OpsContext'
 import type { Priority, TaskStatus } from '../types'
 import { displayStatus, memberNames, taskStatusLabel } from '../utils/metrics'
@@ -41,6 +41,7 @@ export function EmrDesk({ onSaved }: { onSaved: (message: string) => void }) {
           addTask({
             title: String(data.get('title')).trim(),
             description: String(data.get('description') || '').trim(),
+            emrPhase: String(data.get('emrPhase') || 'align'),
             assignedTo,
             assignedBy: String(data.get('assignedBy') || lead),
             priority: String(data.get('priority')) as Priority,
@@ -58,8 +59,18 @@ export function EmrDesk({ onSaved }: { onSaved: (message: string) => void }) {
           rest of the hub list on that page.
         </p>
         <label>
+          Stage
+          <select name="emrPhase" defaultValue="align">
+            {EMR_PHASES.map((phase) => (
+              <option key={phase.id} value={phase.id}>
+                {phase.number}. {phase.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
           Title
-          <input name="title" required placeholder="EMR Launch task" />
+          <input name="title" required placeholder="Advocacy and stakeholder" />
         </label>
         <label>
           Description
@@ -132,7 +143,8 @@ export function EmrDesk({ onSaved }: { onSaved: (message: string) => void }) {
                     {task.title}
                     <em className="muted">
                       {' '}
-                      · {memberNames(state.members, task.assignedTo)} · Due {formatDate(task.dueDate)}
+                      · {EMR_PHASES.find((phase) => phase.id === emrPhaseOf(task))?.label} ·{' '}
+                      {memberNames(state.members, task.assignedTo)} · Due {formatDate(task.dueDate)}
                     </em>
                   </span>
                   <DeskDeleteButton label={task.title} onDelete={() => removeTask(task.id)} />

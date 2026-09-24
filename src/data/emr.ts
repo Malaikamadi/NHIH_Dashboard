@@ -45,6 +45,52 @@ export function formatEmrGoLiveDate(date: Date): string {
 /** Stored on tasks entered from the operator desk so they stay on the EMR Launch page. */
 export const EMR_WORK_LABEL = 'EMR Launch'
 
+export const EMR_PHASES = [
+  { id: 'align', number: 1, label: 'Align' },
+  { id: 'prepare', number: 2, label: 'Prepare task' },
+  { id: 'build', number: 3, label: 'Build & test' },
+  { id: 'integrate', number: 4, label: 'Integrate' },
+  { id: 'train', number: 5, label: 'Train & onboard' },
+  { id: 'launch', number: 6, label: 'Launch' },
+] as const
+
+export type EmrPhaseId = (typeof EMR_PHASES)[number]['id']
+
+const PHASE_IDS = new Set<string>(EMR_PHASES.map((phase) => phase.id))
+
+export function isEmrPhase(value: string | undefined | null): value is EmrPhaseId {
+  return Boolean(value && PHASE_IDS.has(value))
+}
+
+const PHASE_CUES: { id: EmrPhaseId; pattern: RegExp; weight: number }[] = [
+  { id: 'prepare', pattern: /prepare\s+task/, weight: 4 },
+  { id: 'build', pattern: /build\s*(&|and)\s*test/, weight: 4 },
+  { id: 'train', pattern: /train\s*(&|and)\s*on-?board/, weight: 4 },
+  { id: 'launch', pattern: /\blaunch\b|go-?live/, weight: 3 },
+  { id: 'train', pattern: /\btrain\b|on-?board/, weight: 2 },
+  { id: 'integrate', pattern: /integrat/, weight: 2 },
+  { id: 'build', pattern: /\bbuild\b|\btest\b/, weight: 2 },
+  { id: 'prepare', pattern: /\bprepar/, weight: 2 },
+  { id: 'align', pattern: /\balign\b|advocac|stakeholder/, weight: 2 },
+]
+
+/** Stage a task sits under. Wording that names a stage wins; otherwise the stage chosen on the desk. */
+export function emrPhaseOf(task: {
+  title: string
+  description?: string
+  emrPhase?: string
+}): EmrPhaseId {
+  const text = `${task.title}\n${task.description ?? ''}`.toLowerCase()
+  let best: { id: EmrPhaseId; weight: number } | null = null
+  for (const cue of PHASE_CUES) {
+    if (!cue.pattern.test(text)) continue
+    if (!best || cue.weight > best.weight) best = { id: cue.id, weight: cue.weight }
+  }
+  if (best) return best.id
+  if (isEmrPhase(task.emrPhase)) return task.emrPhase
+  return 'align'
+}
+
 const EMR_TASK = /\bemr\b|electronic medical record/i
 
 /** Tasks that belong on the EMR view, not the main hub board. */

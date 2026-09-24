@@ -50,6 +50,7 @@ export async function migratePostgres(): Promise<void> {
   await getPool().query(
     `ALTER TABLE action_items DROP CONSTRAINT IF EXISTS action_items_assigned_to_fkey`,
   )
+  await getPool().query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS emr_phase TEXT`)
 }
 
 export async function readPostgresSnapshot(): Promise<SnapshotRead> {
@@ -146,9 +147,9 @@ export async function writePostgresSnapshot(snapshot: Snapshot): Promise<void> {
         `INSERT INTO tasks (
           id, title, description, assigned_to, assigned_by, priority, due_date, status,
           progress, created_at, completed_at, from_action_item_id, work_kind, work_kind_other,
-          district, facility
+          district, facility, emr_phase
         ) VALUES (
-          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16
+          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17
         )`,
         [
           task.id,
@@ -167,6 +168,7 @@ export async function writePostgresSnapshot(snapshot: Snapshot): Promise<void> {
           task.workKindOther ?? null,
           JSON.stringify(districtIds(task.district)),
           task.facility ?? null,
+          task.emrPhase ?? null,
         ],
       )
     }
@@ -337,6 +339,7 @@ type TaskRow = {
   work_kind_other: string | null
   district: string
   facility: string | null
+  emr_phase: string | null
 }
 type MeetingRow = {
   id: string
@@ -411,6 +414,7 @@ function mapTask(row: TaskRow): Task {
     workKindOther: row.work_kind_other ?? undefined,
     district: districtIds(row.district),
     facility: row.facility ?? undefined,
+    emrPhase: row.emr_phase ?? undefined,
   }
 }
 

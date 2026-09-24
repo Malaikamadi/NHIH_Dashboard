@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS tasks (
   work_kind_other TEXT,
   -- JSON array of district ids, e.g. ["bo","kenema"]
   district TEXT NOT NULL,
-  facility TEXT
+  facility TEXT,
+  emr_phase TEXT
 );
 
 CREATE TABLE IF NOT EXISTS meetings (

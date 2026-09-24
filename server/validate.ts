@@ -70,6 +70,7 @@ export const taskCreate = z
       .optional()
       .default(['national']),
     facility: z.string().optional().default(''),
+    emrPhase: z.enum(['align', 'prepare', 'build', 'integrate', 'train', 'launch']).optional(),
   })
   .refine((value) => value.workKind !== 'other' || Boolean(value.workKindOther?.trim()), {
     message: 'Type the other work type',
@@ -97,6 +98,7 @@ export const taskPatch = z
       .transform((value) => (Array.isArray(value) ? value : [value]))
       .optional(),
     facility: z.string().optional(),
+    emrPhase: z.enum(['align', 'prepare', 'build', 'integrate', 'train', 'launch']).optional(),
   })
   .refine((value) => Object.keys(value).length > 0, 'No fields to update')
 

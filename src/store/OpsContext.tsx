@@ -344,6 +344,7 @@ interface OpsContextValue {
     progress: number
     workKind: WorkKind
     workKindOther?: string
+    emrPhase?: string
     district: DistrictId[]
     facility?: string
   }) => void

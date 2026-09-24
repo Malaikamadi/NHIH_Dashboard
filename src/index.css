@@ -43,7 +43,7 @@
   --week-max-h: 220px;
   --chart-h: 220px;
   --weekbars-h: 140px;
-  --donut: 180px;
+  --donut: 280px;
   --ring: 160px;
   --foot-pad-y: 10px;
   --foot-pad-x: 22px;
@@ -579,60 +579,101 @@ button { cursor: pointer; }
   color: #1f4e79;
 }
 
-.emr-tasks {
-  width: min(920px, 100%);
-  text-align: left;
-  background: color-mix(in srgb, var(--paper) 92%, transparent);
+.emr-roadmap {
+  width: min(1400px, 100%);
+  overflow-x: auto;
+  background: color-mix(in srgb, var(--paper) 94%, transparent);
   border: 1px solid color-mix(in srgb, #c4a35a 55%, var(--line));
   border-radius: 18px;
   box-shadow: var(--shadow), 0 0 24px rgba(31, 78, 121, 0.12);
-  padding: 18px 18px 8px;
+  padding: 22px 18px 18px;
 }
 
-.emr-tasks-head h3 {
-  margin: 0;
-  color: #1f4e79;
-  font-size: 18px;
-}
-
-.emr-tasks-head p,
-.emr-tasks-empty {
-  margin: 4px 0 14px;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.emr-tasks ul {
+.emr-roadmap-track {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(140px, 1fr));
   list-style: none;
   margin: 0;
   padding: 0;
+  min-width: 840px;
 }
 
-.emr-task {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 12px 4px 12px 12px;
-  border-top: 1px solid var(--line);
-  border-left: 3px solid #1f4e79;
+.emr-roadmap-track::before {
+  content: "";
+  position: absolute;
+  top: 58px;
+  left: calc(100% / 12);
+  right: calc(100% / 12);
+  height: 3px;
+  background: #1a6bb5;
+  z-index: 0;
 }
 
-.emr-task.is-overdue { border-left-color: var(--danger); }
-.emr-task.is-in_progress,
-.emr-task.is-under_review { border-left-color: #c4a35a; }
-.emr-task.is-completed { border-left-color: var(--ok); opacity: 0.8; }
-
-.emr-task strong {
-  display: block;
-  font-size: 15px;
+.emr-roadmap-track > li {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 12px;
+  padding: 8px 8px 10px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  text-align: center;
 }
 
-.emr-task-meta {
-  display: block;
-  margin-top: 3px;
+.emr-roadmap-track > li.is-current {
+  border-color: #c4a35a;
+  background: color-mix(in srgb, #c4a35a 8%, transparent);
+}
+
+.emr-roadmap-label {
+  color: #1a2b4a;
+  font-size: clamp(12px, 1.05vw, 15px);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  min-height: 2.4em;
+}
+
+.emr-roadmap-node {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #1a6bb5;
+  color: #fff;
+  font-size: 26px;
+  font-weight: 800;
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--paper) 94%, transparent);
+}
+
+.emr-roadmap-items {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.emr-roadmap-item,
+.emr-roadmap-empty {
+  margin: 0;
+  color: #243044;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.emr-roadmap-item.is-completed { opacity: 0.55; }
+.emr-roadmap-item.is-overdue { color: var(--danger); }
+.emr-roadmap-item.is-in_progress,
+.emr-roadmap-item.is-under_review { color: #8d6b24; }
+
+.emr-roadmap-empty {
   color: var(--muted);
-  font-size: 12px;
+  font-weight: 600;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -643,9 +684,12 @@ button { cursor: pointer; }
 [data-theme="dark"] .emr-head h2,
 [data-theme="dark"] .emr-kicker,
 [data-theme="dark"] .emr-date strong,
-[data-theme="dark"] .emr-tasks-head h3 {
+[data-theme="dark"] .emr-roadmap-label {
   color: #d7e6f4;
 }
+
+[data-theme="dark"] .emr-roadmap-item { color: #e8edf2; }
+[data-theme="dark"] .emr-roadmap-node { box-shadow: 0 0 0 6px #171c22; }
 
 [data-theme="dark"] .emr-unit-label,
 [data-theme="dark"] .emr-date span {
@@ -1040,6 +1084,7 @@ button { cursor: pointer; }
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 28px;
   margin-top: 8px;
 }
@@ -2018,7 +2063,7 @@ button { cursor: pointer; }
     --week-max-h: 160px;
     --chart-h: 170px;
     --weekbars-h: 110px;
-    --donut: 140px;
+    --donut: 240px;
     --ring: 128px;
     --foot-pad-y: 8px;
     --foot-pad-x: 16px;
@@ -2057,7 +2102,7 @@ button { cursor: pointer; }
     --week-max-h: 140px;
     --chart-h: 150px;
     --weekbars-h: 96px;
-    --donut: 120px;
+    --donut: 200px;
     --ring: 112px;
   }
 
@@ -2150,7 +2195,7 @@ button { cursor: pointer; }
     --gcard-value: 18px;
     --gcard-min-h: 64px;
     --ring: 100px;
-    --donut: 110px;
+    --donut: 170px;
   }
 
   .gcard-row { grid-template-columns: 1fr 1fr; }

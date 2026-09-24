@@ -1,12 +1,19 @@
 import { useMemo, useEffect, useState } from 'react'
 import mohsLogo from '../assets/mohs-logo.jpg'
 import { FlipValue } from '../components/FlipClock'
-import { StatusPill } from '../components/Header'
-import { EMR_GO_LIVE, emrRemaining, formatEmrGoLiveDate, isEmrTask, type EmrRemaining } from '../data/emr'
+import {
+  EMR_GO_LIVE,
+  EMR_PHASES,
+  emrPhaseOf,
+  emrRemaining,
+  formatEmrGoLiveDate,
+  isEmrTask,
+  type EmrPhaseId,
+  type EmrRemaining,
+} from '../data/emr'
 import { useOps } from '../store/OpsContext'
 import type { Task, TaskStatus } from '../types'
-import { displayStatus, memberNames } from '../utils/metrics'
-import { formatDate } from '../utils/time'
+import { displayStatus } from '../utils/metrics'
 
 const UNITS: { key: keyof EmrRemaining; label: string }[] = [
   { key: 'days', label: 'Days' },
@@ -30,55 +37,58 @@ const STATUS_RANK: Record<TaskStatus, number> = {
 
 function EmrTasks({ now }: { now: Date }) {
   const { state } = useOps()
-  const tasks = useMemo(() => {
-    return state.tasks
-      .filter(isEmrTask)
-      .map((task) => ({ task, status: displayStatus(task, now) }))
-      .sort((a, b) => {
+  const byPhase = useMemo(() => {
+    const groups = new Map<EmrPhaseId, { task: Task; status: TaskStatus }[]>()
+    for (const phase of EMR_PHASES) groups.set(phase.id, [])
+    for (const task of state.tasks) {
+      if (!isEmrTask(task)) continue
+      const status = displayStatus(task, now)
+      groups.get(emrPhaseOf(task))?.push({ task, status })
+    }
+    for (const items of groups.values()) {
+      items.sort((a, b) => {
         const byStatus = STATUS_RANK[a.status] - STATUS_RANK[b.status]
         if (byStatus !== 0) return byStatus
         return +new Date(a.task.dueDate) - +new Date(b.task.dueDate)
       })
+    }
+    return groups
   }, [state.tasks, now])
 
-  return (
-    <section className="emr-tasks" aria-label="EMR Launch tasks">
-      <header className="emr-tasks-head">
-        <h3>EMR Launch tasks</h3>
-        <p>Only EMR Launch work sits here, so the main board stays clear.</p>
-      </header>
-      {tasks.length === 0 ? (
-        <p className="emr-tasks-empty">No EMR Launch tasks yet. Enter them on the operator desk.</p>
-      ) : (
-        <ul>
-          {tasks.map(({ task, status }) => (
-            <EmrTaskRow key={task.id} task={task} status={status} members={state.members} />
-          ))}
-        </ul>
-      )}
-    </section>
-  )
-}
+  const currentId = useMemo(() => {
+    const open = EMR_PHASES.find((phase) =>
+      (byPhase.get(phase.id) ?? []).some((item) => item.status !== 'completed'),
+    )
+    if (open) return open.id
+    const withWork = [...EMR_PHASES].reverse().find((phase) => (byPhase.get(phase.id) ?? []).length > 0)
+    return withWork?.id ?? EMR_PHASES[0].id
+  }, [byPhase])
 
-function EmrTaskRow({
-  task,
-  status,
-  members,
-}: {
-  task: Task
-  status: TaskStatus
-  members: { id: string; name: string; role: string; initials: string }[]
-}) {
   return (
-    <li className={`emr-task is-${status}`}>
-      <div>
-        <strong>{task.title}</strong>
-        <span className="emr-task-meta">
-          {memberNames(members, task.assignedTo)} · Due {formatDate(task.dueDate)}
-        </span>
-      </div>
-      <StatusPill status={status} />
-    </li>
+    <section className="emr-roadmap" aria-label="EMR Launch tasks">
+      <ol className="emr-roadmap-track">
+        {EMR_PHASES.map((phase) => {
+          const items = byPhase.get(phase.id) ?? []
+          return (
+            <li key={phase.id} className={phase.id === currentId ? 'is-current' : undefined}>
+              <span className="emr-roadmap-label">{phase.label}</span>
+              <span className="emr-roadmap-node">{phase.number}</span>
+              <div className="emr-roadmap-items">
+                {items.length === 0 ? (
+                  <p className="emr-roadmap-empty">Nothing assigned</p>
+                ) : (
+                  items.map(({ task, status }) => (
+                    <p key={task.id} className={`emr-roadmap-item is-${status}`}>
+                      {task.title}
+                    </p>
+                  ))
+                )}
+              </div>
+            </li>
+          )
+        })}
+      </ol>
+    </section>
   )
 }
 

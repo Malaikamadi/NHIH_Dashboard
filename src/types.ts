@@ -76,6 +76,8 @@ export interface Task {
   fromActionItemId?: string
   workKind: WorkKind
   workKindOther?: string
+  /** EMR Launch timeline stage. Only set for EMR Launch tasks. */
+  emrPhase?: string
   /** One or more districts covered by the task. */
   district: DistrictId[]
   facility?: string
