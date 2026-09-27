@@ -12,7 +12,7 @@ import { useOps } from '../store/OpsContext'
 import { hubHasWork } from '../utils/hub'
 import { readHubCache } from '../store/cache'
 import type { ActionItem, ActionStatus, Meeting, Priority, TaskStatus } from '../types'
-import { meetingStatus, recordedActivities, recordedMeetings, taskStatusLabel } from '../utils/metrics'
+import { meetingStatus, memberWorkloads, recordedActivities, recordedMeetings, taskStatusLabel } from '../utils/metrics'
 import { toDatetimeLocal } from '../utils/time'
 
 function assigneesFromForm(data: FormData, fallback: string[] = []): string[] {
@@ -43,10 +43,16 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
   const [tab, setTab] = useState<'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | 'emr'>('task')
   const [saved, setSaved] = useState('')
   const [restoring, setRestoring] = useState(false)
+  const [taskSelection, setTaskSelection] = useState<string[]>(lead ? [lead] : [])
+  const [taskDistricts, setTaskDistricts] = useState<string[]>(['national'])
+  const [taskPriority, setTaskPriority] = useState<Priority>('high')
+  const [taskDue, setTaskDue] = useState('')
   const browserBackup = readHubCache()
   const hasBrowserBackup = hubHasWork(browserBackup)
   const todayMeetings = recordedMeetings(state.meetings)
   const weekActivities = recordedActivities(state.activities)
+  const workloads = memberWorkloads(state)
+  const selectedWorkloads = workloads.filter((row) => taskSelection.includes(row.member.id))
   const deskActions = [...state.actionItems].sort(
     (a, b) => +new Date(b.deadline) - +new Date(a.deadline),
   )
@@ -96,111 +102,116 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
         </div>
 
         {tab === 'task' && (
-          <form
-            className="admin-form"
-            onSubmit={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              const form = e.currentTarget
-              const data = new FormData(form)
-              const due = new Date(String(data.get('dueDate')))
-              if (Number.isNaN(due.getTime())) return
-              const assignedTo = assigneesFromForm(data, [lead])
-              if (!assignedTo.length) return
-              const status = String(data.get('status')) as TaskStatus
-              const progress =
-                status === 'completed'
-                  ? 100
-                  : Number(data.get('progress') || 0)
-              addTask({
-                title: String(data.get('title')),
-                description: String(data.get('description')),
-                assignedTo,
-                assignedBy: String(data.get('assignedBy')),
-                priority: String(data.get('priority')) as Priority,
-                dueDate: due.toISOString(),
-                status,
-                progress,
-                ...placeFromForm(data),
-              })
-              form.reset()
-              setSaved('Task saved. It now shows on the live dashboard.')
-            }}
-          >
-            <label>
-              Title
-              <input name="title" required placeholder="Task title" />
-            </label>
-            <label>
-              Description
-              <textarea name="description" rows={2} placeholder="What needs to happen" />
-            </label>
-            <ParticipantPicker
-              members={state.members}
-              name="assignees"
-              legend="Assigned to"
-              selectedIds={lead ? [lead] : []}
-            />
-            <label>
-              Assigned by
-              <select name="assignedBy" defaultValue={lead}>
-                {state.members.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} ({m.role})
-                  </option>
+          <div className="desk-task-layout">
+            <div className="desk-task-main">
+              <div className="desk-task-title">
+                <div className="desk-task-icon">▣</div>
+                <div>
+                  <h3>Assign Task</h3>
+                  <p>Create and assign new work with clear ownership and timelines.</p>
+                </div>
+              </div>
+              <form
+                className="admin-form desk-command-form"
+                onChange={(e) => {
+                  const data = new FormData(e.currentTarget)
+                  const selected = data.getAll('assignees').map(String).filter(Boolean)
+                  setTaskSelection(selected.length ? selected : [])
+                  const districts = data.getAll('districts').map(String).filter(Boolean)
+                  setTaskDistricts(districts.length ? districts : ['national'])
+                  setTaskPriority((String(data.get('priority') || 'high')) as Priority)
+                  setTaskDue(String(data.get('dueDate') || ''))
+                }}
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  const form = e.currentTarget
+                  const data = new FormData(form)
+                  const due = new Date(String(data.get('dueDate')))
+                  if (Number.isNaN(due.getTime())) return
+                  const assignedTo = assigneesFromForm(data, [lead])
+                  if (!assignedTo.length) return
+                  const status = String(data.get('status')) as TaskStatus
+                  const progress = status === 'completed' ? 100 : Number(data.get('progress') || 0)
+                  addTask({
+                    title: String(data.get('title')),
+                    description: String(data.get('description')),
+                    assignedTo,
+                    assignedBy: String(data.get('assignedBy')),
+                    priority: String(data.get('priority')) as Priority,
+                    dueDate: due.toISOString(),
+                    status,
+                    progress,
+                    ...placeFromForm(data),
+                  })
+                  form.reset()
+                  setTaskSelection(lead ? [lead] : [])
+                  setTaskDistricts(['national'])
+                  setTaskPriority('high')
+                  setTaskDue('')
+                  setSaved('Task saved. It now shows on the live dashboard.')
+                }}
+              >
+                <section className="desk-step">
+                  <div className="desk-step-head"><b>1</b><span><strong>Work details</strong><small>Define the task and key information</small></span></div>
+                  <div className="desk-work-grid">
+                    <label className="desk-title-field">Task title<input name="title" required placeholder="Enter a clear and concise task title..." /></label>
+                    <label>Work type<select name="workKind" defaultValue="extract"><option value="extract">Extract</option><option value="data_review">Data review</option><option value="facility_followup">Facility follow-up</option><option value="other">Other</option></select></label>
+                    <label>Priority<select name="priority" defaultValue="high">{PRIORITIES.map((p) => <option key={p} value={p}>{p}</option>)}</select></label>
+                    <label className="desk-description-field">Description<textarea name="description" rows={3} maxLength={500} placeholder="What needs to happen? Include key details, expected outcome, or specific instructions..." /></label>
+                    <label>Status<select name="status" defaultValue="not_started" onChange={(e) => { const progress=e.currentTarget.form?.elements.namedItem('progress'); if(e.currentTarget.value==='completed' && progress instanceof HTMLInputElement) progress.value='100' }}>{STATUSES.map((s) => <option key={s} value={s}>{taskStatusLabel(s)}</option>)}</select></label>
+                    <label>Due date<input name="dueDate" type="datetime-local" required /></label>
+                    <label>Target completion<input name="progress" type="number" min={0} max={100} defaultValue={0} /></label>
+                  </div>
+                </section>
+
+                <section className="desk-step">
+                  <div className="desk-step-head"><b>2</b><span><strong>Assign to team member(s)</strong><small>Search and select one or more team members</small></span></div>
+                  <ParticipantPicker members={state.members} name="assignees" legend="Team members" selectedIds={lead ? [lead] : []} />
+                  <label className="desk-assigned-by">Assigned by<select name="assignedBy" defaultValue={lead}>{state.members.map((m) => <option key={m.id} value={m.id}>{m.name} ({m.role})</option>)}</select></label>
+                </section>
+
+                <section className="desk-step">
+                  <div className="desk-step-head"><b>3</b><span><strong>Location (Districts)</strong><small>Select where this work applies</small></span></div>
+                  <PlaceFields workKind="extract" lockWorkKind />
+                </section>
+
+                <div className="desk-submit-bar">
+                  <span>{taskSelection.length} assignee{taskSelection.length === 1 ? '' : 's'} · {taskPriority} priority · {taskDistricts.length} district{taskDistricts.length === 1 ? '' : 's'}</span>
+                  <button type="submit" className="primary-btn">Assign Task →</button>
+                </div>
+              </form>
+            </div>
+
+            <aside className="desk-context">
+              <div className="desk-summary-card">
+                <span className="desk-summary-icon">✓</span>
+                <div><strong>Assignment summary</strong><b>Ready to assign</b><small>{taskSelection.length} team member{taskSelection.length === 1 ? '' : 's'} · {taskDistricts.length} district{taskDistricts.length === 1 ? '' : 's'} · {taskPriority} priority{taskDue ? ' · due selected' : ''}</small></div>
+              </div>
+              <h4>Selected team members</h4>
+              <div className="desk-context-people">
+                {selectedWorkloads.map((row) => (
+                  <div className="desk-context-person" key={row.member.id}>
+                    <span className="desk-person-avatar">{row.member.name.split(' ').map((part) => part[0]).slice(0,2).join('')}</span>
+                    <div className="desk-context-name"><strong>{row.member.name}</strong><small>{row.member.role}</small></div>
+                    <div className={`desk-load ${row.overdue > 0 ? 'is-heavy' : ''}`}>{row.overdue > 0 ? 'Needs attention' : 'Normal load'}</div>
+                    <div className="desk-context-stats"><span><b>{row.active}</b>Active</span><span><b>{row.overdue}</b>Overdue</span><span><b>{row.completed}</b>Completed</span></div>
+                  </div>
                 ))}
-              </select>
-            </label>
-            <div className="admin-split">
-              <label>
-                Priority
-                <select name="priority" defaultValue="high">
-                  {PRIORITIES.map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Status
-                <select
-                  name="status"
-                  defaultValue="not_started"
-                  onChange={(e) => {
-                    const form = e.currentTarget.form
-                    const progress = form?.elements.namedItem('progress')
-                    if (
-                      e.currentTarget.value === 'completed' &&
-                      progress instanceof HTMLInputElement
-                    ) {
-                      progress.value = '100'
-                    }
-                  }}
-                >
-                  {STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {taskStatusLabel(s)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <div className="admin-split">
-              <label>
-                Due
-                <input name="dueDate" type="datetime-local" required />
-              </label>
-              <label>
-                Progress %
-                <input name="progress" type="number" min={0} max={100} defaultValue={0} />
-              </label>
-            </div>
-            <PlaceFields workKind="extract" />
-            <button type="submit" className="primary-btn">
-              Assign task
-            </button>
-          </form>
+              </div>
+              <h4>Selected districts</h4>
+              <div className="desk-context-chips">{taskDistricts.map((d) => <span key={d}>⌖ {d === 'national' ? 'National / Hub' : d.replaceAll('_',' ')}</span>)}</div>
+              {selectedWorkloads.some((row) => row.overdue > 0) && (
+                <div className="desk-warning"><strong>Workload attention</strong><span>{selectedWorkloads.filter((row) => row.overdue > 0).length} selected team member(s) currently have overdue work. Review workload before assigning.</span></div>
+              )}
+              <div className="desk-related">
+                <h4>Operational context</h4>
+                <div><span>Open tasks</span><b>{state.tasks.filter((t) => t.status !== 'completed').length}</b></div>
+                <div><span>Selected owners</span><b>{taskSelection.length}</b></div>
+                <div><span>Selected districts</span><b>{taskDistricts.length}</b></div>
+              </div>
+            </aside>
+          </div>
         )}
 
         {tab === 'update' && <TaskUpdatePanel />}
