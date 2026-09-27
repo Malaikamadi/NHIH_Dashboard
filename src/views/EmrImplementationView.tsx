@@ -1,6 +1,5 @@
 import { useMemo, useEffect, useState } from 'react'
 import mohsLogo from '../assets/mohs-logo.jpg'
-import { FlipValue } from '../components/FlipClock'
 import {
   EMR_GO_LIVE,
   EMR_PHASES,
@@ -121,10 +120,13 @@ export function EmrImplementationView() {
       <section className="emr-countdown" aria-label="EMR go-live countdown">
         <p className="emr-kicker">EMR Go-Live Countdown</p>
         <div className="emr-clock" role="timer">
-          {UNITS.map((unit) => (
-            <div className="emr-unit" key={unit.key} aria-label={`${remaining[unit.key]} ${unit.label}`}>
-              <FlipValue value={unitValue(remaining, unit.key)} />
-              <span className="emr-unit-label">{unit.label}</span>
+          {UNITS.map((unit, index) => (
+            <div className="emr-clock-part" key={unit.key}>
+              {index > 0 && <span className="emr-separator" aria-hidden="true">:</span>}
+              <div className="emr-unit" aria-label={`${remaining[unit.key]} ${unit.label}`}>
+                <strong className="emr-value">{unitValue(remaining, unit.key)}</strong>
+                <span className="emr-unit-label">{unit.label}</span>
+              </div>
             </div>
           ))}
         </div>
