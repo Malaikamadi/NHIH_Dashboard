@@ -2218,3 +2218,61 @@ button { cursor: pointer; }
   .workload-view .metric-strip,
   .actions-view .metric-strip { grid-template-columns: 1fr; }
 }
+
+
+/* 2026-09 dashboard refresh: approved local preview */
+.brief-emr-clock { align-items: flex-start; gap: 0; }
+.brief-emr-part { display: flex; align-items: flex-start; }
+.brief-emr-sep { color: var(--accent); font-size: 36px; line-height: 48px; padding: 0 7px; }
+.brief-emr-unit strong {
+  display: grid; place-items: center; min-width: 64px; height: 52px;
+  padding: 0 10px; border-radius: 10px; color: #fff;
+  background: linear-gradient(180deg,#245a8a,#1f4e79);
+  font-size: 32px; line-height: 1; font-weight: 900; font-variant-numeric: tabular-nums;
+  box-shadow: 0 6px 14px rgba(31,78,121,.15);
+}
+.brief-emr-clock small { color: var(--accent); }
+
+/* KPI cards appear above Dashboard + Priority Tasks by DOM order.
+   Do not set flex order here: Hub Incident Log must remain below both sections. */
+
+/* More expressive dashboard status mix */
+.overview-card { overflow: hidden; }
+.overview-kpis {
+  padding: 10px 12px; border-radius: 12px;
+  background: linear-gradient(90deg, color-mix(in srgb,var(--accent) 7%,var(--paper)), var(--paper));
+  border: 1px solid color-mix(in srgb,var(--accent) 10%,var(--line));
+}
+.overview-mix { justify-content: flex-start; gap: 34px; padding: 8px 10px 2px; }
+.donut-wrap { position: relative; width: var(--donut); height: var(--donut); flex: 0 0 auto; }
+.donut-wrap .donut { width: 100%; height: 100%; filter: drop-shadow(0 8px 14px rgba(31,78,121,.10)); }
+.donut-center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; pointer-events: none; }
+.donut-center strong { font-size: clamp(28px,3vw,46px); line-height: 1; color: var(--ink); }
+.donut-center span { margin-top: 5px; color: var(--muted); font-size: 12px; font-weight: 800; }
+.overview-mix .traffic-legend { flex: 1; min-width: 300px; display: grid; grid-template-columns: 1fr; gap: 10px; }
+.legend-dot { display: grid; grid-template-columns: 10px 90px minmax(90px,1fr) 72px; align-items: center; gap: 10px; }
+.legend-swatch { width: 10px !important; height: 10px !important; }
+.legend-label { color: var(--ink); font-weight: 700; }
+.legend-track { height: 7px; border-radius: 999px; background: var(--track); overflow: hidden; }
+.legend-track i { display: block; height: 100%; border-radius: inherit; }
+.legend-dot strong { text-align: right; white-space: nowrap; }
+.legend-dot strong em { color: var(--muted); font-style: normal; font-weight: 600; }
+
+/* EMR Launch page countdown: clean DD : HH : MM : SS, no flip/gold split line */
+.emr-clock { display: flex; align-items: flex-start; justify-content: center; gap: 0; }
+.emr-clock-part { display: flex; align-items: flex-start; min-width: 0; flex: 1; }
+.emr-separator { align-self: flex-start; color: #1f4e79; font-size: clamp(40px,5vw,88px); font-weight: 900; line-height: 1.25; padding: 0 clamp(5px,1vw,16px); }
+.emr-unit { flex: 1; display: grid; justify-items: center; border-color: color-mix(in srgb,#c4a35a 55%,var(--line)); }
+.emr-value {
+  display: grid; place-items: center; width: min(100%,220px); min-height: clamp(88px,10vw,150px);
+  border-radius: 16px; background: linear-gradient(180deg,#245a8a,#1f4e79); color:#fff;
+  font-size: clamp(52px,7vw,112px); line-height: 1; font-weight: 900; font-variant-numeric: tabular-nums;
+  box-shadow: 0 10px 22px rgba(31,78,121,.16);
+}
+
+@media (max-width: 900px) {
+  .brief-emr-sep { padding: 0 3px; }
+  .brief-emr-unit strong { min-width: 48px; height: 46px; font-size: 26px; }
+  .legend-dot { grid-template-columns: 10px 78px 1fr 62px; }
+  .emr-separator { padding: 0 3px; }
+}
