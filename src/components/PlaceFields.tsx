@@ -43,35 +43,35 @@ function DistrictPicker({
   }, [selectedKey])
 
   return (
-    <fieldset ref={rootRef} className="participant-picks">
+    <fieldset ref={rootRef} className="participant-picks district-picks">
       <legend>Districts</legend>
-      <label className="check-line is-all">
-        <input
-          type="checkbox"
-          checked={allOn}
-          onChange={() => setIds(allOn ? [] : DISTRICTS.map((item) => item.id))}
-        />
-        Select all districts
-      </label>
-      {DISTRICTS.map((item) => {
-        const on = ids.includes(item.id)
-        return (
-          <label key={item.id} className="check-line">
-            <input
-              type="checkbox"
-              name="districts"
-              value={item.id}
-              checked={on}
-              onChange={() =>
-                setIds((current) =>
-                  on ? current.filter((id) => id !== item.id) : [...current, item.id],
-                )
-              }
-            />
-            {item.label}
-          </label>
-        )
-      })}
+      <div className="district-tools">
+        <span>{ids.length} selected</span>
+        <button type="button" onClick={() => setIds(allOn ? [] : DISTRICTS.map((item) => item.id))}>
+          {allOn ? 'Clear all' : 'Select all'}
+        </button>
+      </div>
+      <div className="district-chip-grid">
+        {DISTRICTS.map((item) => {
+          const on = ids.includes(item.id)
+          return (
+            <label key={item.id} className={`district-chip ${on ? 'is-selected' : ''}`}>
+              <input
+                type="checkbox"
+                name="districts"
+                value={item.id}
+                checked={on}
+                onChange={() =>
+                  setIds((current) =>
+                    on ? current.filter((id) => id !== item.id) : [...current, item.id],
+                  )
+                }
+              />
+              {item.label}
+            </label>
+          )
+        })}
+      </div>
     </fieldset>
   )
 }
