@@ -192,6 +192,72 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
         }}
         onOpenEmr={() => onOpenView('emr')}
       />
+      <div className="gcard-row">
+        <StatusCard
+          tone={state.meetings.length ? 'ok' : 'info'}
+          label="Meetings"
+          value={state.meetings.length}
+          hint={metrics.liveMeetings ? `${metrics.liveMeetings} live now` : 'All recorded huddles'}
+          values={completedSeries}
+          active={spotlight === 'meetings'}
+          onClick={() => openSpotlight('meetings')}
+        />
+        <StatusCard
+          tone={(state.activities ?? []).length ? 'ok' : 'info'}
+          label="Activities"
+          value={(state.activities ?? []).length}
+          hint={metrics.liveActivities ? `${metrics.liveActivities} happening now` : 'All recorded activities'}
+          values={dueSeries}
+          active={spotlight === 'activities'}
+          onClick={() => openSpotlight('activities')}
+        />
+        <StatusCard
+          tone={metrics.dueToday ? 'warn' : 'info'}
+          label="Tasks Due Today"
+          value={metrics.dueToday}
+          hint={`${metrics.highPriorityDue} high priority`}
+          values={dueSeries}
+          active={spotlight === 'due'}
+          onClick={() => {
+            setDueDay(new Date())
+            openSpotlight('due')
+          }}
+        />
+        <StatusCard
+          tone="info"
+          label="In Progress"
+          value={metrics.inProgress}
+          hint="Active execution"
+          values={completedSeries.slice().reverse()}
+          active={spotlight === 'progress'}
+          onClick={() => openSpotlight('progress')}
+        />
+        <StatusCard
+          tone={breakdown.completed ? 'ok' : 'info'}
+          label="Tasks Completed"
+          value={breakdown.completed}
+          hint={
+            metrics.completedToday
+              ? `${metrics.completedToday} today · ${metrics.completedWeek} this week`
+              : metrics.completedWeek
+                ? `${metrics.completedWeek} this week`
+                : 'Closed work stays visible'
+          }
+          values={completedSeries}
+          active={spotlight === 'completed'}
+          onClick={() => openSpotlight('completed')}
+        />
+        <StatusCard
+          tone={metrics.overdue ? 'danger' : 'ok'}
+          label="Overdue Tasks"
+          value={metrics.overdue}
+          hint={hotspot ? `${hotspot.label} still open` : metrics.overdue ? 'Needs attention' : 'All clear'}
+          values={dueSeries.slice().reverse()}
+          active={spotlight === 'overdue'}
+          onClick={() => openSpotlight('overdue')}
+        />
+      </div>
+
       <div className="hero-row">
         <section className="paper overview-card">
           <header className="paper-h">
@@ -411,72 +477,6 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
         </section>
       </div>
 
-      <div className="gcard-row">
-        <StatusCard
-          tone={state.meetings.length ? 'ok' : 'info'}
-          label="Meetings"
-          value={state.meetings.length}
-          hint={metrics.liveMeetings ? `${metrics.liveMeetings} live now` : 'All recorded huddles'}
-          values={completedSeries}
-          active={spotlight === 'meetings'}
-          onClick={() => openSpotlight('meetings')}
-        />
-        <StatusCard
-          tone={(state.activities ?? []).length ? 'ok' : 'info'}
-          label="Activities"
-          value={(state.activities ?? []).length}
-          hint={metrics.liveActivities ? `${metrics.liveActivities} happening now` : 'All recorded activities'}
-          values={dueSeries}
-          active={spotlight === 'activities'}
-          onClick={() => openSpotlight('activities')}
-        />
-        <StatusCard
-          tone={metrics.dueToday ? 'warn' : 'info'}
-          label="Tasks Due Today"
-          value={metrics.dueToday}
-          hint={`${metrics.highPriorityDue} high priority`}
-          values={dueSeries}
-          active={spotlight === 'due'}
-          onClick={() => {
-            setDueDay(new Date())
-            openSpotlight('due')
-          }}
-        />
-        <StatusCard
-          tone="info"
-          label="In Progress"
-          value={metrics.inProgress}
-          hint="Active execution"
-          values={completedSeries.slice().reverse()}
-          active={spotlight === 'progress'}
-          onClick={() => openSpotlight('progress')}
-        />
-        <StatusCard
-          tone={breakdown.completed ? 'ok' : 'info'}
-          label="Tasks Completed"
-          value={breakdown.completed}
-          hint={
-            metrics.completedToday
-              ? `${metrics.completedToday} today · ${metrics.completedWeek} this week`
-              : metrics.completedWeek
-                ? `${metrics.completedWeek} this week`
-                : 'Closed work stays visible'
-          }
-          values={completedSeries}
-          active={spotlight === 'completed'}
-          onClick={() => openSpotlight('completed')}
-        />
-        <StatusCard
-          tone={metrics.overdue ? 'danger' : 'ok'}
-          label="Overdue Tasks"
-          value={metrics.overdue}
-          hint={hotspot ? `${hotspot.label} still open` : metrics.overdue ? 'Needs attention' : 'All clear'}
-          values={dueSeries.slice().reverse()}
-          active={spotlight === 'overdue'}
-          onClick={() => openSpotlight('overdue')}
-        />
-      </div>
-
       {districts.length > 0 && (
         <div className="district-chips" aria-label="Open work by district">
           {districts.map((row) => (
@@ -568,8 +568,10 @@ function StatusDonut({
   const c = 2 * Math.PI * r
   let offset = 0
   return (
-    <svg viewBox="0 0 160 160" className="donut">
-      {segments.map((seg) => {
+    <div className="donut-wrap">
+      <svg viewBox="0 0 160 160" className="donut">
+        <circle cx="80" cy="80" r={r} fill="none" stroke="var(--track)" strokeWidth="18" />
+        {segments.map((seg) => {
         const len = total ? (seg.value / total) * c : 0
         const node = (
           <circle
@@ -587,8 +589,10 @@ function StatusDonut({
         )
         offset += len
         return node
-      })}
-    </svg>
+        })}
+      </svg>
+      <div className="donut-center"><strong>{total}</strong><span>Total Tasks</span></div>
+    </div>
   )
 }
 
@@ -606,9 +610,10 @@ function LegendDot({
   const pct = total ? Math.round((value / total) * 100) : 0
   return (
     <div className="legend-dot">
-      <span style={{ background: color }} />
-      <strong>{pct}%</strong>
-      {label}
+      <span className="legend-swatch" style={{ background: color }} />
+      <span className="legend-label">{label}</span>
+      <span className="legend-track"><i style={{ width: `${pct}%`, background: color }} /></span>
+      <strong>{pct}% <em>({value})</em></strong>
     </div>
   )
 }
