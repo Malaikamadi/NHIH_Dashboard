@@ -1,6 +1,5 @@
 import { districtLabel, logKindLabel } from '../data/catalog'
 import { EMR_GO_LIVE, emrRemaining } from '../data/emr'
-import { FlipValue } from './FlipClock'
 import { StatusPill } from './Header'
 import type { HubLogKind } from '../types'
 import {
@@ -102,10 +101,13 @@ export function HubBrief({
         <button type="button" className="brief-emr" onClick={onOpenEmr} disabled={!onOpenEmr}>
           <span className="brief-kicker">EMR Launch</span>
           <span className="brief-emr-clock" role="timer" aria-label="EMR go-live countdown">
-            {countdownUnits.map((unit) => (
-              <span key={unit.label} className="brief-emr-unit" aria-label={`${unit.value} ${unit.label}`}>
-                <FlipValue value={unit.value} />
-                <small>{unit.label}</small>
+            {countdownUnits.map((unit, index) => (
+              <span key={unit.label} className="brief-emr-part">
+                {index > 0 && <b className="brief-emr-sep" aria-hidden="true">:</b>}
+                <span className="brief-emr-unit" aria-label={`${unit.value} ${unit.label}`}>
+                  <strong>{unit.value}</strong>
+                  <small>{unit.label}</small>
+                </span>
               </span>
             ))}
           </span>
