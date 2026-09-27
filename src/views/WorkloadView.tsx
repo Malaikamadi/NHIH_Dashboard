@@ -8,10 +8,26 @@ export function WorkloadView() {
   const [openId, setOpenId] = useState<string | null>(null)
   const now = useMemo(() => new Date(), [state.tasks])
   const rows = memberWorkloads(state, now)
-  const maxAssigned = Math.max(...rows.map((r) => r.assigned), 1)
-  const overloaded = rows.filter((r) => r.level === 'overloaded' || r.level === 'heavy').length
-  const light = rows.filter((r) => r.level === 'light').length
+  const overloadedRows = rows.filter((r) => r.level === 'overloaded' || r.level === 'heavy' || r.overdue > 0)
+  const activeRows = rows.filter((r) => r.active > 0 && !overloadedRows.some((x) => x.member.id === r.member.id))
+  const capacityRows = rows.filter((r) => r.active === 0 && !overloadedRows.some((x) => x.member.id === r.member.id))
   const selected = state.members.find((m) => m.id === openId)
+  const openAssignments = rows.reduce((n, r) => n + r.active, 0)
+
+  const PersonRow = ({ row, attention = false }: { row: (typeof rows)[number]; attention?: boolean }) => (
+    <button type="button" className={`ops-work-person ${attention ? 'needs-attention' : ''}`} onClick={() => setOpenId(row.member.id)}>
+      <span className="avatar lg">{row.member.initials}</span>
+      <span className="ops-work-person-main">
+        <strong>{row.member.name}</strong>
+        <small>{row.member.role}</small>
+      </span>
+      <span className="ops-work-person-stats">
+        <strong>{row.active} active</strong>
+        <small className={row.overdue ? 'warn-text' : ''}>{row.overdue} overdue · {row.completed} completed</small>
+      </span>
+      <span className={`load-badge load-${row.level}`}>{WORKLOAD_LABEL[row.level]}</span>
+    </button>
+  )
 
   return (
     <div className="view workload-view">
@@ -21,68 +37,66 @@ export function WorkloadView() {
           <div className="metric-value">{rows.length}</div>
           <div className="metric-hint">On the operations board</div>
         </article>
-        <article className={`metric ${overloaded ? 'tone-danger' : 'tone-ok'}`}>
-          <div className="metric-label">Heavy / Overloaded</div>
-          <div className="metric-value">{overloaded}</div>
-          <div className="metric-hint">Need load relief</div>
+        <article className={`metric ${overloadedRows.length ? 'tone-danger' : 'tone-ok'}`}>
+          <div className="metric-label">Needs Attention</div>
+          <div className="metric-value">{overloadedRows.length}</div>
+          <div className="metric-hint">Overdue or overloaded</div>
         </article>
         <article className="metric tone-ok">
-          <div className="metric-label">Light Load</div>
-          <div className="metric-value">{light}</div>
-          <div className="metric-hint">Capacity available</div>
+          <div className="metric-label">Available Capacity</div>
+          <div className="metric-value">{capacityRows.length}</div>
+          <div className="metric-hint">No active assignments</div>
         </article>
         <article className="metric">
           <div className="metric-label">Open Assignments</div>
-          <div className="metric-value">{rows.reduce((n, r) => n + r.active, 0)}</div>
+          <div className="metric-value">{openAssignments}</div>
           <div className="metric-hint">Active work across the team</div>
         </article>
       </section>
 
-      <section className="panel">
+      <section className="panel ops-workload-panel">
         <header className="panel-h">
-          <h2>Workload Distribution</h2>
+          <div>
+            <h2>Workload Distribution</h2>
+            <span className="panel-note">Attention first · active execution · available capacity</span>
+          </div>
           <span className="panel-note">Click a name to view assigned work</span>
         </header>
-        <div className="workload-grid">
-          {rows.map((row) => (
-            <article key={row.member.id} className={`work-card is-${row.level}`}>
-              <header className="work-head">
-                <span className="avatar lg">{row.member.initials}</span>
-                <div>
-                  <button
-                    type="button"
-                    className="member-name-btn"
-                    onClick={() => setOpenId(row.member.id)}
-                  >
-                    {row.member.name}
-                  </button>
-                  <div className="muted">{row.member.role}</div>
-                </div>
-                <span className={`load-badge load-${row.level}`}>{WORKLOAD_LABEL[row.level]}</span>
-              </header>
-              <div className="work-nums">
-                <div>
-                  <strong>{row.active}</strong>
-                  <span>Active</span>
-                </div>
-                <div>
-                  <strong>{row.completed}</strong>
-                  <span>Completed</span>
-                </div>
-                <div>
-                  <strong className={row.overdue ? 'warn-text' : ''}>{row.overdue}</strong>
-                  <span>Overdue</span>
-                </div>
-              </div>
-              <div className="work-bar">
-                <span className="seg active" style={{ width: `${(row.active / maxAssigned) * 100}%` }} />
-                <span className="seg done" style={{ width: `${(row.completed / maxAssigned) * 100}%` }} />
-                <span className="seg late" style={{ width: `${(row.overdue / maxAssigned) * 100}%` }} />
-              </div>
-              <div className="work-foot">{row.assigned} tasks assigned</div>
-            </article>
-          ))}
+
+        <div className="ops-work-section attention-section">
+          <div className="ops-work-section-h">
+            <div><strong>Needs Attention Now</strong><small>Priority review</small></div>
+            <span>{overloadedRows.length} people</span>
+          </div>
+          {overloadedRows.length ? (
+            <div className="ops-work-list attention-list">{overloadedRows.map((row) => <PersonRow key={row.member.id} row={row} attention />)}</div>
+          ) : <div className="ops-work-empty">No overloaded or overdue assignments.</div>}
         </div>
+
+        <div className="ops-work-section">
+          <div className="ops-work-section-h">
+            <div><strong>Active Execution</strong><small>Team members currently carrying open work</small></div>
+            <span>{activeRows.length} people</span>
+          </div>
+          {activeRows.length ? (
+            <div className="ops-work-list">{activeRows.map((row) => <PersonRow key={row.member.id} row={row} />)}</div>
+          ) : <div className="ops-work-empty">No other active assignments.</div>}
+        </div>
+
+        <details className="ops-capacity" open>
+          <summary>
+            <span><strong>Available Capacity</strong><small>Team members with no active assignments</small></span>
+            <b>{capacityRows.length} people</b>
+          </summary>
+          <div className="capacity-chips">
+            {capacityRows.map((row) => (
+              <button type="button" key={row.member.id} onClick={() => setOpenId(row.member.id)}>
+                <span className="avatar">{row.member.initials}</span>
+                <span><strong>{row.member.name}</strong><small>{row.member.role}</small></span>
+              </button>
+            ))}
+          </div>
+        </details>
       </section>
       {selected && <MemberDesk member={selected} onClose={() => setOpenId(null)} />}
     </div>
