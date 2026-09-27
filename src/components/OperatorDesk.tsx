@@ -27,8 +27,8 @@ export function OperatorDesk() {
         <>
           <header className="operator-bar">
             <div>
-              <div className="hdr-kicker">NHIH hub</div>
-              <strong>Operator desk · Prince Mafinda</strong>
+              <div className="hdr-kicker">NHIH · Operator only</div>
+              <strong>Operations Control Desk</strong>
             </div>
             <div className="operator-bar-actions">
               <button type="button" className="ghost-btn" onClick={signOut}>
