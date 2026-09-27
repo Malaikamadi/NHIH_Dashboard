@@ -57,8 +57,8 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
       <aside className={`admin ${variant === 'page' ? 'is-page' : ''}`} onClick={(e) => e.stopPropagation()}>
         <header className="admin-h">
           <div>
-            <div className="hdr-kicker">Operator desk</div>
-            <h2>Enter hub work</h2>
+            <div className="hdr-kicker">Command workspace</div>
+            <h2>Manage operational work</h2>
           </div>
           <button type="button" className="ghost-btn" onClick={onClose}>
             {variant === 'page' ? 'View dashboard' : 'Close'}
@@ -66,8 +66,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
         </header>
 
         <p className="admin-help">
-          Assign new work here. Use Update tasks to change progress, status, and details. The
-          dashboard stays view-only for the rest of the team.
+          Create and manage the operational data that powers the NHIH dashboard. Changes saved here\n          continue to populate the team-facing dashboard.
         </p>
         {saved && <p className="meet-saved">{saved}</p>}
 
