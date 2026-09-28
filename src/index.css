@@ -2917,3 +2917,25 @@ button { cursor: pointer; }
     font-size: 11px;
   }
 }
+
+
+/* Live activity pulse — preserve the existing pale green and pulse the full area every 5s. */
+.hub-brief.is-live {
+  animation: hub-live-pulse 5s ease-in-out infinite;
+  will-change: background-color, border-color, box-shadow;
+}
+@keyframes hub-live-pulse {
+  0%, 18%, 100% {
+    background: color-mix(in srgb, var(--ok) 8%, var(--paper));
+    border-color: color-mix(in srgb, var(--ok) 28%, var(--line));
+    box-shadow: var(--shadow);
+  }
+  8% {
+    background: color-mix(in srgb, var(--ok) 14%, var(--paper));
+    border-color: color-mix(in srgb, var(--ok) 45%, var(--line));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ok) 12%, transparent), 0 8px 24px color-mix(in srgb, var(--ok) 12%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hub-brief.is-live { animation: none; }
+}
