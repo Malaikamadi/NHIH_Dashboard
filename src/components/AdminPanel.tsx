@@ -42,6 +42,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
   const lead = state.members.find((m) => m.role === 'Team Lead')?.id ?? 'm1'
   const [tab, setTab] = useState<'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | 'emr'>('task')
   const [saved, setSaved] = useState('')
+  const [saveError, setSaveError] = useState('')
   const [restoring, setRestoring] = useState(false)
   const [taskSelection, setTaskSelection] = useState<string[]>(lead ? [lead] : [])
   const [taskDistricts, setTaskDistricts] = useState<string[]>(['national'])
@@ -75,6 +76,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
           Create and manage the operational data that powers the NHIH dashboard. Changes saved here\n          continue to populate the team-facing dashboard.
         </p>
         {saved && <p className="meet-saved">{saved}</p>}
+        {saveError && <p className="warn-text" role="alert">{saveError}</p>}
 
         <div className="admin-tabs">
           {(['task', 'update', 'meeting', 'activity', 'action', 'log', 'emr'] as const).map((id) => (
@@ -122,7 +124,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
                   setTaskPriority((String(data.get('priority') || 'high')) as Priority)
                   setTaskDue(String(data.get('dueDate') || ''))
                 }}
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault()
                   e.stopPropagation()
                   const form = e.currentTarget
@@ -133,7 +135,10 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
                   if (!assignedTo.length) return
                   const status = String(data.get('status')) as TaskStatus
                   const progress = status === 'completed' ? 100 : Number(data.get('progress') || 0)
-                  addTask({
+                  setSaved('')
+                  setSaveError('')
+                  try {
+                    await addTask({
                     title: String(data.get('title')),
                     description: String(data.get('description')),
                     assignedTo,
@@ -143,13 +148,16 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
                     status,
                     progress,
                     ...placeFromForm(data),
-                  })
-                  form.reset()
-                  setTaskSelection(lead ? [lead] : [])
-                  setTaskDistricts(['national'])
-                  setTaskPriority('high')
-                  setTaskDue('')
-                  setSaved('Task saved. It now shows on the live dashboard.')
+                    })
+                    form.reset()
+                    setTaskSelection(lead ? [lead] : [])
+                    setTaskDistricts(['national'])
+                    setTaskPriority('high')
+                    setTaskDue('')
+                    setSaved('Task saved. It now shows on the live dashboard.')
+                  } catch (error) {
+                    setSaveError(`Task was not saved: ${error instanceof Error ? error.message : 'server unavailable'}. Please try again.`)
+                  }
                 }}
               >
                 <section className="desk-step">

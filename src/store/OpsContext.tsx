@@ -347,8 +347,8 @@ interface OpsContextValue {
     emrPhase?: string
     district: DistrictId[]
     facility?: string
-  }) => void
-  updateTask: (id: string, patch: Partial<Task>) => void
+  }) => Promise<void>
+  updateTask: (id: string, patch: Partial<Task>) => Promise<void>
   addMeeting: (input: Omit<Meeting, 'id'>) => void
   updateMeeting: (id: string, patch: Partial<Meeting>) => void
   addActivity: (input: Omit<TeamActivity, 'id'>) => void
@@ -431,7 +431,7 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
   }, [state])
 
   const addTask = useCallback<OpsContextValue['addTask']>(
-    (input) => {
+    async (input) => {
       const completed = input.status === 'completed'
       const task: Task = {
         ...input,
@@ -441,22 +441,30 @@ export function OpsProvider({ children }: { children: React.ReactNode }) {
         createdAt: nowIso(),
         completedAt: completed ? nowIso() : undefined,
       }
-      dispatch({ type: 'add_task', task })
-      void createTask(task).then(hydrate).catch(refresh)
+      try {
+        hydrate(await createTask(task))
+      } catch (error) {
+        await refresh()
+        throw error
+      }
     },
     [hydrate, refresh],
   )
 
   const updateTask = useCallback(
-    (id: string, patch: Partial<Task>) => {
+    async (id: string, patch: Partial<Task>) => {
       const next = { ...patch }
       if (patch.district) next.district = districtIds(patch.district)
       if (patch.status === 'completed') {
         next.progress = 100
         next.completedAt = nowIso()
       }
-      dispatch({ type: 'update_task', id, patch: next })
-      void patchTask(id, next).then(hydrate).catch(refresh)
+      try {
+        hydrate(await patchTask(id, next))
+      } catch (error) {
+        await refresh()
+        throw error
+      }
     },
     [hydrate, refresh],
   )

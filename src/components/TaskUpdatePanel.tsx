@@ -104,6 +104,7 @@ function TaskUpdateCard({
 }) {
   const { state, updateTask, removeTask } = useOps()
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const formRef = useRef<HTMLFormElement>(null)
   const status = displayStatus(task, now)
 
@@ -133,12 +134,15 @@ function TaskUpdateCard({
         <select
           value={task.status}
           aria-label={`Status for ${task.title}`}
-          onChange={(e) => {
+          onChange={async (e) => {
             const status = e.target.value as TaskStatus
-            updateTask(
+            setSaveError('')
+            try { await updateTask(
               task.id,
               status === 'completed' ? { status, progress: 100 } : { status },
-            )
+            ) } catch (error) {
+              setSaveError(`Status not saved: ${error instanceof Error ? error.message : 'server unavailable'}`)
+            }
           }}
         >
           {STATUSES.map((item) => (
@@ -157,7 +161,7 @@ function TaskUpdateCard({
           id={`edit-task-${task.id}`}
           ref={formRef}
           className="admin-form"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault()
             e.stopPropagation()
             const data = new FormData(e.currentTarget)
@@ -171,7 +175,9 @@ function TaskUpdateCard({
                 : Math.min(100, Math.max(0, Math.round(progressRaw)))
             const assignedTo = assigneesFromForm(data, task.assignedTo)
             if (!assignedTo.length) return
-            updateTask(task.id, {
+            setSaved(false)
+            setSaveError('')
+            try { await updateTask(task.id, {
               title: String(data.get('title')).trim(),
               description: String(data.get('description') || '').trim(),
               assignedTo,
@@ -182,8 +188,11 @@ function TaskUpdateCard({
               progress,
               ...placeFromForm(data),
             })
-            setSaved(true)
-            window.setTimeout(() => setSaved(false), 2000)
+              setSaved(true)
+              window.setTimeout(() => setSaved(false), 2000)
+            } catch (error) {
+              setSaveError(`Update was not saved: ${error instanceof Error ? error.message : 'server unavailable'}. Please try again.`)
+            }
           }}
         >
           <label>
@@ -274,6 +283,7 @@ function TaskUpdateCard({
             Save updates
           </button>
           {saved && <p className="meet-saved">Updates saved to the dashboard.</p>}
+          {saveError && <p className="warn-text" role="alert">{saveError}</p>}
         </form>
       )}
     </article>
