@@ -11,7 +11,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (code) headers['X-Operator-Code'] = code
   const res = await fetch(path, { ...init, headers, cache: 'no-store' })
   if (!res.ok) {
-    throw new Error(`${res.status} ${path}`)
+    const body = await res.json().catch(() => null) as { error?: string } | null
+    throw new Error(body?.error ? `${body.error} (${res.status})` : `${res.status} ${path}`)
   }
   return res.json() as Promise<T>
 }

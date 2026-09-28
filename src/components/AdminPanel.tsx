@@ -8,6 +8,7 @@ import { MeetingForm } from './MeetingForm'
 import { ParticipantPicker } from './ParticipantPicker'
 import { PlaceFields, placeFromForm } from './PlaceFields'
 import { TaskUpdatePanel } from './TaskUpdatePanel'
+import { WORK_TYPES } from '../data/catalog'
 import { useOps } from '../store/OpsContext'
 import { hubHasWork } from '../utils/hub'
 import { readHubCache } from '../store/cache'
@@ -47,6 +48,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
   const [taskSelection, setTaskSelection] = useState<string[]>(lead ? [lead] : [])
   const [taskDistricts, setTaskDistricts] = useState<string[]>(['national'])
   const [taskPriority, setTaskPriority] = useState<Priority>('high')
+  const [taskWorkKind, setTaskWorkKind] = useState('extract')
   const [taskDue, setTaskDue] = useState('')
   const browserBackup = readHubCache()
   const hasBrowserBackup = hubHasWork(browserBackup)
@@ -122,6 +124,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
                   const districts = data.getAll('districts').map(String).filter(Boolean)
                   setTaskDistricts(districts.length ? districts : ['national'])
                   setTaskPriority((String(data.get('priority') || 'high')) as Priority)
+                  setTaskWorkKind(String(data.get('workKind') || 'extract'))
                   setTaskDue(String(data.get('dueDate') || ''))
                 }}
                 onSubmit={async (e) => {
@@ -153,6 +156,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
                     setTaskSelection(lead ? [lead] : [])
                     setTaskDistricts(['national'])
                     setTaskPriority('high')
+                    setTaskWorkKind('extract')
                     setTaskDue('')
                     setSaved('Task saved. It now shows on the live dashboard.')
                   } catch (error) {
@@ -164,7 +168,8 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
                   <div className="desk-step-head"><b>1</b><span><strong>Work details</strong><small>Define the task and key information</small></span></div>
                   <div className="desk-work-grid">
                     <label className="desk-title-field">Task title<input name="title" required placeholder="Enter a clear and concise task title..." /></label>
-                    <label>Work type<select name="workKind" defaultValue="extract"><option value="extract">Extract</option><option value="data_review">Data review</option><option value="facility_followup">Facility follow-up</option><option value="other">Other</option></select></label>
+                    <label>Work type<select name="workKind" defaultValue="extract">{WORK_TYPES.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+                    {taskWorkKind === 'other' && <label>Other work type<input name="workKindOther" required placeholder="Describe the work type" /></label>}
                     <label>Priority<select name="priority" defaultValue="high">{PRIORITIES.map((p) => <option key={p} value={p}>{p}</option>)}</select></label>
                     <label className="desk-description-field">Description<textarea name="description" rows={3} maxLength={500} placeholder="What needs to happen? Include key details, expected outcome, or specific instructions..." /></label>
                     <label>Status<select name="status" defaultValue="not_started" onChange={(e) => { const progress=e.currentTarget.form?.elements.namedItem('progress'); if(e.currentTarget.value==='completed' && progress instanceof HTMLInputElement) progress.value='100' }}>{STATUSES.map((s) => <option key={s} value={s}>{taskStatusLabel(s)}</option>)}</select></label>
@@ -181,7 +186,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
 
                 <section className="desk-step">
                   <div className="desk-step-head"><b>3</b><span><strong>Location (Districts)</strong><small>Select where this work applies</small></span></div>
-                  <PlaceFields workKind="extract" lockWorkKind />
+                  <PlaceFields workKind="extract" omitWorkKind />
                 </section>
 
                 <div className="desk-submit-bar">

@@ -82,6 +82,7 @@ export function PlaceFields({
   district = 'national',
   facility = '',
   lockWorkKind = false,
+  omitWorkKind = false,
 }: {
   workKind?: WorkKind
   workKindOther?: string
@@ -89,6 +90,8 @@ export function PlaceFields({
   facility?: string
   /** Keep the work type fixed. Used when a desk view owns the category. */
   lockWorkKind?: boolean
+  /** Another field in the same form owns workKind. */
+  omitWorkKind?: boolean
 }) {
   const [kind, setKind] = useState<WorkKind>(workKind)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -104,7 +107,7 @@ export function PlaceFields({
 
   return (
     <div ref={rootRef}>
-      {lockWorkKind ? (
+      {omitWorkKind ? null : lockWorkKind ? (
         <>
           <input type="hidden" name="workKind" value={workKind} />
           {workKind === 'other' && (
