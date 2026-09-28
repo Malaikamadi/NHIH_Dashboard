@@ -2829,3 +2829,91 @@ button { cursor: pointer; }
 .operator-page .desk-related b { color:#20334a; }
 @media(max-width:1200px){.operator-page .desk-task-layout{grid-template-columns:1fr}.operator-page .desk-context{position:static}.operator-page .desk-step .desk-picker-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:800px){.operator-page .desk-work-grid{grid-template-columns:1fr}.operator-page .desk-work-grid>*{grid-column:1!important;grid-row:auto!important}.operator-page .desk-step .desk-picker-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* 2026-09 Dashboard status mix — compact + responsive */
+.light-dash .overview-card {
+  align-self: start;
+}
+.light-dash .overview-card .overview-mix {
+  display: grid;
+  grid-template-columns: minmax(170px, 220px) minmax(260px, 390px);
+  justify-content: start;
+  align-items: center;
+  gap: clamp(18px, 3vw, 34px);
+  width: fit-content;
+  max-width: 100%;
+  margin: 10px 0 0;
+  padding: 10px 14px 14px;
+}
+.light-dash .overview-card .overview-mix .traffic-legend {
+  width: min(390px, 100%);
+  min-width: 0;
+  flex: none;
+  gap: 9px;
+}
+.light-dash .overview-card .legend-dot {
+  grid-template-columns: 10px minmax(74px, 92px) minmax(70px, 1fr) auto;
+  gap: 8px;
+}
+.light-dash .overview-card .legend-track {
+  min-width: 70px;
+}
+.light-dash .overview-card .donut-wrap {
+  width: min(var(--donut), 220px);
+  height: min(var(--donut), 220px);
+}
+@media (max-width: 1150px) {
+  .light-dash .overview-card .overview-mix {
+    grid-template-columns: minmax(150px, 190px) minmax(220px, 1fr);
+    width: 100%;
+    gap: 16px;
+  }
+  .light-dash .overview-card .donut-wrap {
+    width: min(var(--donut), 190px);
+    height: min(var(--donut), 190px);
+  }
+}
+@media (max-width: 720px) {
+  .light-dash .overview-card .paper-h {
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .light-dash .overview-card .period-tabs {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  .light-dash .overview-card .overview-kpis {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 22px;
+  }
+  .light-dash .overview-card .overview-kpis .primary-btn {
+    margin-left: 0;
+  }
+  .light-dash .overview-card .overview-mix {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    width: 100%;
+    gap: 14px;
+    padding: 10px 4px 12px;
+  }
+  .light-dash .overview-card .overview-mix .traffic-legend {
+    width: 100%;
+    max-width: 430px;
+  }
+  .light-dash .overview-card .legend-dot {
+    grid-template-columns: 10px minmax(78px, 96px) minmax(70px, 1fr) auto;
+  }
+}
+@media (max-width: 430px) {
+  .light-dash .overview-card .overview-mix .traffic-legend {
+    gap: 8px;
+  }
+  .light-dash .overview-card .legend-dot {
+    grid-template-columns: 9px minmax(72px, 86px) minmax(48px, 1fr) auto;
+    gap: 6px;
+    font-size: 11px;
+  }
+}
