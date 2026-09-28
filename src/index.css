@@ -2939,3 +2939,29 @@ button { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   .hub-brief.is-live { animation: none; }
 }
+
+
+/* 2026-09 dashboard polish: keep status labels together and match Priority Tasks height */
+@media (min-width: 1201px) {
+  .light-dash .hero-row {
+    align-items: stretch;
+  }
+  .light-dash .hero-row > .overview-card {
+    align-self: stretch;
+    height: 100%;
+  }
+}
+.light-dash .overview-card .legend-label {
+  display: block;
+  white-space: nowrap;
+  line-height: 1.15;
+}
+.light-dash .overview-card .legend-dot {
+  grid-template-columns: 10px minmax(88px, 104px) minmax(70px, 1fr) auto;
+  align-items: center;
+}
+@media (max-width: 430px) {
+  .light-dash .overview-card .legend-label {
+    white-space: normal;
+  }
+}
