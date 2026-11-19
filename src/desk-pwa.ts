@@ -10,7 +10,7 @@ export function setupDeskPwa() {
   if (!theme.parentElement) document.head.appendChild(theme)
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      void navigator.serviceWorker.register('/desk-sw.js', { scope: '/desk' }).catch(() => {})
+      void navigator.serviceWorker.register('/desk/sw.js', { scope: '/desk' }).catch(() => {})
     })
   }
 }
