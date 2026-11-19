@@ -9,7 +9,7 @@
     "dev:api": "tsx watch server/index.ts",
     "db:setup": "tsx scripts/setup-postgres.ts",
     "db:import": "tsx scripts/import-ops-to-postgres.ts",
-    "build": "tsc --noEmit && tsc --noEmit -p tsconfig.server.json && vite build && node scripts/bundle-api.mjs",
+    "build": "node scripts/generate-desk-icons.mjs && tsc --noEmit && tsc --noEmit -p tsconfig.server.json && vite build && node scripts/bundle-api.mjs",
     "preview": "vite preview",
     "start": "tsx server/index.ts",
     "docker:up": "docker compose up -d --build",
