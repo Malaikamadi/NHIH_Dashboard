@@ -1,0 +1,23 @@
+name: Mobile Command Desk verification
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [feature/mobile-command-desk-pwa]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Check installable app assets
+        run: |
+          test -f dist/desk-manifest.webmanifest
+          test -f dist/desk-sw.js
+          test -f dist/desk-icon.svg
+          node -e "const m=require('./dist/desk-manifest.webmanifest');" || node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync('dist/desk-manifest.webmanifest')); if(m.start_url!=='/desk'||m.scope!=='/desk')process.exit(1)"
