@@ -26,3 +26,18 @@
 @media(max-width:600px){.mobile-ops-home{padding:12px 10px 45px}.mobile-ops-intro{padding:21px 17px;border-radius:17px}.mobile-ops-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.mobile-ops-stats>div{padding:13px}.mobile-ops-section{padding:14px}.mobile-ops-shortcuts button{font-size:13px}.mobile-ops-item{align-items:flex-start}.mobile-ops-item>span{font-size:10px}}
 
 .mobile-ops-section-head button{min-height:44px;padding:10px 12px}
+
+.mobile-ops-intelligence{background:#fff;border:1px solid #dce7f1;border-radius:17px;padding:18px;margin:16px 0}
+.mobile-ops-intelligence h2{font-size:18px;margin:0;color:#183c5e}
+.mobile-ops-intelligence h3{font-size:14px;margin:16px 0 9px;color:#1d435e}
+.mobile-ops-brief-lead{font-size:13px;line-height:1.6;color:#455d72;margin:0 0 13px}
+.mobile-ops-alerts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.mobile-ops-alerts button{display:flex;flex-direction:column;align-items:flex-start;gap:5px;border:1px solid #e0e8f1;background:#f6f9fc;border-radius:12px;min-height:70px;padding:12px;cursor:pointer;color:#224c70;text-align:left}
+.mobile-ops-alerts button strong{font-size:22px;color:#183c5e}.mobile-ops-alerts button span{font-size:11px;line-height:1.35}
+.mobile-ops-brief-meta{font-size:12px;color:#58718a;margin:14px 0}
+.mobile-ops-intelligence .mobile-ops-item button{min-height:44px;border:0;border-radius:9px;padding:8px 12px;color:#145d8e;background:#eaf4fb;font-weight:800;cursor:pointer}
+.mobile-ops-report{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid #e7edf4;margin-top:18px;padding-top:12px}
+.mobile-ops-report h3{margin:0 0 5px}.mobile-ops-report p{font-size:12px;color:#5a6d7f;margin:0;line-height:1.5}
+.mobile-ops-report button{flex-shrink:0;border:0;border-radius:10px;background:#1f4e79;color:white;min-height:44px;padding:11px 14px;font-weight:800;cursor:pointer}
+.mobile-ops-report button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:600px){.mobile-ops-intelligence{padding:14px}.mobile-ops-alerts{grid-template-columns:repeat(2,minmax(0,1fr))}.mobile-ops-report{align-items:stretch;flex-direction:column}.mobile-ops-report button{width:100%}}
