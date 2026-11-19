@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { clearOperatorCode, isOperatorUnlocked } from '../access'
 import { unlockOperator } from '../api'
 import { AdminPanel } from './AdminPanel'
+import { MobileOpsHome } from './MobileOpsHome'
 
 function goDashboard() {
   window.history.pushState({}, '', '/')
@@ -13,12 +14,14 @@ export function OperatorDesk() {
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [activeTab, setActiveTab] = useState<'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | 'emr' | null>(null)
 
   const signOut = () => {
     clearOperatorCode()
     setUnlocked(false)
     setCode('')
     setError('')
+    setActiveTab(null)
   }
 
   return (
@@ -36,7 +39,12 @@ export function OperatorDesk() {
               </button>
             </div>
           </header>
-          <AdminPanel open variant="page" onClose={goDashboard} />
+          {activeTab ? (
+            <>
+              <button type="button" className="mobile-ops-back" onClick={() => { if (window.confirm('Return to overview? Any unsaved changes in this form will be lost.')) setActiveTab(null) }}>← Back to overview</button>
+              <AdminPanel key={activeTab} open variant="page" initialTab={activeTab} onClose={goDashboard} />
+            </>
+          ) : <MobileOpsHome onOpen={setActiveTab} />}
         </>
       ) : (
         <section className="operator-lock paper">

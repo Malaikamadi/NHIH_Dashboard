@@ -25,6 +25,7 @@ interface Props {
   open: boolean
   onClose: () => void
   variant?: 'drawer' | 'page'
+  initialTab?: 'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | 'emr'
 }
 
 const STATUSES: TaskStatus[] = [
@@ -37,11 +38,11 @@ const STATUSES: TaskStatus[] = [
 
 const PRIORITIES: Priority[] = ['critical', 'high', 'medium', 'low']
 
-export function AdminPanel({ open, onClose, variant = 'drawer' }: Props) {
+export function AdminPanel({ open, onClose, variant = 'drawer', initialTab = 'task' }: Props) {
   const { state, addTask, addActionItem, removeMeeting, removeActivity, resetDemo, restoreFromBrowser } =
     useOps()
   const lead = state.members.find((m) => m.role === 'Team Lead')?.id ?? 'm1'
-  const [tab, setTab] = useState<'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | 'emr'>('task')
+  const [tab, setTab] = useState<'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | 'emr'>(initialTab)
   const [saved, setSaved] = useState('')
   const [saveError, setSaveError] = useState('')
   const [restoring, setRestoring] = useState(false)
