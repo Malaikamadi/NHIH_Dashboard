@@ -41,8 +41,8 @@ export function OperatorDesk() {
           </header>
           {activeTab ? (
             <>
-              <button type="button" className="mobile-ops-back" onClick={() => setActiveTab(null)}>← Back to overview</button>
-              <AdminPanel key={activeTab} open variant="page" initialTab={activeTab} onClose={() => setActiveTab(null)} />
+              <button type="button" className="mobile-ops-back" onClick={() => { if (window.confirm('Return to overview? Any unsaved changes in this form will be lost.')) setActiveTab(null) }}>← Back to overview</button>
+              <AdminPanel key={activeTab} open variant="page" initialTab={activeTab} onClose={goDashboard} />
             </>
           ) : <MobileOpsHome onOpen={setActiveTab} />}
         </>
