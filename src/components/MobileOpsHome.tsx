@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { OpsIntelligence } from './OpsIntelligence'
 import { useOps } from '../store/OpsContext'
 import { displayStatus, memberNames, meetingStatus, priorityTasks, todaysMeetings } from '../utils/metrics'
 
@@ -31,6 +32,7 @@ export function MobileOpsHome({ onOpen }: { onOpen: (tab: DeskTab) => void }) {
         <div><span>High priority</span><strong>{urgent.length}</strong></div>
         <div><span>Open actions</span><strong>{actions.length}</strong></div>
       </div>
+      <OpsIntelligence onOpen={onOpen} />
       <section className="mobile-ops-section"><div className="mobile-ops-section-head"><h2>Quick commands</h2></div>
         <div className="mobile-ops-shortcuts">
           <button type="button" onClick={() => onOpen('task')}>＋ Assign task</button>
