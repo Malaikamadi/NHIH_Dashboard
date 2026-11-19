@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useOps } from '../store/OpsContext'
 import { displayStatus, memberNames, meetingStatus, priorityTasks, todaysMeetings } from '../utils/metrics'
 
@@ -5,6 +6,8 @@ type DeskTab = 'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | '
 
 export function MobileOpsHome({ onOpen }: { onOpen: (tab: DeskTab) => void }) {
   const { state, connected } = useOps()
+  const [hasConnected, setHasConnected] = useState(connected)
+  useEffect(() => { if (connected) setHasConnected(true) }, [connected])
   const now = new Date()
   const active = state.tasks.filter(t => displayStatus(t, now) !== 'completed')
   const overdue = active.filter(t => displayStatus(t, now) === 'overdue')
@@ -20,7 +23,7 @@ export function MobileOpsHome({ onOpen }: { onOpen: (tab: DeskTab) => void }) {
         <span className="mobile-ops-eyebrow">OPERATIONS OVERVIEW · {date}</span>
         <h1>Today's command centre</h1>
         <p>Live priorities, follow-ups and operational incidents from the NHIH dashboard.</p>
-        <span className={'mobile-ops-connection ' + (connected ? 'is-connected' : '')}>{connected ? '● Live connection' : '● Connection unavailable — figures may be stale'}</span>
+        <span className={'mobile-ops-connection ' + (connected ? 'is-connected' : '')}>{connected ? '● Live connection' : hasConnected ? '● Connection unavailable — figures may be stale' : '● Connecting…'}</span>
       </div>
       <div className="mobile-ops-stats" aria-label="Operational summary">
         <div><span>Active tasks</span><strong>{active.length}</strong></div>
