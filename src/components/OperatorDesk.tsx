@@ -5,6 +5,7 @@ import { AdminPanel } from './AdminPanel'
 import { MobileOpsHome } from './MobileOpsHome'
 import { MobileWorkQueue, type WorkFilter } from './MobileWorkQueue'
 import mohLogo from '../assets/mohs-logo.jpg'
+import { InstallApp } from './InstallApp'
 
 function goDashboard() {
   window.history.pushState({}, '', '/')
@@ -40,6 +41,7 @@ export function OperatorDesk() {
 
   return (
     <div className="operator-page">
+      <InstallApp />
       {unlocked ? (
         <>
           <header className="operator-bar">

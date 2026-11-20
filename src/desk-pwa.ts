@@ -1,6 +1,28 @@
+export type InstallPrompt = Event & {
+  prompt(): Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
+
+export const appInstall = {
+  prompt: null as InstallPrompt | null,
+  worker: 'Checking app connection…',
+}
+
+function changed() { window.dispatchEvent(new Event('nhih-install-status')) }
+
 export function setupDeskPwa() {
   if (window.location.pathname.replace(/\/+$/, '') !== '/desk') return
-  const link = document.createElement('link')
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault()
+    appInstall.prompt = event as InstallPrompt
+    changed()
+  })
+  window.addEventListener('appinstalled', () => {
+    appInstall.prompt = null
+    appInstall.worker = 'App installed. Open NHIH Command from your apps.'
+    changed()
+  })
+  const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]') || document.createElement('link')
   link.rel = 'manifest'
   link.href = '/desk-manifest.webmanifest?v=3'
   document.head.appendChild(link)
@@ -9,10 +31,19 @@ export function setupDeskPwa() {
   theme.setAttribute('content', '#1f4e79')
   if (!theme.parentElement) document.head.appendChild(theme)
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      void navigator.serviceWorker.register('/desk-sw.js', { scope: '/desk' }).catch((error: unknown) => {
+    const register = () => {
+      void navigator.serviceWorker.register('/desk-sw.js', { scope: '/desk' }).then(() => navigator.serviceWorker.ready).then(() => {
+        appInstall.worker = 'App connection ready. Waiting for Chrome to offer installation.'
+        changed()
+      }).catch((error: unknown) => {
+        appInstall.worker = `App connection failed: ${error instanceof Error ? error.message : String(error)}`
+        changed()
         console.error('NHIH app service worker registration failed', error)
       })
-    })
+    }
+    if (document.readyState === 'complete') register()
+    else window.addEventListener('load', register, { once: true })
+  } else {
+    appInstall.worker = 'This browser does not support the app connection. Open this page in Chrome.'
   }
 }
