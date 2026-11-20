@@ -59795,9 +59795,27 @@ async function readLastSync(client) {
 }
 async function getVisitorSummary() {
   const pool2 = await ensureVisitorStorage();
-  const checkedInCount = await queryCheckedInCount(pool2);
+  const res = await pool2.query(
+    `SELECT purpose
+     FROM visitor_visits
+     WHERE status = 'checked_in'
+       AND checked_in_at IS NOT NULL
+       AND checked_out_at IS NULL
+     ORDER BY checked_in_at DESC`
+  );
+  const seen = /* @__PURE__ */ new Set();
+  const activePurposes = [];
+  for (const row of res.rows) {
+    const clean = row.purpose.trim();
+    if (!clean) continue;
+    const key = clean.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    activePurposes.push(clean);
+  }
   return {
-    checkedInCount,
+    checkedInCount: res.rows.length,
+    activePurposes,
     updatedAt: (/* @__PURE__ */ new Date()).toISOString()
   };
 }

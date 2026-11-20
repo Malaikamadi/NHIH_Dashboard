@@ -95,9 +95,27 @@ async function readLastSync(client: pg.Pool | pg.PoolClient): Promise<VisitorSyn
 
 export async function getVisitorSummary(): Promise<VisitorSummary> {
   const pool = await ensureVisitorStorage()
-  const checkedInCount = await queryCheckedInCount(pool)
+  const res = await pool.query<{ purpose: string }>(
+    `SELECT purpose
+     FROM visitor_visits
+     WHERE status = 'checked_in'
+       AND checked_in_at IS NOT NULL
+       AND checked_out_at IS NULL
+     ORDER BY checked_in_at DESC`,
+  )
+  const seen = new Set<string>()
+  const activePurposes: string[] = []
+  for (const row of res.rows) {
+    const clean = row.purpose.trim()
+    if (!clean) continue
+    const key = clean.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    activePurposes.push(clean)
+  }
   return {
-    checkedInCount,
+    checkedInCount: res.rows.length,
+    activePurposes,
     updatedAt: new Date().toISOString(),
   }
 }

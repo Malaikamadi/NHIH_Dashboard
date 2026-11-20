@@ -49,6 +49,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
   const [dueDay, setDueDay] = useState(() => new Date())
   const [dismissedSoon, setDismissedSoon] = useState<string[]>([])
   const [visitorCount, setVisitorCount] = useState<number | null>(null)
+  const [visitorPurposes, setVisitorPurposes] = useState<string[]>([])
   const [visitorUnavailable, setVisitorUnavailable] = useState(false)
   const detailRef = useRef<HTMLElement | null>(null)
 
@@ -64,6 +65,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
         const summary = await fetchVisitorSummary()
         if (cancelled) return
         setVisitorCount(summary.checkedInCount)
+        setVisitorPurposes(summary.activePurposes ?? [])
         setVisitorUnavailable(false)
       } catch {
         if (cancelled) return
@@ -186,6 +188,23 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
 
   return (
     <div className="view light-dash">
+      {!visitorUnavailable && visitorCount !== null && visitorCount > 0 && (
+        <aside className="visitor-top-banner" aria-live="polite">
+          <Icon name="users" size={18} />
+          <div className="visitor-top-banner-body">
+            <strong>
+              {visitorCount === 1
+                ? '1 visitor currently at the Hub'
+                : `${visitorCount} visitors currently at the Hub`}
+            </strong>
+            <span>
+              {visitorPurposes.length > 0
+                ? `Purpose: ${visitorPurposes.join(' · ')}`
+                : 'Checked in at reception'}
+            </span>
+          </div>
+        </aside>
+      )}
       {soon.map((item) => (
         <aside key={item.id} className="soon-banner">
           <Icon name="bell" size={16} />

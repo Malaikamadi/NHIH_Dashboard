@@ -179,6 +179,7 @@ export interface VisitorVisit {
 
 export interface VisitorSummary {
   checkedInCount: number
+  activePurposes: string[]
   updatedAt: string
 }
 

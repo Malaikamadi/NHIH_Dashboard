@@ -176,8 +176,9 @@ async function runIntegrationTests(): Promise<void> {
     const summaryRes = await app.request('/api/visitors/summary')
     assert.equal(summaryRes.status, 200, 'Public summary must succeed without auth')
     const summaryBody = (await summaryRes.json()) as Record<string, unknown>
-    assert.deepEqual(Object.keys(summaryBody).sort(), ['checkedInCount', 'updatedAt'])
+    assert.deepEqual(Object.keys(summaryBody).sort(), ['activePurposes', 'checkedInCount', 'updatedAt'])
     assert.equal(summaryBody.checkedInCount, 0)
+    assert.deepEqual(summaryBody.activePurposes, [])
 
     for (const [method, path] of [
       ['GET', '/api/visitors'],
@@ -280,10 +281,16 @@ async function runIntegrationTests(): Promise<void> {
     assert.equal(walkInBody.checkedInCount, 2)
     assert.equal(walkInBody.visit.status, 'checked_in')
 
-    // Public summary must still expose ONLY aggregate count (2) and no names
+    // Public summary must still expose ONLY aggregate count (2) and active purposes, never names
     const publicSummary2 = await (await app.request('/api/visitors/summary')).text()
     assert.ok(!publicSummary2.includes('Aminata') && !publicSummary2.includes('Ibrahim'))
-    assert.equal(JSON.parse(publicSummary2).checkedInCount, 2)
+    const parsedSummary2 = JSON.parse(publicSummary2) as {
+      checkedInCount: number
+      activePurposes: string[]
+    }
+    assert.equal(parsedSummary2.checkedInCount, 2)
+    assert.ok(parsedSummary2.activePurposes.includes('Monthly data review'))
+    assert.ok(parsedSummary2.activePurposes.includes('DHIS2 reporting support'))
     console.log('   ✓ Check-in and walk-in check-in increase count (0 → 1 → 2)')
 
     // --- Simultaneous & repeated checkout decreases count safely (2 -> 1) ---
