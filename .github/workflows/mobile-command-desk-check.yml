@@ -22,4 +22,4 @@ jobs:
           test -f dist/desk-icon.svg
           test -f dist/desk-icon-192.png
           test -f dist/desk-icon-512.png
-          node -e "const m=require('./dist/desk-manifest.webmanifest');" || node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync('dist/desk-manifest.webmanifest')); if(m.start_url!=='/desk'||m.scope!=='/desk')process.exit(1)"
+          node -e "const fs=require('node:fs'); const m=JSON.parse(fs.readFileSync('dist/desk-manifest.webmanifest','utf8')); const u=new URL(m.start_url,'https://example.org'); if(u.pathname!=='/desk'||m.scope!=='/desk'||m.display!=='standalone'||!m.id||!Array.isArray(m.icons)||m.icons.length<2) process.exit(1)"

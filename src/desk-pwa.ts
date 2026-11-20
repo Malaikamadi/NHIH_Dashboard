@@ -24,7 +24,7 @@ export function setupDeskPwa() {
   })
   const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]') || document.createElement('link')
   link.rel = 'manifest'
-  link.href = '/desk-manifest.webmanifest?v=3'
+  link.href = '/desk-manifest.webmanifest?v=4'
   document.head.appendChild(link)
   const theme = document.querySelector('meta[name="theme-color"]') || document.createElement('meta')
   theme.setAttribute('name', 'theme-color')
