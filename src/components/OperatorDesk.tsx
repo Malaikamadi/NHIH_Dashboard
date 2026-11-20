@@ -3,6 +3,7 @@ import { clearOperatorCode, isOperatorUnlocked } from '../access'
 import { unlockOperator } from '../api'
 import { AdminPanel } from './AdminPanel'
 import { MobileOpsHome } from './MobileOpsHome'
+import mohLogo from '../assets/mohs-logo.jpg'
 
 function goDashboard() {
   window.history.pushState({}, '', '/')
@@ -29,9 +30,9 @@ export function OperatorDesk() {
       {unlocked ? (
         <>
           <header className="operator-bar">
-            <div>
-              <div className="hdr-kicker">NHIH · Operator only</div>
-              <strong>Operations Control Desk</strong>
+            <div className="operator-brand"><img src={mohLogo} alt="Ministry of Health logo" />
+              <div><div className="hdr-kicker">NHIH · Operator only</div>
+              <strong>Operations Control Desk</strong></div>
             </div>
             <div className="operator-bar-actions">
               <button type="button" className="ghost-btn" onClick={signOut}>
