@@ -95,3 +95,31 @@
   .operator-page .mobile-ops-item{flex-wrap:wrap}
   .operator-page .mobile-ops-item>span{white-space:normal}
 }
+
+
+/* Native-feeling navigation only on the installed-size Command Desk. */
+.operator-mobile-nav,.operator-sheet-backdrop{display:none}
+@media(max-width:767px){
+  .operator-page{padding-bottom:calc(78px + env(safe-area-inset-bottom))!important}
+  .operator-page .mobile-ops-home{padding-bottom:24px!important}
+  .operator-mobile-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;z-index:100;background:#fff;border-top:1px solid #dce6ef;box-shadow:0 -6px 25px #12365016;padding:7px 7px calc(7px + env(safe-area-inset-bottom));gap:2px}
+  .operator-mobile-nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:54px;border:0;border-radius:12px;background:transparent;color:#64788b;font-size:10px;font-weight:800;cursor:pointer}
+  .operator-mobile-nav button span{font-size:24px;line-height:1.1}
+  .operator-mobile-nav button.is-selected{background:#eaf4fb;color:#155b8b}
+  .operator-mobile-nav .operator-nav-create span{display:grid;place-items:center;width:42px;height:42px;border-radius:15px;background:#1f4e79;color:#fff;font-size:29px;box-shadow:0 5px 14px #1f4e7930}
+  .operator-sheet-backdrop{display:flex;position:fixed;inset:0;z-index:95;background:#0b203d88;align-items:flex-end}
+  .operator-create-sheet{width:100%;max-height:75dvh;overflow:auto;border-radius:24px 24px 0 0;background:#fff;padding:16px 16px calc(94px + env(safe-area-inset-bottom));box-shadow:0 -8px 28px #0002}
+  .operator-sheet-head{display:flex;justify-content:space-between;align-items:center;padding:4px 0 15px;color:#163d5c;font-size:18px}
+  .operator-sheet-head button{border:0;background:#eff4f8;border-radius:50%;width:40px;height:40px;font-size:17px}
+  .operator-sheet-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .operator-sheet-actions button{display:flex;align-items:center;gap:10px;min-height:64px;padding:12px;border:1px solid #dce7ef;border-radius:14px;background:#f6f9fc;text-align:left;font-size:13px;font-weight:800;color:#173e60}
+  .operator-sheet-actions button span:first-child{font-size:22px;color:#1f6d9e}
+  .operator-sheet-actions button span:last-child{margin-left:auto;font-size:20px}
+  .operator-page .desk-submit-bar{bottom:calc(70px + env(safe-area-inset-bottom))!important}
+  .operator-page .mobile-ops-full{display:none}
+  .operator-page .mobile-ops-intro{box-shadow:none}
+  .operator-page .mobile-ops-stats strong{font-size:26px}
+  .operator-page .mobile-ops-intelligence{margin:12px 0}
+  .operator-page .mobile-ops-section{margin:12px 0}
+}
+@media(max-width:350px){.operator-sheet-actions{grid-template-columns:1fr}}
