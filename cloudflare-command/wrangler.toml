@@ -1,0 +1,7 @@
+name = "nhih-command"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+workers_dev = true
+
+# Do not add routes or custom domains until the mobile installation is tested.
+# Requests are proxied to the existing NHIH HTTPS endpoint.
