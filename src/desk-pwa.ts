@@ -19,7 +19,7 @@ export function setupDeskPwa() {
   })
   window.addEventListener('appinstalled', () => {
     appInstall.prompt = null
-    appInstall.worker = 'App installed. Open NHIH Command from your apps.'
+    appInstall.worker = 'Chrome reported an install event. Confirm NHIH Command appears in Samsung Settings → Apps; Android installation can still fail.'
     changed()
   })
   const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]') || document.createElement('link')

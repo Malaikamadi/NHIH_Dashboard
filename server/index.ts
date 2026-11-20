@@ -10,6 +10,7 @@ const PORT = Number(process.env.PORT ?? 8787)
 
 if (existsSync('dist/index.html')) {
   app.use('/assets/*', serveStatic({ root: './dist' }))
+  app.get('/desk-install-check.html', serveStatic({ path: './dist/desk-install-check.html' }))
   app.get('/desk-manifest.webmanifest', serveStatic({ path: './dist/desk-manifest.webmanifest' }))
   app.get('/desk-logo.jpg', serveStatic({ path: './dist/desk-logo.jpg' }))
   app.get('/desk-icon.svg', serveStatic({ path: './dist/desk-icon.svg' }))
