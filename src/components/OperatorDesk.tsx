@@ -15,6 +15,7 @@ export function OperatorDesk() {
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [showCreate, setShowCreate] = useState(false)
   const [activeTab, setActiveTab] = useState<'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | 'emr' | null>(null)
 
   const signOut = () => {
@@ -23,6 +24,15 @@ export function OperatorDesk() {
     setCode('')
     setError('')
     setActiveTab(null)
+    setShowCreate(false)
+  }
+
+  const navigate = (tab: typeof activeTab) => {
+    if (tab === activeTab) { setShowCreate(false); return }
+    if (activeTab && !window.confirm('Leave this screen? Any unsaved form changes will be lost.')) return
+    setShowCreate(false)
+    setActiveTab(tab)
+    window.scrollTo({ top: 0, behavior: 'instant' })
   }
 
   return (
@@ -42,10 +52,25 @@ export function OperatorDesk() {
           </header>
           {activeTab ? (
             <>
-              <button type="button" className="mobile-ops-back" onClick={() => { if (window.confirm('Return to overview? Any unsaved changes in this form will be lost.')) setActiveTab(null) }}>← Back to overview</button>
+              <button type="button" className="mobile-ops-back" onClick={() => navigate(null)}>← Back to overview</button>
               <AdminPanel key={activeTab} open variant="page" initialTab={activeTab} onClose={goDashboard} />
             </>
-          ) : <MobileOpsHome onOpen={setActiveTab} />}
+          ) : <MobileOpsHome onOpen={navigate} />}
+          <nav className="operator-mobile-nav" aria-label="Command Desk navigation">
+            <button type="button" className={!activeTab && !showCreate ? 'is-selected' : ''} aria-current={!activeTab && !showCreate ? 'page' : undefined} onClick={() => navigate(null)}><span aria-hidden="true">⌂</span>Home</button>
+            <button type="button" className={activeTab === 'update' ? 'is-selected' : ''} aria-current={activeTab === 'update' ? 'page' : undefined} onClick={() => navigate('update')}><span aria-hidden="true">☑</span>Tasks</button>
+            <button type="button" className="operator-nav-create" aria-expanded={showCreate} aria-controls="operator-create-menu" onClick={() => setShowCreate(v => !v)}><span aria-hidden="true">＋</span>Create</button>
+            <button type="button" className={activeTab === 'meeting' ? 'is-selected' : ''} aria-current={activeTab === 'meeting' ? 'page' : undefined} onClick={() => navigate('meeting')}><span aria-hidden="true">▦</span>Meetings</button>
+            <button type="button" className={showCreate || ['activity','action','log','emr'].includes(activeTab ?? '') ? 'is-selected' : ''} aria-expanded={showCreate} aria-controls="operator-create-menu" onClick={() => setShowCreate(v => !v)}><span aria-hidden="true">☰</span>More</button>
+          </nav>
+          {showCreate && <div className="operator-sheet-backdrop" onClick={() => setShowCreate(false)}>
+            <div className="operator-create-sheet" id="operator-create-menu" role="dialog" aria-modal="true" aria-label="Command Desk actions" onClick={e => e.stopPropagation()}>
+              <div className="operator-sheet-head"><strong>Quick actions</strong><button type="button" onClick={() => setShowCreate(false)} aria-label="Close actions">✕</button></div>
+              <div className="operator-sheet-actions">
+                {([['task','＋','Assign task'],['meeting','▦','Add meeting'],['activity','◷','Record activity'],['action','☑','Add follow-up'],['log','⚑','Incident log'],['emr','▤','EMR work']] as const).map(([tab, icon, label]) => <button type="button" key={tab} onClick={() => navigate(tab)}><span aria-hidden="true">{icon}</span>{label}<span aria-hidden="true">›</span></button>)}
+              </div>
+            </div>
+          </div>}
         </>
       ) : (
         <section className="operator-lock paper">
