@@ -1,24 +1,25 @@
 {
-  "id": "/desk",
-  "name": "NHIH Command Desk \u00b7 Ministry of Health",
+  "id": "/nhih-command-android-2026",
+  "name": "NHIH Command Desk · Ministry of Health",
   "short_name": "NHIH Command",
-  "start_url": "/desk",
+  "start_url": "/desk?source=installed-command",
   "scope": "/desk",
   "display": "standalone",
   "background_color": "#f5f7fa",
   "theme_color": "#1f4e79",
   "icons": [
     {
-      "src": "/desk-icon-192.png?v=3",
+      "src": "/desk-icon-192.png?v=4",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/desk-icon-512.png?v=3",
+      "src": "/desk-icon-512.png?v=4",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     }
-  ]
+  ],
+  "description": "NHIH Command Desk for authorized Ministry of Health operations"
 }
