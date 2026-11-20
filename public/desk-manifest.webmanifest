@@ -1,6 +1,6 @@
 {
   "id": "/desk",
-  "name": "NHIH Command Desk · Ministry of Health",
+  "name": "NHIH Command Desk \u00b7 Ministry of Health",
   "short_name": "NHIH Command",
   "start_url": "/desk",
   "scope": "/desk",
@@ -9,9 +9,15 @@
   "theme_color": "#1f4e79",
   "icons": [
     {
-      "src": "/desk-logo.jpg?v=2",
-      "sizes": "any",
-      "type": "image/jpeg",
+      "src": "/desk-icon-192.png?v=3",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/desk-icon-512.png?v=3",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any"
     }
   ]
