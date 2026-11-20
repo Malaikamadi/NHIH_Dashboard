@@ -105,9 +105,43 @@ CREATE TABLE IF NOT EXISTS activity_events (
   tone TEXT NOT NULL 
 );
 
+CREATE TABLE IF NOT EXISTS visitor_visits (
+  id TEXT PRIMARY KEY,
+  source TEXT NOT NULL CHECK (source IN ('google_sheets', 'walk_in')),
+  source_key TEXT UNIQUE,
+  source_row_number INTEGER,
+  full_name TEXT NOT NULL,
+  organization TEXT NOT NULL DEFAULT '',
+  purpose TEXT NOT NULL DEFAULT '',
+  registered_at TIMESTAMPTZ NOT NULL,
+  checked_in_at TIMESTAMPTZ,
+  checked_out_at TIMESTAMPTZ,
+  status TEXT NOT NULL CHECK (status IN ('registered', 'checked_in', 'checked_out')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CHECK (
+    (status = 'registered' AND checked_in_at IS NULL AND checked_out_at IS NULL) OR
+    (status = 'checked_in' AND checked_in_at IS NOT NULL AND checked_out_at IS NULL) OR
+    (status = 'checked_out' AND checked_in_at IS NOT NULL AND checked_out_at IS NOT NULL)
+  )
+);
+
+CREATE TABLE IF NOT EXISTS visitor_events (
+  id TEXT PRIMARY KEY,
+  visit_id TEXT NOT NULL REFERENCES visitor_visits (id) ON DELETE CASCADE,
+  event_type TEXT NOT NULL CHECK (event_type IN ('registered', 'checked_in', 'checked_out')),
+  occurred_at TIMESTAMPTZ NOT NULL,
+  source TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE INDEX IF NOT EXISTS tasks_assigned_to_idx ON tasks (assigned_to);
 CREATE INDEX IF NOT EXISTS tasks_status_idx ON tasks (status);
 CREATE INDEX IF NOT EXISTS meetings_start_time_idx ON meetings (start_time);
 CREATE INDEX IF NOT EXISTS activities_start_time_idx ON activities (start_time);
 CREATE INDEX IF NOT EXISTS hub_log_at_idx ON hub_log (at DESC);
 CREATE INDEX IF NOT EXISTS activity_events_at_idx ON activity_events (at DESC);
+CREATE INDEX IF NOT EXISTS visitor_visits_status_idx ON visitor_visits (status);
+CREATE INDEX IF NOT EXISTS visitor_visits_registered_at_idx ON visitor_visits (registered_at DESC);
+CREATE INDEX IF NOT EXISTS visitor_visits_checked_in_at_idx ON visitor_visits (checked_in_at DESC);
+CREATE INDEX IF NOT EXISTS visitor_events_visit_id_idx ON visitor_events (visit_id, occurred_at ASC);

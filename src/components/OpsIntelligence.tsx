@@ -3,7 +3,7 @@ import { useOps } from '../store/OpsContext'
 import { displayStatus, memberNames, meetingStatus } from '../utils/metrics'
 import type { Task } from '../types'
 
-type DeskTab = 'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | 'emr'
+type DeskTab = 'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | 'emr' | 'visitors'
 const dateText = (value: Date) => value.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 const line = (value: string) => value.replace(/\s+/g, ' ').trim()
 

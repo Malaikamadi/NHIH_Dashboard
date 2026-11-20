@@ -4,7 +4,7 @@ import type { WorkFilter } from './MobileWorkQueue'
 import { useOps } from '../store/OpsContext'
 import { displayStatus, memberNames, meetingStatus, priorityTasks, todaysMeetings } from '../utils/metrics'
 
-type DeskTab = 'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | 'emr'
+type DeskTab = 'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | 'emr' | 'visitors'
 
 export function MobileOpsHome({ onOpen }: { onOpen: (tab: DeskTab, filter?: WorkFilter) => void }) {
   const { state, connected } = useOps()
@@ -40,6 +40,7 @@ export function MobileOpsHome({ onOpen }: { onOpen: (tab: DeskTab, filter?: Work
           <button type="button" onClick={() => onOpen('update')}>↗ Update tasks</button>
           <button type="button" onClick={() => onOpen('meeting')}>＋ Add meeting</button>
           <button type="button" onClick={() => onOpen('log')}>＋ Record incident</button>
+          <button type="button" onClick={() => onOpen('visitors')}>◎ Visitors</button>
         </div>
       </section>
       <section className="mobile-ops-section"><div className="mobile-ops-section-head"><h2>Needs your attention</h2><button type="button" onClick={() => onOpen('update')}>Manage tasks</button></div>

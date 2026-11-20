@@ -159,3 +159,59 @@ export interface OpsState {
 }
 
 export type ViewId = 'today' | 'performance' | 'workload' | 'actions' | 'emr'
+
+export type VisitorSource = 'google_sheets' | 'walk_in'
+
+export type VisitorStatus = 'registered' | 'checked_in' | 'checked_out'
+
+export interface VisitorVisit {
+  id: string
+  source: VisitorSource
+  sourceRowNumber?: number
+  fullName: string
+  organization: string
+  purpose: string
+  registeredAt: string
+  checkedInAt?: string
+  checkedOutAt?: string
+  status: VisitorStatus
+}
+
+export interface VisitorSummary {
+  checkedInCount: number
+  updatedAt: string
+}
+
+export interface VisitorSkippedRow {
+  rowNumber: number
+  reason: string
+}
+
+export interface VisitorColumnMapping {
+  timestamp: string
+  fullName: string
+  organization: string
+  purpose: string
+  ignoredColumns: string[]
+}
+
+export interface VisitorSyncResult {
+  syncedAt: string
+  spreadsheetId: string
+  tabName: string
+  imported: number
+  unchanged: number
+  skippedCount: number
+  skipped: VisitorSkippedRow[]
+  columnMapping: VisitorColumnMapping
+  checkedInCount: number
+}
+
+export interface VisitorRegisterResponse {
+  checkedInCount: number
+  registeredCount: number
+  checkedOutCount: number
+  visits: VisitorVisit[]
+  lastSync: VisitorSyncResult | null
+  sheetsConfigured: boolean
+}

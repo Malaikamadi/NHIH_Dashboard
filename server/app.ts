@@ -7,8 +7,9 @@ import { buildOpsReport, parseReportPeriod, reportToHtml } from '../src/utils/re
 import { uid } from '../src/utils/time'
 import * as repo from './db'
 import { HttpError } from './errors'
-import { isValidOperatorCode } from './operator'
+import { assertVisitorOperatorAccess, isValidOperatorCode } from './operator'
 import { broadcast, clientCount, subscribe } from './hub'
+import * as visitors from './visitors'
 import {
   actionCreate,
   actionPatch,
@@ -22,6 +23,7 @@ import {
   restoreBody,
   taskCreate,
   taskPatch,
+  visitorWalkInCreate,
 } from './validate'
 
 const api = new Hono()
@@ -43,9 +45,31 @@ api.use('*', async (c, next) => {
   c.header('Vercel-CDN-Cache-Control', 'no-store')
 })
 
+function isVisitorPath(path: string): boolean {
+  return (
+    path === '/visitors' ||
+    path.startsWith('/visitors/') ||
+    path === '/api/visitors' ||
+    path.startsWith('/api/visitors/')
+  )
+}
+
+function isVisitorSummaryPath(path: string): boolean {
+  return path === '/visitors/summary' || path === '/api/visitors/summary'
+}
+
 api.use('*', async (c, next) => {
-  if (c.req.method === 'GET' || c.req.method === 'HEAD' || c.req.method === 'OPTIONS') return next()
   const path = c.req.path
+  if (c.req.method === 'OPTIONS') return next()
+  if (isVisitorPath(path)) {
+    if (isVisitorSummaryPath(path) && (c.req.method === 'GET' || c.req.method === 'HEAD')) {
+      return next()
+    }
+    const given = c.req.header('x-operator-code') ?? ''
+    assertVisitorOperatorAccess(given)
+    return next()
+  }
+  if (c.req.method === 'GET' || c.req.method === 'HEAD') return next()
   if (
     path === '/unlock' ||
     path === '/operator/unlock' ||
@@ -332,6 +356,25 @@ api.post('/restore', async (c) => {
 })
 
 api.post('/reset', async (c) => c.json(await push(await repo.resetState())))
+
+api.get('/visitors/summary', async (c) => c.json(await visitors.getVisitorSummary()))
+
+api.get('/visitors', async (c) => c.json(await visitors.listVisitorRegister()))
+
+api.post('/visitors/sync', async (c) => c.json(await visitors.syncVisitorsFromGoogleSheets()))
+
+api.post('/visitors/walk-in', async (c) => {
+  const body = await readBody(c, visitorWalkInCreate)
+  return c.json(await visitors.registerWalkIn(body), 201)
+})
+
+api.post('/visitors/:id/check-in', async (c) =>
+  c.json(await visitors.checkInVisit(c.req.param('id'))),
+)
+
+api.post('/visitors/:id/check-out', async (c) =>
+  c.json(await visitors.checkOutVisit(c.req.param('id'))),
+)
 
 export const app = new Hono()
 app.route('/api', api)

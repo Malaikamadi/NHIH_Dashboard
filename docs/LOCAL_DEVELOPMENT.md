@@ -130,6 +130,8 @@ Do **not** port-forward this to the public internet.
 
 Still the shared **operator code** (`OPERATOR_CODE` / default local `nhih-ops`). No multi-user login and no change required for Postgres. Unlock on `/desk`; mutating API calls send `X-Operator-Code`.
 
+> **Visitor Register:** All operator visitor endpoints (`GET /api/visitors`, `POST /api/visitors/sync`, `POST /api/visitors/walk-in`, `POST /api/visitors/:id/check-in`, `POST /api/visitors/:id/check-out`) require `PERSISTENCE=postgres` and a **configured non-default `OPERATOR_CODE`** (the default `nhih-ops` is rejected). Only `GET /api/visitors/summary` (aggregate checked-in count) is accessible without authentication. See `.env.example` for the server-side Google Sheets environment variables.
+
 ## 11. Notifications
 
 Not implemented yet (activity `events` feed only). Web Push / notification center are future work.

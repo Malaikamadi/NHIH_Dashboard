@@ -30,13 +30,17 @@ export function postgresActive(): boolean {
   return mode === 'postgres' && postgresConfigured()
 }
 
-function getPool(): pg.Pool {
+export function getPostgresPool(): pg.Pool {
   if (!pool) {
     const connectionString = process.env.DATABASE_URL?.trim()
     if (!connectionString) throw new Error('DATABASE_URL is not set')
     pool = new Pool({ connectionString })
   }
   return pool
+}
+
+function getPool(): pg.Pool {
+  return getPostgresPool()
 }
 
 export async function migratePostgres(): Promise<void> {

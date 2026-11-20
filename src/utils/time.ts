@@ -178,3 +178,26 @@ export function timeAgo(iso: string, now = new Date()): string {
   const days = Math.floor(hours / 24)
   return `${days} Day${days === 1 ? '' : 's'} Ago`
 }
+
+export const FREETOWN_TIME_ZONE = 'Africa/Freetown'
+
+export function formatFreetownTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString('en-GB', {
+    timeZone: FREETOWN_TIME_ZONE,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+}
+
+export function formatFreetownDateTime(iso: string): string {
+  return new Date(iso).toLocaleString('en-GB', {
+    timeZone: FREETOWN_TIME_ZONE,
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+}

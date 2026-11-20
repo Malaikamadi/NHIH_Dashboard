@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { fetchVisitorSummary } from '../api'
 import { ActivitySession } from '../components/ActivityForm'
 import { Avatar, PriorityMark, StatusPill } from '../components/Header'
 import { Icon } from '../components/Icons'
@@ -47,11 +48,36 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
   const [districtFilter, setDistrictFilter] = useState<DistrictId | null>(null)
   const [dueDay, setDueDay] = useState(() => new Date())
   const [dismissedSoon, setDismissedSoon] = useState<string[]>([])
+  const [visitorCount, setVisitorCount] = useState<number | null>(null)
+  const [visitorUnavailable, setVisitorUnavailable] = useState(false)
   const detailRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 1000)
     return () => window.clearInterval(id)
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    const loadVisitors = async () => {
+      try {
+        const summary = await fetchVisitorSummary()
+        if (cancelled) return
+        setVisitorCount(summary.checkedInCount)
+        setVisitorUnavailable(false)
+      } catch {
+        if (cancelled) return
+        setVisitorUnavailable(true)
+      }
+    }
+    void loadVisitors()
+    const id = window.setInterval(() => {
+      void loadVisitors()
+    }, 15000)
+    return () => {
+      cancelled = true
+      window.clearInterval(id)
+    }
   }, [])
 
   const metrics = teamMetrics(state, now)
@@ -256,6 +282,25 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
           active={spotlight === 'overdue'}
           onClick={() => openSpotlight('overdue')}
         />
+        <div
+          className={`gcard ${visitorUnavailable ? 'gcard-warn' : visitorCount ? 'gcard-ok' : 'gcard-info'} is-static`}
+          aria-live="polite"
+        >
+          <div>
+            <span>Visitors at the Hub</span>
+            <strong>{visitorUnavailable ? '—' : visitorCount === null ? '…' : visitorCount}</strong>
+            <em>
+              {visitorUnavailable
+                ? 'Visitor count unavailable'
+                : visitorCount === null
+                  ? 'Loading count…'
+                  : 'Checked in now'}
+            </em>
+          </div>
+          <span className="gcard-icon" aria-hidden="true">
+            <Icon name="users" size={22} />
+          </span>
+        </div>
       </div>
 
       <div className="hero-row">

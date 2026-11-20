@@ -9,5 +9,6 @@ dist
 .verify
 /data
 /backups
+/secrets
 .vercel
 .env*.local

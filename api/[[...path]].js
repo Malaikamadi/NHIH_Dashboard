@@ -486,7 +486,7 @@ var require_windows = __commonJS({
     module2.exports = isexe;
     isexe.sync = sync;
     var fs = require("fs");
-    function checkPathExt(path2, options) {
+    function checkPathExt(path3, options) {
       var pathext = options.pathExt !== void 0 ? options.pathExt : process.env.PATHEXT;
       if (!pathext) {
         return true;
@@ -497,25 +497,25 @@ var require_windows = __commonJS({
       }
       for (var i = 0; i < pathext.length; i++) {
         var p = pathext[i].toLowerCase();
-        if (p && path2.substr(-p.length).toLowerCase() === p) {
+        if (p && path3.substr(-p.length).toLowerCase() === p) {
           return true;
         }
       }
       return false;
     }
-    function checkStat(stat, path2, options) {
+    function checkStat(stat, path3, options) {
       if (!stat.isSymbolicLink() && !stat.isFile()) {
         return false;
       }
-      return checkPathExt(path2, options);
+      return checkPathExt(path3, options);
     }
-    function isexe(path2, options, cb) {
-      fs.stat(path2, function(er, stat) {
-        cb(er, er ? false : checkStat(stat, path2, options));
+    function isexe(path3, options, cb) {
+      fs.stat(path3, function(er, stat) {
+        cb(er, er ? false : checkStat(stat, path3, options));
       });
     }
-    function sync(path2, options) {
-      return checkStat(fs.statSync(path2), path2, options);
+    function sync(path3, options) {
+      return checkStat(fs.statSync(path3), path3, options);
     }
   }
 });
@@ -526,13 +526,13 @@ var require_mode = __commonJS({
     module2.exports = isexe;
     isexe.sync = sync;
     var fs = require("fs");
-    function isexe(path2, options, cb) {
-      fs.stat(path2, function(er, stat) {
+    function isexe(path3, options, cb) {
+      fs.stat(path3, function(er, stat) {
         cb(er, er ? false : checkStat(stat, options));
       });
     }
-    function sync(path2, options) {
-      return checkStat(fs.statSync(path2), options);
+    function sync(path3, options) {
+      return checkStat(fs.statSync(path3), options);
     }
     function checkStat(stat, options) {
       return stat.isFile() && checkMode(stat, options);
@@ -565,7 +565,7 @@ var require_isexe = __commonJS({
     }
     module2.exports = isexe;
     isexe.sync = sync;
-    function isexe(path2, options, cb) {
+    function isexe(path3, options, cb) {
       if (typeof options === "function") {
         cb = options;
         options = {};
@@ -575,7 +575,7 @@ var require_isexe = __commonJS({
           throw new TypeError("callback not provided");
         }
         return new Promise(function(resolve, reject) {
-          isexe(path2, options || {}, function(er, is) {
+          isexe(path3, options || {}, function(er, is) {
             if (er) {
               reject(er);
             } else {
@@ -584,7 +584,7 @@ var require_isexe = __commonJS({
           });
         });
       }
-      core(path2, options || {}, function(er, is) {
+      core(path3, options || {}, function(er, is) {
         if (er) {
           if (er.code === "EACCES" || options && options.ignoreErrors) {
             er = null;
@@ -594,9 +594,9 @@ var require_isexe = __commonJS({
         cb(er, is);
       });
     }
-    function sync(path2, options) {
+    function sync(path3, options) {
       try {
-        return core.sync(path2, options || {});
+        return core.sync(path3, options || {});
       } catch (er) {
         if (options && options.ignoreErrors || er.code === "EACCES") {
           return false;
@@ -612,7 +612,7 @@ var require_isexe = __commonJS({
 var require_which = __commonJS({
   "node_modules/which/which.js"(exports2, module2) {
     var isWindows = process.platform === "win32" || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys";
-    var path2 = require("path");
+    var path3 = require("path");
     var COLON = isWindows ? ";" : ":";
     var isexe = require_isexe();
     var getNotFoundError = (cmd) => Object.assign(new Error(`not found: ${cmd}`), { code: "ENOENT" });
@@ -650,7 +650,7 @@ var require_which = __commonJS({
           return opt.all && found.length ? resolve(found) : reject(getNotFoundError(cmd));
         const ppRaw = pathEnv[i];
         const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
-        const pCmd = path2.join(pathPart, cmd);
+        const pCmd = path3.join(pathPart, cmd);
         const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
         resolve(subStep(p, i, 0));
       });
@@ -677,7 +677,7 @@ var require_which = __commonJS({
       for (let i = 0; i < pathEnv.length; i++) {
         const ppRaw = pathEnv[i];
         const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
-        const pCmd = path2.join(pathPart, cmd);
+        const pCmd = path3.join(pathPart, cmd);
         const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
         for (let j = 0; j < pathExt.length; j++) {
           const cur = p + pathExt[j];
@@ -725,7 +725,7 @@ var require_path_key = __commonJS({
 var require_resolveCommand = __commonJS({
   "node_modules/cross-spawn/lib/util/resolveCommand.js"(exports2, module2) {
     "use strict";
-    var path2 = require("path");
+    var path3 = require("path");
     var which = require_which();
     var getPathKey = require_path_key();
     function resolveCommandAttempt(parsed, withoutPathExt) {
@@ -743,7 +743,7 @@ var require_resolveCommand = __commonJS({
       try {
         resolved = which.sync(parsed.command, {
           path: env[getPathKey({ env })],
-          pathExt: withoutPathExt ? path2.delimiter : void 0
+          pathExt: withoutPathExt ? path3.delimiter : void 0
         });
       } catch (e) {
       } finally {
@@ -752,7 +752,7 @@ var require_resolveCommand = __commonJS({
         }
       }
       if (resolved) {
-        resolved = path2.resolve(hasCustomCwd ? parsed.options.cwd : "", resolved);
+        resolved = path3.resolve(hasCustomCwd ? parsed.options.cwd : "", resolved);
       }
       return resolved;
     }
@@ -806,8 +806,8 @@ var require_shebang_command = __commonJS({
       if (!match2) {
         return null;
       }
-      const [path2, argument] = match2[0].replace(/#! ?/, "").split(" ");
-      const binary = path2.split("/").pop();
+      const [path3, argument] = match2[0].replace(/#! ?/, "").split(" ");
+      const binary = path3.split("/").pop();
       if (binary === "env") {
         return argument;
       }
@@ -842,7 +842,7 @@ var require_readShebang = __commonJS({
 var require_parse = __commonJS({
   "node_modules/cross-spawn/lib/parse.js"(exports2, module2) {
     "use strict";
-    var path2 = require("path");
+    var path3 = require("path");
     var resolveCommand = require_resolveCommand();
     var escape = require_escape();
     var readShebang = require_readShebang();
@@ -867,7 +867,7 @@ var require_parse = __commonJS({
       const needsShell = !isExecutableRegExp.test(commandFile);
       if (parsed.options.forceShell || needsShell) {
         const needsDoubleEscapeMetaChars = isCmdShimRegExp.test(commandFile);
-        parsed.command = path2.normalize(parsed.command);
+        parsed.command = path3.normalize(parsed.command);
         parsed.command = escape.command(parsed.command);
         parsed.args = parsed.args.map((arg) => escape.argument(arg, needsDoubleEscapeMetaChars));
         const shellCommand = [parsed.command].concat(parsed.args).join(" ");
@@ -999,7 +999,7 @@ var require_strip_final_newline = __commonJS({
 var require_npm_run_path = __commonJS({
   "node_modules/npm-run-path/index.js"(exports2, module2) {
     "use strict";
-    var path2 = require("path");
+    var path3 = require("path");
     var pathKey = require_path_key();
     var npmRunPath = (options) => {
       options = {
@@ -1009,16 +1009,16 @@ var require_npm_run_path = __commonJS({
         ...options
       };
       let previous;
-      let cwdPath = path2.resolve(options.cwd);
+      let cwdPath = path3.resolve(options.cwd);
       const result = [];
       while (previous !== cwdPath) {
-        result.push(path2.join(cwdPath, "node_modules/.bin"));
+        result.push(path3.join(cwdPath, "node_modules/.bin"));
         previous = cwdPath;
-        cwdPath = path2.resolve(cwdPath, "..");
+        cwdPath = path3.resolve(cwdPath, "..");
       }
-      const execPathDir = path2.resolve(options.cwd, options.execPath, "..");
+      const execPathDir = path3.resolve(options.cwd, options.execPath, "..");
       result.push(execPathDir);
-      return result.concat(options.path).join(path2.delimiter);
+      return result.concat(options.path).join(path3.delimiter);
     };
     module2.exports = npmRunPath;
     module2.exports.default = npmRunPath;
@@ -1028,9 +1028,9 @@ var require_npm_run_path = __commonJS({
         ...options
       };
       const env = { ...options.env };
-      const path3 = pathKey({ env });
-      options.path = env[path3];
-      env[path3] = module2.exports(options);
+      const path4 = pathKey({ env });
+      options.path = env[path4];
+      env[path4] = module2.exports(options);
       return env;
     };
   }
@@ -2212,7 +2212,7 @@ var require_command = __commonJS({
 var require_execa = __commonJS({
   "node_modules/execa/index.js"(exports2, module2) {
     "use strict";
-    var path2 = require("path");
+    var path3 = require("path");
     var childProcess = require("child_process");
     var crossSpawn = require_cross_spawn();
     var stripFinalNewline = require_strip_final_newline();
@@ -2254,7 +2254,7 @@ var require_execa = __commonJS({
       };
       options.env = getEnv(options);
       options.stdio = normalizeStdio(options);
-      if (process.platform === "win32" && path2.basename(file2, ".exe") === "cmd") {
+      if (process.platform === "win32" && path3.basename(file2, ".exe") === "cmd") {
         args.unshift("/q");
       }
       return { file: file2, args, options, parsed };
@@ -2475,9 +2475,9 @@ var require_envpath = __commonJS({
       splitPath: () => splitPath2
     });
     module2.exports = __toCommonJS2(envpath_exports);
-    var import_node_path2 = __toESM2(require("node:path"));
+    var import_node_path3 = __toESM2(require("node:path"));
     function prependPathEntries(pathValue, directories) {
-      const pathParts = pathValue.split(import_node_path2.default.delimiter).filter(Boolean);
+      const pathParts = pathValue.split(import_node_path3.default.delimiter).filter(Boolean);
       const prepended = [];
       for (const directory of directories) {
         if (!pathParts.includes(directory) && !prepended.includes(directory)) {
@@ -2487,10 +2487,10 @@ var require_envpath = __commonJS({
       if (prepended.length === 0) {
         return pathValue;
       }
-      return pathValue === "" || pathValue === import_node_path2.default.delimiter ? `${prepended.join(import_node_path2.default.delimiter)}${pathValue}` : [...prepended, pathValue].join(import_node_path2.default.delimiter);
+      return pathValue === "" || pathValue === import_node_path3.default.delimiter ? `${prepended.join(import_node_path3.default.delimiter)}${pathValue}` : [...prepended, pathValue].join(import_node_path3.default.delimiter);
     }
     function splitPath2(pathValue) {
-      return pathValue.split(import_node_path2.default.delimiter).filter(Boolean);
+      return pathValue.split(import_node_path3.default.delimiter).filter(Boolean);
     }
     function getEnvPath(env = process.env) {
       if (process.platform !== "win32") {
@@ -2605,7 +2605,7 @@ var require_fsutils = __commonJS({
     });
     module2.exports = __toCommonJS2(fsutils_exports);
     var import_promises = require("node:fs/promises");
-    var import_node_path2 = __toESM2(require("node:path"));
+    var import_node_path3 = __toESM2(require("node:path"));
     var import_errutils = require_errutils();
     async function getCanonicalPath(filePath) {
       try {
@@ -2616,14 +2616,14 @@ var require_fsutils = __commonJS({
     }
     function getDirectoriesBetween(parent, child) {
       const directories = [];
-      let current = import_node_path2.default.resolve(child);
-      const resolvedParent = import_node_path2.default.resolve(parent);
+      let current = import_node_path3.default.resolve(child);
+      const resolvedParent = import_node_path3.default.resolve(parent);
       while (true) {
         directories.push(current);
         if (current === resolvedParent) {
           return directories.reverse();
         }
-        const next = import_node_path2.default.dirname(current);
+        const next = import_node_path3.default.dirname(current);
         if (next === current) {
           return [];
         }
@@ -2641,18 +2641,18 @@ var require_fsutils = __commonJS({
       }
     }
     function isNodeScript(filePath) {
-      return [".js", ".cjs", ".mjs"].includes(import_node_path2.default.extname(filePath));
+      return [".js", ".cjs", ".mjs"].includes(import_node_path3.default.extname(filePath));
     }
     function isSubpath(parent, child) {
-      const relativePath = import_node_path2.default.relative(parent, child);
-      return relativePath === "" || relativePath !== "" && !relativePath.startsWith("..") && !import_node_path2.default.isAbsolute(relativePath);
+      const relativePath = import_node_path3.default.relative(parent, child);
+      return relativePath === "" || relativePath !== "" && !relativePath.startsWith("..") && !import_node_path3.default.isAbsolute(relativePath);
     }
     function getCommandBase(command) {
-      const extension = import_node_path2.default.extname(command).toLowerCase();
+      const extension = import_node_path3.default.extname(command).toLowerCase();
       if (process.platform === "win32" && [".cmd", ".exe"].includes(extension)) {
-        return import_node_path2.default.basename(command, extension);
+        return import_node_path3.default.basename(command, extension);
       }
-      return import_node_path2.default.basename(command);
+      return import_node_path3.default.basename(command);
     }
   }
 });
@@ -2699,11 +2699,11 @@ var require_safety = __commonJS({
     });
     module2.exports = __toCommonJS2(safety_exports);
     var import_promises = require("node:fs/promises");
-    var import_node_path2 = __toESM2(require("node:path"));
+    var import_node_path3 = __toESM2(require("node:path"));
     var import_errutils = require_errutils();
     var import_fsutils = require_fsutils();
     async function getSkippedNodeModulesReason(nodeModulesDirectory, parentDirectories) {
-      const parentDirectory = import_node_path2.default.dirname(nodeModulesDirectory);
+      const parentDirectory = import_node_path3.default.dirname(nodeModulesDirectory);
       parentDirectories ??= [parentDirectory];
       for (const directory of parentDirectories) {
         let unsafeParentReason;
@@ -2731,7 +2731,7 @@ var require_safety = __commonJS({
         return unsafeNodeModulesReason;
       }
       return await getSkippedLocalBinDirectoryReason(
-        import_node_path2.default.join(nodeModulesDirectory, ".bin")
+        import_node_path3.default.join(nodeModulesDirectory, ".bin")
       );
     }
     async function getSkippedLocalBinDirectoryReason(localBinDirectory) {
@@ -2777,7 +2777,7 @@ var require_safety = __commonJS({
     async function getUnsafePackageFileReason(packageDirectory, filePath) {
       const directoriesToCheck = (0, import_fsutils.getDirectoriesBetween)(
         packageDirectory,
-        import_node_path2.default.dirname(filePath)
+        import_node_path3.default.dirname(filePath)
       );
       if (directoriesToCheck.length === 0) {
         return `${filePath} resolves outside package`;
@@ -2867,14 +2867,14 @@ var require_lookup = __commonJS({
     });
     module2.exports = __toCommonJS2(lookup_exports);
     var import_promises = require("node:fs/promises");
-    var import_node_path2 = __toESM2(require("node:path"));
+    var import_node_path3 = __toESM2(require("node:path"));
     var import_envpath = require_envpath();
     var import_errutils = require_errutils();
     var import_fsutils = require_fsutils();
     var import_safety = require_safety();
     var cliInvocationCache = /* @__PURE__ */ new Map();
     async function findVercelCli2(options = {}) {
-      const cwd = import_node_path2.default.resolve(options.cwd ?? process.cwd());
+      const cwd = import_node_path3.default.resolve(options.cwd ?? process.cwd());
       const pathValue = options.path ?? (0, import_envpath.getEnvPath)(process.env);
       const resolution = await resolveCachedCliInvocation(cwd, pathValue);
       return resolution.found ? toVercelCliInvocation(resolution) : null;
@@ -2970,8 +2970,8 @@ var require_lookup = __commonJS({
       return null;
     }
     function getPathCommandCandidate(directory, command, cwd) {
-      const candidateDirectory = import_node_path2.default.isAbsolute(directory) ? directory : import_node_path2.default.resolve(cwd, directory);
-      return import_node_path2.default.join(candidateDirectory, command);
+      const candidateDirectory = import_node_path3.default.isAbsolute(directory) ? directory : import_node_path3.default.resolve(cwd, directory);
+      return import_node_path3.default.join(candidateDirectory, command);
     }
     async function canAccessCommandCandidate(candidate, localBinSearch, diagnostics) {
       try {
@@ -3046,12 +3046,12 @@ var require_lookup = __commonJS({
       );
     }
     async function getLocalBinSearch(cwd) {
-      const searchRoot = await (0, import_fsutils.getCanonicalPath)(import_node_path2.default.resolve(cwd));
+      const searchRoot = await (0, import_fsutils.getCanonicalPath)(import_node_path3.default.resolve(cwd));
       const ancestorSearch = await getAncestorDirectorySearch(searchRoot);
       const skippedNodeModules = [];
       const directories = [];
       for (const directory of ancestorSearch.directories) {
-        const nodeModulesDirectory = import_node_path2.default.join(directory, "node_modules");
+        const nodeModulesDirectory = import_node_path3.default.join(directory, "node_modules");
         const parentDirectories = ancestorSearch.stopReason === "project-root-marker" ? (0, import_fsutils.getDirectoriesBetween)(ancestorSearch.stoppedAt, directory) : (0, import_fsutils.getDirectoriesBetween)(directory, searchRoot);
         const skippedReason = await (0, import_safety.getSkippedNodeModulesReason)(
           nodeModulesDirectory,
@@ -3064,7 +3064,7 @@ var require_lookup = __commonJS({
           });
           continue;
         }
-        directories.push(import_node_path2.default.join(nodeModulesDirectory, ".bin"));
+        directories.push(import_node_path3.default.join(nodeModulesDirectory, ".bin"));
       }
       return {
         directories,
@@ -3079,7 +3079,7 @@ var require_lookup = __commonJS({
     }
     async function getAncestorDirectorySearch(cwd) {
       const directories = [];
-      let current = import_node_path2.default.resolve(cwd);
+      let current = import_node_path3.default.resolve(cwd);
       while (true) {
         directories.push(current);
         const marker = await getProjectRootMarker(current);
@@ -3091,7 +3091,7 @@ var require_lookup = __commonJS({
             markerPath: marker.path
           };
         }
-        const parent = import_node_path2.default.dirname(current);
+        const parent = import_node_path3.default.dirname(current);
         if (parent === current) {
           return {
             directories,
@@ -3103,7 +3103,7 @@ var require_lookup = __commonJS({
       }
     }
     async function getProjectRootMarker(directory) {
-      const gitPath = import_node_path2.default.join(directory, ".git");
+      const gitPath = import_node_path3.default.join(directory, ".git");
       try {
         await (0, import_promises.stat)(gitPath);
         return { path: gitPath };
@@ -3112,12 +3112,12 @@ var require_lookup = __commonJS({
       return null;
     }
     async function getLocalBinDirectory(filePath, localBinDirectories) {
-      const resolvedFilePath = import_node_path2.default.resolve(filePath);
+      const resolvedFilePath = import_node_path3.default.resolve(filePath);
       let canonicalFilePath = resolvedFilePath;
       try {
-        canonicalFilePath = import_node_path2.default.join(
-          await (0, import_promises.realpath)(import_node_path2.default.dirname(resolvedFilePath)),
-          import_node_path2.default.basename(resolvedFilePath)
+        canonicalFilePath = import_node_path3.default.join(
+          await (0, import_promises.realpath)(import_node_path3.default.dirname(resolvedFilePath)),
+          import_node_path3.default.basename(resolvedFilePath)
         );
       } catch {
       }
@@ -3126,14 +3126,14 @@ var require_lookup = __commonJS({
           localBinDirectory = await (0, import_promises.realpath)(localBinDirectory);
         } catch {
         }
-        if (canonicalFilePath.startsWith(`${localBinDirectory}${import_node_path2.default.sep}`)) {
+        if (canonicalFilePath.startsWith(`${localBinDirectory}${import_node_path3.default.sep}`)) {
           return localBinDirectory;
         }
       }
       return null;
     }
     async function getNodeModulesBinDirectory(filePath) {
-      const candidateDirectory = import_node_path2.default.resolve(import_node_path2.default.dirname(filePath));
+      const candidateDirectory = import_node_path3.default.resolve(import_node_path3.default.dirname(filePath));
       const directories = [candidateDirectory];
       try {
         const canonicalDirectory = await (0, import_promises.realpath)(candidateDirectory);
@@ -3143,7 +3143,7 @@ var require_lookup = __commonJS({
       } catch {
       }
       for (const directory of directories) {
-        if (import_node_path2.default.basename(directory) === ".bin" && import_node_path2.default.basename(import_node_path2.default.dirname(directory)) === "node_modules") {
+        if (import_node_path3.default.basename(directory) === ".bin" && import_node_path3.default.basename(import_node_path3.default.dirname(directory)) === "node_modules") {
           return directory;
         }
       }
@@ -3161,7 +3161,7 @@ var require_lookup = __commonJS({
       if (!nodeModulesBinDirectory) {
         return null;
       }
-      const nodeModulesDirectory = import_node_path2.default.dirname(nodeModulesBinDirectory);
+      const nodeModulesDirectory = import_node_path3.default.dirname(nodeModulesBinDirectory);
       const skippedReason = await (0, import_safety.getSkippedNodeModulesReason)(nodeModulesDirectory);
       if (skippedReason) {
         return { reason: `local node_modules is ${skippedReason}` };
@@ -3170,8 +3170,8 @@ var require_lookup = __commonJS({
     }
     async function getLocalVercelPackageBin(command, localBinDirectory) {
       const commandBase = (0, import_fsutils.getCommandBase)(command);
-      const nodeModulesDirectory = import_node_path2.default.dirname(localBinDirectory);
-      if (commandBase !== "vercel" || import_node_path2.default.basename(nodeModulesDirectory) !== "node_modules") {
+      const nodeModulesDirectory = import_node_path3.default.dirname(localBinDirectory);
+      if (commandBase !== "vercel" || import_node_path3.default.basename(nodeModulesDirectory) !== "node_modules") {
         return { reason: "not a local vercel bin" };
       }
       try {
@@ -3194,7 +3194,7 @@ var require_lookup = __commonJS({
       }
     }
     async function getLocalVercelPackage(nodeModulesDirectory) {
-      const packageDirectory = import_node_path2.default.join(nodeModulesDirectory, "vercel");
+      const packageDirectory = import_node_path3.default.join(nodeModulesDirectory, "vercel");
       const realNodeModulesDirectory = await (0, import_promises.realpath)(nodeModulesDirectory);
       const realPackageDirectory = await (0, import_promises.realpath)(packageDirectory);
       if (!(0, import_fsutils.isSubpath)(realNodeModulesDirectory, realPackageDirectory)) {
@@ -3218,7 +3218,7 @@ var require_lookup = __commonJS({
       };
     }
     async function readLocalVercelPackageJson(realPackageDirectory) {
-      const packageJsonPath = import_node_path2.default.join(realPackageDirectory, "package.json");
+      const packageJsonPath = import_node_path3.default.join(realPackageDirectory, "package.json");
       const realPackageJsonPath = await (0, import_promises.realpath)(packageJsonPath);
       if (!(0, import_fsutils.isSubpath)(realPackageDirectory, realPackageJsonPath)) {
         return { reason: "local vercel package.json resolves outside package" };
@@ -3248,7 +3248,7 @@ var require_lookup = __commonJS({
       if (!binTarget) {
         return { reason: "local vercel package does not declare bin.vercel" };
       }
-      const declaredBinPath = import_node_path2.default.resolve(realPackageDirectory, binTarget);
+      const declaredBinPath = import_node_path3.default.resolve(realPackageDirectory, binTarget);
       const realDeclaredBinPath = await (0, import_promises.realpath)(declaredBinPath);
       if (!(0, import_fsutils.isSubpath)(realPackageDirectory, realDeclaredBinPath)) {
         return { reason: "local vercel package bin resolves outside package" };
@@ -3329,20 +3329,20 @@ var require_exec = __commonJS({
       execVercelCli: () => execVercelCli2
     });
     module2.exports = __toCommonJS2(exec_exports);
-    var import_node_path2 = __toESM2(require("node:path"));
+    var import_node_path3 = __toESM2(require("node:path"));
     var import_execa = __toESM2(require_execa());
     var import_envpath = require_envpath();
-    var import_errors5 = require_errors();
+    var import_errors8 = require_errors();
     var import_lookup = require_lookup();
     async function execVercelCli2(args, options = {}) {
-      const cwd = import_node_path2.default.resolve(options.cwd ?? process.cwd());
-      await (0, import_errors5.assertValidCwd)(cwd);
+      const cwd = import_node_path3.default.resolve(options.cwd ?? process.cwd());
+      await (0, import_errors8.assertValidCwd)(cwd);
       const env = mergeExecEnv(options.env);
       const pathValue = (0, import_envpath.getEnvPath)(env);
       try {
         return await execResolvedVercelCli(args, options, cwd, env, pathValue);
       } catch (error61) {
-        if (error61 instanceof import_errors5.VercelCliError && error61.code === "VERCEL_CLI_NOT_FOUND") {
+        if (error61 instanceof import_errors8.VercelCliError && error61.code === "VERCEL_CLI_NOT_FOUND") {
           (0, import_lookup.clearCachedCliInvocation)(cwd, pathValue);
           return await execResolvedVercelCli(args, options, cwd, env, pathValue);
         }
@@ -3373,15 +3373,15 @@ var require_exec = __commonJS({
         );
         return { stdout, stderr, invocation };
       } catch (error61) {
-        throw (0, import_errors5.toVercelCliError)(invocation, error61);
+        throw (0, import_errors8.toVercelCliError)(invocation, error61);
       }
     }
     async function resolveInvocationOrThrow(cwd, pathValue) {
       const resolution = await (0, import_lookup.resolveCachedCliInvocation)(cwd, pathValue);
       if (!resolution.found) {
-        throw new import_errors5.VercelCliError({
+        throw new import_errors8.VercelCliError({
           code: "VERCEL_CLI_NOT_FOUND",
-          message: (0, import_errors5.getCliNotFoundMessage)(resolution.diagnostics)
+          message: (0, import_errors8.getCliNotFoundMessage)(resolution.diagnostics)
         });
       }
       return (0, import_lookup.toVercelCliInvocation)(resolution);
@@ -3396,7 +3396,7 @@ var require_exec = __commonJS({
       const localPath = await prependLocalBinsToPath(cwd, (0, import_envpath.getEnvPath)(env));
       return (0, import_envpath.setEnvPath)(
         env,
-        (0, import_envpath.prependPathEntries)(localPath, [import_node_path2.default.dirname(process.execPath)])
+        (0, import_envpath.prependPathEntries)(localPath, [import_node_path3.default.dirname(process.execPath)])
       );
     }
     async function prependLocalBinsToPath(cwd, pathValue = "") {
@@ -3431,13 +3431,13 @@ var require_dist = __commonJS({
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
     var src_exports = {};
     __export2(src_exports, {
-      VercelCliError: () => import_errors5.VercelCliError,
+      VercelCliError: () => import_errors8.VercelCliError,
       clearVercelCliLookupCache: () => import_lookup.clearVercelCliLookupCache,
       execVercelCli: () => import_exec.execVercelCli,
       findVercelCli: () => import_lookup.findVercelCli
     });
     module2.exports = __toCommonJS2(src_exports);
-    var import_errors5 = require_errors();
+    var import_errors8 = require_errors();
     var import_exec = require_exec();
     var import_lookup = require_lookup();
   }
@@ -3465,7 +3465,7 @@ var require_dist2 = __commonJS({
     };
     var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__getProtoOf2(mod)) : {}, __copyProps2(isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target, mod));
     var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
-    var require_lib2 = __commonJS2({ "../../node_modules/.pnpm/os-paths@4.4.0/node_modules/os-paths/src/lib/index.js"(exports3, module22) {
+    var require_lib4 = __commonJS2({ "../../node_modules/.pnpm/os-paths@4.4.0/node_modules/os-paths/src/lib/index.js"(exports3, module22) {
       "use strict";
       var os = require("os"), paths = require("path"), isWinOS = /^win/i.test(process.platform);
       function normalize_path(path3) {
@@ -3493,7 +3493,7 @@ var require_dist2 = __commonJS({
     } });
     var require_lib22 = __commonJS2({ "../../node_modules/.pnpm/xdg-portable@7.3.0/node_modules/xdg-portable/src/lib/index.js"(exports3, module22) {
       "use strict";
-      var path3 = require("path"), osPaths = require_lib2(), linux = () => {
+      var path3 = require("path"), osPaths = require_lib4(), linux = () => {
         let object22 = {};
         return object22.cache = () => process.env.XDG_CACHE_HOME || path3.join(osPaths.home() || osPaths.temp(), ".cache"), object22.config = () => process.env.XDG_CONFIG_HOME || path3.join(osPaths.home() || osPaths.temp(), ".config"), object22.data = () => process.env.XDG_DATA_HOME || path3.join(osPaths.home() || osPaths.temp(), ".local", "share"), object22.runtime = () => process.env.XDG_RUNTIME_DIR || void 0, object22.state = () => process.env.XDG_STATE_HOME || path3.join(osPaths.home() || osPaths.temp(), ".local", "state"), object22;
       }, macos = () => {
@@ -5303,14 +5303,14 @@ var require_dist2 = __commonJS({
     var credStorageSchema2 = _enum3(CRED_STORAGE_CONFIG_VALUES, { error: (issue22) => formatCredStorageError(issue22.input) }).optional();
     var globalConfigSchema2 = globalConfigSchema.extend({ credStorage: credStorageSchema2, telemetry: telemetryConfigSchema2.optional(), guidance: guidanceConfigSchema2.optional(), updates: updatesConfigSchema2.optional() }).passthrough();
     var authConfigSchema2 = authConfigSchema.passthrough();
-    var import_node_fs2 = __toESM2(require("fs"));
-    var import_node_path2 = __toESM2(require("path"));
-    var import_node_fs3 = __toESM2(require("fs"));
+    var import_node_fs22 = __toESM2(require("fs"));
+    var import_node_path22 = __toESM2(require("path"));
+    var import_node_fs4 = __toESM2(require("fs"));
     var import_node_path3 = __toESM2(require("path"));
     var import_node_os = require("os");
     function isReadableDirectory(targetPath) {
       try {
-        return import_node_fs3.default.lstatSync(targetPath).isDirectory();
+        return import_node_fs4.default.lstatSync(targetPath).isDirectory();
       } catch {
         return false;
       }
@@ -5365,18 +5365,18 @@ var require_dist2 = __commonJS({
       return authConfig;
     }
     function readJsonFileSync(filePath) {
-      let content = import_node_fs2.default.readFileSync(filePath, "utf8").replace(/^\uFEFF/, "");
+      let content = import_node_fs22.default.readFileSync(filePath, "utf8").replace(/^\uFEFF/, "");
       return JSON.parse(content);
     }
     function writeJsonFileSync(filePath, value, options = {}) {
-      let directory = import_node_path2.default.dirname(filePath), tempFilePath = import_node_path2.default.join(directory, `.${import_node_path2.default.basename(filePath)}.${process.pid}.${Date.now()}.tmp`), content = `${JSON.stringify(value, null, options.indent ?? 2)}
+      let directory = import_node_path22.default.dirname(filePath), tempFilePath = import_node_path22.default.join(directory, `.${import_node_path22.default.basename(filePath)}.${process.pid}.${Date.now()}.tmp`), content = `${JSON.stringify(value, null, options.indent ?? 2)}
 `;
-      import_node_fs2.default.mkdirSync(directory, { recursive: true });
+      import_node_fs22.default.mkdirSync(directory, { recursive: true });
       try {
-        import_node_fs2.default.writeFileSync(tempFilePath, content, { encoding: "utf8", mode: options.mode }), import_node_fs2.default.renameSync(tempFilePath, filePath);
+        import_node_fs22.default.writeFileSync(tempFilePath, content, { encoding: "utf8", mode: options.mode }), import_node_fs22.default.renameSync(tempFilePath, filePath);
       } catch (error61) {
         try {
-          import_node_fs2.default.rmSync(tempFilePath, { force: true });
+          import_node_fs22.default.rmSync(tempFilePath, { force: true });
         } catch {
         }
         throw error61;
@@ -5422,7 +5422,7 @@ var require_dist2 = __commonJS({
       writeAuthConfigFile(getAuthConfigFilePath(configDir), authConfig);
     }
     function deleteAuthConfigFile(configPath) {
-      import_node_fs2.default.rmSync(configPath, { force: true });
+      import_node_fs22.default.rmSync(configPath, { force: true });
     }
     function deleteAuthConfig(configDir) {
       deleteAuthConfigFile(getAuthConfigFilePath(configDir));
@@ -5731,7 +5731,7 @@ var require_token_util = __commonJS({
       saveToken: () => saveToken
     });
     module2.exports = __toCommonJS2(token_util_exports);
-    var path2 = __toESM2(require("path"));
+    var path3 = __toESM2(require("path"));
     var fs = __toESM2(require("fs"));
     var import_cli_exec = require_dist();
     var import_cli_config = require_dist2();
@@ -5856,7 +5856,7 @@ ${stderr}`.trim();
           "Unable to find project root directory. Have you linked your project with `vc link?`"
         );
       }
-      const prjPath = path2.join(dir, ".vercel", "project.json");
+      const prjPath = path3.join(dir, ".vercel", "project.json");
       if (!fs.existsSync(prjPath)) {
         throw new import_token_error.VercelOidcTokenError(
           "project.json not found, have you linked your project with `vc link?`"
@@ -5877,9 +5877,9 @@ ${stderr}`.trim();
           "Unable to find user data directory. Please reach out to Vercel support."
         );
       }
-      const tokenPath = path2.join(dir, "com.vercel.token", `${projectId}.json`);
+      const tokenPath = path3.join(dir, "com.vercel.token", `${projectId}.json`);
       const tokenJson = JSON.stringify(token);
-      fs.mkdirSync(path2.dirname(tokenPath), { mode: 504, recursive: true });
+      fs.mkdirSync(path3.dirname(tokenPath), { mode: 504, recursive: true });
       fs.writeFileSync(tokenPath, tokenJson);
       fs.chmodSync(tokenPath, 432);
       return;
@@ -5891,7 +5891,7 @@ ${stderr}`.trim();
           "Unable to find user data directory. Please reach out to Vercel support."
         );
       }
-      const tokenPath = path2.join(dir, "com.vercel.token", `${projectId}.json`);
+      const tokenPath = path3.join(dir, "com.vercel.token", `${projectId}.json`);
       if (!fs.existsSync(tokenPath)) {
         return null;
       }
@@ -6398,8 +6398,8 @@ var require_timing_safe_equal = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var node_crypto_1 = require("node:crypto");
-    var timingSafeEqual = node_crypto_1.timingSafeEqual;
-    exports2.default = timingSafeEqual;
+    var timingSafeEqual2 = node_crypto_1.timingSafeEqual;
+    exports2.default = timingSafeEqual2;
   }
 });
 
@@ -6606,15 +6606,15 @@ var require_invalid_key_input = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.withAlg = withAlg;
-    function message(msg, actual, ...types) {
-      types = types.filter(Boolean);
-      if (types.length > 2) {
-        const last = types.pop();
-        msg += `one of type ${types.join(", ")}, or ${last}.`;
-      } else if (types.length === 2) {
-        msg += `one of type ${types[0]} or ${types[1]}.`;
+    function message(msg, actual, ...types2) {
+      types2 = types2.filter(Boolean);
+      if (types2.length > 2) {
+        const last = types2.pop();
+        msg += `one of type ${types2.join(", ")}, or ${last}.`;
+      } else if (types2.length === 2) {
+        msg += `one of type ${types2[0]} or ${types2[1]}.`;
       } else {
-        msg += `of type ${types[0]}.`;
+        msg += `of type ${types2[0]}.`;
       }
       if (actual == null) {
         msg += ` Received ${actual}`;
@@ -6627,11 +6627,11 @@ var require_invalid_key_input = __commonJS({
       }
       return msg;
     }
-    exports2.default = (actual, ...types) => {
-      return message("Key must be ", actual, ...types);
+    exports2.default = (actual, ...types2) => {
+      return message("Key must be ", actual, ...types2);
     };
-    function withAlg(alg, actual, ...types) {
-      return message(`Key for the ${alg} algorithm must be `, actual, ...types);
+    function withAlg(alg, actual, ...types2) {
+      return message(`Key for the ${alg} algorithm must be `, actual, ...types2);
     }
   }
 });
@@ -6659,10 +6659,10 @@ var require_is_key_like = __commonJS({
     var webcrypto_js_1 = require_webcrypto();
     var is_key_object_js_1 = require_is_key_object();
     exports2.default = (key) => (0, is_key_object_js_1.default)(key) || (0, webcrypto_js_1.isCryptoKey)(key);
-    var types = ["KeyObject"];
-    exports2.types = types;
+    var types2 = ["KeyObject"];
+    exports2.types = types2;
     if (globalThis.CryptoKey || webcrypto_js_1.default?.CryptoKey) {
-      types.push("CryptoKey");
+      types2.push("CryptoKey");
     }
   }
 });
@@ -11715,14 +11715,14 @@ var require_util = __commonJS({
         }
         const port = url2.port != null ? url2.port : url2.protocol === "https:" ? 443 : 80;
         let origin = url2.origin != null ? url2.origin : `${url2.protocol || ""}//${url2.hostname || ""}:${port}`;
-        let path2 = url2.path != null ? url2.path : `${url2.pathname || ""}${url2.search || ""}`;
+        let path3 = url2.path != null ? url2.path : `${url2.pathname || ""}${url2.search || ""}`;
         if (origin[origin.length - 1] === "/") {
           origin = origin.slice(0, origin.length - 1);
         }
-        if (path2 && path2[0] !== "/") {
-          path2 = `/${path2}`;
+        if (path3 && path3[0] !== "/") {
+          path3 = `/${path3}`;
         }
-        return new URL(`${origin}${path2}`);
+        return new URL(`${origin}${path3}`);
       }
       if (!isHttpOrHttpsPrefixed(url2.origin || url2.protocol)) {
         throw new InvalidArgumentError("Invalid URL protocol: the URL must start with `http:` or `https:`.");
@@ -12173,39 +12173,39 @@ var require_diagnostics = __commonJS({
       });
       diagnosticsChannel.channel("undici:client:sendHeaders").subscribe((evt) => {
         const {
-          request: { method, path: path2, origin }
+          request: { method, path: path3, origin }
         } = evt;
-        debuglog("sending request to %s %s/%s", method, origin, path2);
+        debuglog("sending request to %s %s/%s", method, origin, path3);
       });
       diagnosticsChannel.channel("undici:request:headers").subscribe((evt) => {
         const {
-          request: { method, path: path2, origin },
+          request: { method, path: path3, origin },
           response: { statusCode }
         } = evt;
         debuglog(
           "received response to %s %s/%s - HTTP %d",
           method,
           origin,
-          path2,
+          path3,
           statusCode
         );
       });
       diagnosticsChannel.channel("undici:request:trailers").subscribe((evt) => {
         const {
-          request: { method, path: path2, origin }
+          request: { method, path: path3, origin }
         } = evt;
-        debuglog("trailers received from %s %s/%s", method, origin, path2);
+        debuglog("trailers received from %s %s/%s", method, origin, path3);
       });
       diagnosticsChannel.channel("undici:request:error").subscribe((evt) => {
         const {
-          request: { method, path: path2, origin },
+          request: { method, path: path3, origin },
           error: error61
         } = evt;
         debuglog(
           "request to %s %s/%s errored - %s",
           method,
           origin,
-          path2,
+          path3,
           error61.message
         );
       });
@@ -12254,9 +12254,9 @@ var require_diagnostics = __commonJS({
         });
         diagnosticsChannel.channel("undici:client:sendHeaders").subscribe((evt) => {
           const {
-            request: { method, path: path2, origin }
+            request: { method, path: path3, origin }
           } = evt;
-          debuglog("sending request to %s %s/%s", method, origin, path2);
+          debuglog("sending request to %s %s/%s", method, origin, path3);
         });
       }
       diagnosticsChannel.channel("undici:websocket:open").subscribe((evt) => {
@@ -12319,7 +12319,7 @@ var require_request = __commonJS({
     var kHandler = Symbol("handler");
     var Request2 = class {
       constructor(origin, {
-        path: path2,
+        path: path3,
         method,
         body,
         headers,
@@ -12334,11 +12334,11 @@ var require_request = __commonJS({
         expectContinue,
         servername
       }, handler2) {
-        if (typeof path2 !== "string") {
+        if (typeof path3 !== "string") {
           throw new InvalidArgumentError("path must be a string");
-        } else if (path2[0] !== "/" && !(path2.startsWith("http://") || path2.startsWith("https://")) && method !== "CONNECT") {
+        } else if (path3[0] !== "/" && !(path3.startsWith("http://") || path3.startsWith("https://")) && method !== "CONNECT") {
           throw new InvalidArgumentError("path must be an absolute URL or start with a slash");
-        } else if (invalidPathRegex.test(path2)) {
+        } else if (invalidPathRegex.test(path3)) {
           throw new InvalidArgumentError("invalid request path");
         }
         if (typeof method !== "string") {
@@ -12404,7 +12404,7 @@ var require_request = __commonJS({
         this.completed = false;
         this.aborted = false;
         this.upgrade = upgrade || null;
-        this.path = query ? buildURL(path2, query) : path2;
+        this.path = query ? buildURL(path3, query) : path3;
         this.origin = origin;
         this.idempotent = idempotent == null ? method === "HEAD" || method === "GET" : idempotent;
         this.blocking = blocking == null ? false : blocking;
@@ -14234,7 +14234,7 @@ var require_data_url = __commonJS({
 var require_webidl = __commonJS({
   "node_modules/undici/lib/web/fetch/webidl.js"(exports2, module2) {
     "use strict";
-    var { types, inspect } = require("node:util");
+    var { types: types2, inspect } = require("node:util");
     var { markAsUncloneable } = require("node:worker_threads");
     var { toUSVString } = require_util();
     var webidl = {};
@@ -14424,7 +14424,7 @@ var require_webidl = __commonJS({
           });
         }
         const result = {};
-        if (!types.isProxy(O)) {
+        if (!types2.isProxy(O)) {
           const keys2 = [...Object.getOwnPropertyNames(O), ...Object.getOwnPropertySymbols(O)];
           for (const key of keys2) {
             const typedKey = keyConverter(key, prefix, argument);
@@ -14553,14 +14553,14 @@ var require_webidl = __commonJS({
       return x;
     };
     webidl.converters.ArrayBuffer = function(V, prefix, argument, opts) {
-      if (webidl.util.Type(V) !== "Object" || !types.isAnyArrayBuffer(V)) {
+      if (webidl.util.Type(V) !== "Object" || !types2.isAnyArrayBuffer(V)) {
         throw webidl.errors.conversionFailed({
           prefix,
           argument: `${argument} ("${webidl.util.Stringify(V)}")`,
           types: ["ArrayBuffer"]
         });
       }
-      if (opts?.allowShared === false && types.isSharedArrayBuffer(V)) {
+      if (opts?.allowShared === false && types2.isSharedArrayBuffer(V)) {
         throw webidl.errors.exception({
           header: "ArrayBuffer",
           message: "SharedArrayBuffer is not allowed."
@@ -14575,14 +14575,14 @@ var require_webidl = __commonJS({
       return V;
     };
     webidl.converters.TypedArray = function(V, T, prefix, name, opts) {
-      if (webidl.util.Type(V) !== "Object" || !types.isTypedArray(V) || V.constructor.name !== T.name) {
+      if (webidl.util.Type(V) !== "Object" || !types2.isTypedArray(V) || V.constructor.name !== T.name) {
         throw webidl.errors.conversionFailed({
           prefix,
           argument: `${name} ("${webidl.util.Stringify(V)}")`,
           types: [T.name]
         });
       }
-      if (opts?.allowShared === false && types.isSharedArrayBuffer(V.buffer)) {
+      if (opts?.allowShared === false && types2.isSharedArrayBuffer(V.buffer)) {
         throw webidl.errors.exception({
           header: "ArrayBuffer",
           message: "SharedArrayBuffer is not allowed."
@@ -14597,13 +14597,13 @@ var require_webidl = __commonJS({
       return V;
     };
     webidl.converters.DataView = function(V, prefix, name, opts) {
-      if (webidl.util.Type(V) !== "Object" || !types.isDataView(V)) {
+      if (webidl.util.Type(V) !== "Object" || !types2.isDataView(V)) {
         throw webidl.errors.exception({
           header: prefix,
           message: `${name} is not a DataView.`
         });
       }
-      if (opts?.allowShared === false && types.isSharedArrayBuffer(V.buffer)) {
+      if (opts?.allowShared === false && types2.isSharedArrayBuffer(V.buffer)) {
         throw webidl.errors.exception({
           header: "ArrayBuffer",
           message: "SharedArrayBuffer is not allowed."
@@ -14618,13 +14618,13 @@ var require_webidl = __commonJS({
       return V;
     };
     webidl.converters.BufferSource = function(V, prefix, name, opts) {
-      if (types.isAnyArrayBuffer(V)) {
+      if (types2.isAnyArrayBuffer(V)) {
         return webidl.converters.ArrayBuffer(V, prefix, name, { ...opts, allowShared: false });
       }
-      if (types.isTypedArray(V)) {
+      if (types2.isTypedArray(V)) {
         return webidl.converters.TypedArray(V, V.constructor, prefix, name, { ...opts, allowShared: false });
       }
-      if (types.isDataView(V)) {
+      if (types2.isDataView(V)) {
         return webidl.converters.DataView(V, prefix, name, { ...opts, allowShared: false });
       }
       throw webidl.errors.conversionFailed({
@@ -17033,7 +17033,7 @@ var require_client_h1 = __commonJS({
       return method !== "GET" && method !== "HEAD" && method !== "OPTIONS" && method !== "TRACE" && method !== "CONNECT";
     }
     function writeH1(client, request) {
-      const { method, path: path2, host, upgrade, blocking, reset } = request;
+      const { method, path: path3, host, upgrade, blocking, reset } = request;
       let { body, headers, contentLength } = request;
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH" || method === "QUERY" || method === "PROPFIND" || method === "PROPPATCH";
       if (util.isFormDataLike(body)) {
@@ -17108,7 +17108,7 @@ var require_client_h1 = __commonJS({
       if (blocking) {
         socket[kBlocking] = true;
       }
-      let header = `${method} ${path2} HTTP/1.1\r
+      let header = `${method} ${path3} HTTP/1.1\r
 `;
       if (typeof host === "string") {
         header += `host: ${host}\r
@@ -17634,7 +17634,7 @@ var require_client_h2 = __commonJS({
     }
     function writeH2(client, request) {
       const session = client[kHTTP2Session];
-      const { method, path: path2, host, upgrade, expectContinue, signal, headers: reqHeaders } = request;
+      const { method, path: path3, host, upgrade, expectContinue, signal, headers: reqHeaders } = request;
       let { body } = request;
       if (upgrade) {
         util.errorRequest(client, request, new Error("Upgrade not supported for H2"));
@@ -17701,7 +17701,7 @@ var require_client_h2 = __commonJS({
         });
         return true;
       }
-      headers[HTTP2_HEADER_PATH] = path2;
+      headers[HTTP2_HEADER_PATH] = path3;
       headers[HTTP2_HEADER_SCHEME] = "https";
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH";
       if (body && typeof body.read === "function") {
@@ -18054,9 +18054,9 @@ var require_redirect_handler = __commonJS({
           return this.handler.onHeaders(statusCode, headers, resume, statusText);
         }
         const { origin, pathname, search } = util.parseURL(new URL(this.location, this.opts.origin && new URL(this.opts.path, this.opts.origin)));
-        const path2 = search ? `${pathname}${search}` : pathname;
+        const path3 = search ? `${pathname}${search}` : pathname;
         this.opts.headers = cleanRequestHeaders(this.opts.headers, statusCode === 303, this.opts.origin !== origin);
-        this.opts.path = path2;
+        this.opts.path = path3;
         this.opts.origin = origin;
         this.opts.maxRedirections = 0;
         this.opts.query = null;
@@ -18222,7 +18222,7 @@ var require_client = __commonJS({
     function getPipelining(client) {
       return client[kPipelining] ?? client[kHTTPContext]?.defaultPipelining ?? 1;
     }
-    var Client = class extends DispatcherBase {
+    var Client2 = class extends DispatcherBase {
       /**
        *
        * @param {string|URL} url
@@ -18651,7 +18651,7 @@ var require_client = __commonJS({
         }
       }
     }
-    module2.exports = Client;
+    module2.exports = Client2;
   }
 });
 
@@ -18718,8 +18718,8 @@ var require_pool_stats = __commonJS({
     var { kFree, kConnected, kPending, kQueued, kRunning, kSize } = require_symbols();
     var kPool = Symbol("pool");
     var PoolStats = class {
-      constructor(pool) {
-        this[kPool] = pool;
+      constructor(pool2) {
+        this[kPool] = pool2;
       }
       get connected() {
         return this[kPool][kConnected];
@@ -18770,35 +18770,35 @@ var require_pool_base = __commonJS({
         this[kQueue] = new FixedQueue();
         this[kClients] = [];
         this[kQueued] = 0;
-        const pool = this;
+        const pool2 = this;
         this[kOnDrain] = function onDrain(origin, targets) {
-          const queue = pool[kQueue];
+          const queue = pool2[kQueue];
           let needDrain = false;
           while (!needDrain) {
             const item = queue.shift();
             if (!item) {
               break;
             }
-            pool[kQueued]--;
+            pool2[kQueued]--;
             needDrain = !this.dispatch(item.opts, item.handler);
           }
           this[kNeedDrain] = needDrain;
-          if (!this[kNeedDrain] && pool[kNeedDrain]) {
-            pool[kNeedDrain] = false;
-            pool.emit("drain", origin, [pool, ...targets]);
+          if (!this[kNeedDrain] && pool2[kNeedDrain]) {
+            pool2[kNeedDrain] = false;
+            pool2.emit("drain", origin, [pool2, ...targets]);
           }
-          if (pool[kClosedResolve] && queue.isEmpty()) {
-            Promise.all(pool[kClients].map((c) => c.close())).then(pool[kClosedResolve]);
+          if (pool2[kClosedResolve] && queue.isEmpty()) {
+            Promise.all(pool2[kClients].map((c) => c.close())).then(pool2[kClosedResolve]);
           }
         };
         this[kOnConnect] = (origin, targets) => {
-          pool.emit("connect", origin, [pool, ...targets]);
+          pool2.emit("connect", origin, [pool2, ...targets]);
         };
         this[kOnDisconnect] = (origin, targets, err) => {
-          pool.emit("disconnect", origin, [pool, ...targets], err);
+          pool2.emit("disconnect", origin, [pool2, ...targets], err);
         };
         this[kOnConnectionError] = (origin, targets, err) => {
-          pool.emit("connectionError", origin, [pool, ...targets], err);
+          pool2.emit("connectionError", origin, [pool2, ...targets], err);
         };
         this[kStats] = new PoolStats(this);
       }
@@ -18910,7 +18910,7 @@ var require_pool = __commonJS({
       kAddClient,
       kGetDispatcher
     } = require_pool_base();
-    var Client = require_client();
+    var Client2 = require_client();
     var {
       InvalidArgumentError
     } = require_errors3();
@@ -18921,9 +18921,9 @@ var require_pool = __commonJS({
     var kConnections = Symbol("connections");
     var kFactory = Symbol("factory");
     function defaultFactory(origin, opts) {
-      return new Client(origin, opts);
+      return new Client2(origin, opts);
     }
-    var Pool = class extends PoolBase {
+    var Pool3 = class extends PoolBase {
       constructor(origin, {
         connections,
         factory = defaultFactory,
@@ -18986,7 +18986,7 @@ var require_pool = __commonJS({
         }
       }
     };
-    module2.exports = Pool;
+    module2.exports = Pool3;
   }
 });
 
@@ -19006,7 +19006,7 @@ var require_balanced_pool = __commonJS({
       kRemoveClient,
       kGetDispatcher
     } = require_pool_base();
-    var Pool = require_pool();
+    var Pool3 = require_pool();
     var { kUrl, kInterceptors } = require_symbols();
     var { parseOrigin } = require_util();
     var kFactory = Symbol("factory");
@@ -19027,7 +19027,7 @@ var require_balanced_pool = __commonJS({
       return a;
     }
     function defaultFactory(origin, opts) {
-      return new Pool(origin, opts);
+      return new Pool3(origin, opts);
     }
     var BalancedPool = class extends PoolBase {
       constructor(upstreams = [], { factory = defaultFactory, ...opts } = {}) {
@@ -19052,22 +19052,22 @@ var require_balanced_pool = __commonJS({
       }
       addUpstream(upstream) {
         const upstreamOrigin = parseOrigin(upstream).origin;
-        if (this[kClients].find((pool2) => pool2[kUrl].origin === upstreamOrigin && pool2.closed !== true && pool2.destroyed !== true)) {
+        if (this[kClients].find((pool3) => pool3[kUrl].origin === upstreamOrigin && pool3.closed !== true && pool3.destroyed !== true)) {
           return this;
         }
-        const pool = this[kFactory](upstreamOrigin, Object.assign({}, this[kOptions]));
-        this[kAddClient](pool);
-        pool.on("connect", () => {
-          pool[kWeight] = Math.min(this[kMaxWeightPerServer], pool[kWeight] + this[kErrorPenalty]);
+        const pool2 = this[kFactory](upstreamOrigin, Object.assign({}, this[kOptions]));
+        this[kAddClient](pool2);
+        pool2.on("connect", () => {
+          pool2[kWeight] = Math.min(this[kMaxWeightPerServer], pool2[kWeight] + this[kErrorPenalty]);
         });
-        pool.on("connectionError", () => {
-          pool[kWeight] = Math.max(1, pool[kWeight] - this[kErrorPenalty]);
+        pool2.on("connectionError", () => {
+          pool2[kWeight] = Math.max(1, pool2[kWeight] - this[kErrorPenalty]);
           this._updateBalancedPoolStats();
         });
-        pool.on("disconnect", (...args) => {
+        pool2.on("disconnect", (...args) => {
           const err = args[2];
           if (err && err.code === "UND_ERR_SOCKET") {
-            pool[kWeight] = Math.max(1, pool[kWeight] - this[kErrorPenalty]);
+            pool2[kWeight] = Math.max(1, pool2[kWeight] - this[kErrorPenalty]);
             this._updateBalancedPoolStats();
           }
         });
@@ -19086,9 +19086,9 @@ var require_balanced_pool = __commonJS({
       }
       removeUpstream(upstream) {
         const upstreamOrigin = parseOrigin(upstream).origin;
-        const pool = this[kClients].find((pool2) => pool2[kUrl].origin === upstreamOrigin && pool2.closed !== true && pool2.destroyed !== true);
-        if (pool) {
-          this[kRemoveClient](pool);
+        const pool2 = this[kClients].find((pool3) => pool3[kUrl].origin === upstreamOrigin && pool3.closed !== true && pool3.destroyed !== true);
+        if (pool2) {
+          this[kRemoveClient](pool2);
         }
         return this;
       }
@@ -19103,16 +19103,16 @@ var require_balanced_pool = __commonJS({
         if (!dispatcher) {
           return;
         }
-        const allClientsBusy = this[kClients].map((pool) => pool[kNeedDrain]).reduce((a, b) => a && b, true);
+        const allClientsBusy = this[kClients].map((pool2) => pool2[kNeedDrain]).reduce((a, b) => a && b, true);
         if (allClientsBusy) {
           return;
         }
         let counter = 0;
-        let maxWeightIndex = this[kClients].findIndex((pool) => !pool[kNeedDrain]);
+        let maxWeightIndex = this[kClients].findIndex((pool2) => !pool2[kNeedDrain]);
         while (counter++ < this[kClients].length) {
           this[kIndex] = (this[kIndex] + 1) % this[kClients].length;
-          const pool = this[kClients][this[kIndex]];
-          if (pool[kWeight] > this[kClients][maxWeightIndex][kWeight] && !pool[kNeedDrain]) {
+          const pool2 = this[kClients][this[kIndex]];
+          if (pool2[kWeight] > this[kClients][maxWeightIndex][kWeight] && !pool2[kNeedDrain]) {
             maxWeightIndex = this[kIndex];
           }
           if (this[kIndex] === 0) {
@@ -19121,8 +19121,8 @@ var require_balanced_pool = __commonJS({
               this[kCurrentWeight] = this[kMaxWeightPerServer];
             }
           }
-          if (pool[kWeight] >= this[kCurrentWeight] && !pool[kNeedDrain]) {
-            return pool;
+          if (pool2[kWeight] >= this[kCurrentWeight] && !pool2[kNeedDrain]) {
+            return pool2;
           }
         }
         this[kCurrentWeight] = this[kClients][maxWeightIndex][kWeight];
@@ -19141,8 +19141,8 @@ var require_agent = __commonJS({
     var { InvalidArgumentError } = require_errors3();
     var { kClients, kRunning, kClose, kDestroy, kDispatch, kInterceptors } = require_symbols();
     var DispatcherBase = require_dispatcher_base();
-    var Pool = require_pool();
-    var Client = require_client();
+    var Pool3 = require_pool();
+    var Client2 = require_client();
     var util = require_util();
     var createRedirectInterceptor = require_redirect_interceptor();
     var kOnConnect = Symbol("onConnect");
@@ -19153,7 +19153,7 @@ var require_agent = __commonJS({
     var kFactory = Symbol("factory");
     var kOptions = Symbol("options");
     function defaultFactory(origin, opts) {
-      return opts && opts.connections === 1 ? new Client(origin, opts) : new Pool(origin, opts);
+      return opts && opts.connections === 1 ? new Client2(origin, opts) : new Pool3(origin, opts);
     }
     var Agent = class extends DispatcherBase {
       constructor({ factory = defaultFactory, maxRedirections = 0, connect, ...options } = {}) {
@@ -19238,11 +19238,11 @@ var require_proxy_agent = __commonJS({
     var { kProxy, kClose, kDestroy, kDispatch, kInterceptors } = require_symbols();
     var { URL: URL2 } = require("node:url");
     var Agent = require_agent();
-    var Pool = require_pool();
+    var Pool3 = require_pool();
     var DispatcherBase = require_dispatcher_base();
     var { InvalidArgumentError, RequestAbortedError, SecureProxyConnectionError } = require_errors3();
     var buildConnector = require_connect();
-    var Client = require_client();
+    var Client2 = require_client();
     var kAgent = Symbol("proxy agent");
     var kClient = Symbol("proxy client");
     var kProxyHeaders = Symbol("proxy headers");
@@ -19254,15 +19254,15 @@ var require_proxy_agent = __commonJS({
       return protocol === "https:" ? 443 : 80;
     }
     function defaultFactory(origin, opts) {
-      return new Pool(origin, opts);
+      return new Pool3(origin, opts);
     }
     var noop = () => {
     };
     function defaultAgentFactory(origin, opts) {
       if (opts.connections === 1) {
-        return new Client(origin, opts);
+        return new Client2(origin, opts);
       }
-      return new Pool(origin, opts);
+      return new Pool3(origin, opts);
     }
     var Http1ProxyWrapper = class extends DispatcherBase {
       #client;
@@ -19275,7 +19275,7 @@ var require_proxy_agent = __commonJS({
         if (factory) {
           this.#client = factory(proxyUrl, { connect });
         } else {
-          this.#client = new Client(proxyUrl, { connect });
+          this.#client = new Client2(proxyUrl, { connect });
         }
       }
       [kDispatch](opts, handler2) {
@@ -19291,10 +19291,10 @@ var require_proxy_agent = __commonJS({
         };
         const {
           origin,
-          path: path2 = "/",
+          path: path3 = "/",
           headers = {}
         } = opts;
-        opts.path = origin + path2;
+        opts.path = origin + path3;
         if (!("host" in headers) && !("Host" in headers)) {
           const { host } = new URL2(origin);
           headers.host = host;
@@ -21266,20 +21266,20 @@ var require_mock_utils = __commonJS({
       }
       return true;
     }
-    function safeUrl(path2) {
-      if (typeof path2 !== "string") {
-        return path2;
+    function safeUrl(path3) {
+      if (typeof path3 !== "string") {
+        return path3;
       }
-      const pathSegments = path2.split("?");
+      const pathSegments = path3.split("?");
       if (pathSegments.length !== 2) {
-        return path2;
+        return path3;
       }
       const qp = new URLSearchParams(pathSegments.pop());
       qp.sort();
       return [...pathSegments, qp.toString()].join("?");
     }
-    function matchKey(mockDispatch2, { path: path2, method, body, headers }) {
-      const pathMatch = matchValue(mockDispatch2.path, path2);
+    function matchKey(mockDispatch2, { path: path3, method, body, headers }) {
+      const pathMatch = matchValue(mockDispatch2.path, path3);
       const methodMatch = matchValue(mockDispatch2.method, method);
       const bodyMatch = typeof mockDispatch2.body !== "undefined" ? matchValue(mockDispatch2.body, body) : true;
       const headersMatch = matchHeaders(mockDispatch2, headers);
@@ -21301,7 +21301,7 @@ var require_mock_utils = __commonJS({
     function getMockDispatch(mockDispatches, key) {
       const basePath = key.query ? buildURL(key.path, key.query) : key.path;
       const resolvedPath = typeof basePath === "string" ? safeUrl(basePath) : basePath;
-      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path2 }) => matchValue(safeUrl(path2), resolvedPath));
+      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path3 }) => matchValue(safeUrl(path3), resolvedPath));
       if (matchedMockDispatches.length === 0) {
         throw new MockNotMatchedError(`Mock dispatch not matched for path '${resolvedPath}'`);
       }
@@ -21339,9 +21339,9 @@ var require_mock_utils = __commonJS({
       }
     }
     function buildKey(opts) {
-      const { path: path2, method, body, headers, query } = opts;
+      const { path: path3, method, body, headers, query } = opts;
       return {
-        path: path2,
+        path: path3,
         method,
         body,
         headers,
@@ -21648,7 +21648,7 @@ var require_mock_client = __commonJS({
   "node_modules/undici/lib/mock/mock-client.js"(exports2, module2) {
     "use strict";
     var { promisify } = require("node:util");
-    var Client = require_client();
+    var Client2 = require_client();
     var { buildMockDispatch } = require_mock_utils();
     var {
       kDispatches,
@@ -21662,7 +21662,7 @@ var require_mock_client = __commonJS({
     var { MockInterceptor } = require_mock_interceptor();
     var Symbols = require_symbols();
     var { InvalidArgumentError } = require_errors3();
-    var MockClient = class extends Client {
+    var MockClient = class extends Client2 {
       constructor(origin, opts) {
         super(origin, opts);
         if (!opts || !opts.agent || typeof opts.agent.dispatch !== "function") {
@@ -21701,7 +21701,7 @@ var require_mock_pool = __commonJS({
   "node_modules/undici/lib/mock/mock-pool.js"(exports2, module2) {
     "use strict";
     var { promisify } = require("node:util");
-    var Pool = require_pool();
+    var Pool3 = require_pool();
     var { buildMockDispatch } = require_mock_utils();
     var {
       kDispatches,
@@ -21715,7 +21715,7 @@ var require_mock_pool = __commonJS({
     var { MockInterceptor } = require_mock_interceptor();
     var Symbols = require_symbols();
     var { InvalidArgumentError } = require_errors3();
-    var MockPool = class extends Pool {
+    var MockPool = class extends Pool3 {
       constructor(origin, opts) {
         super(origin, opts);
         if (!opts || !opts.agent || typeof opts.agent.dispatch !== "function") {
@@ -21804,10 +21804,10 @@ var require_pending_interceptors_formatter = __commonJS({
       }
       format(pendingInterceptors) {
         const withPrettyHeaders = pendingInterceptors.map(
-          ({ method, path: path2, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
+          ({ method, path: path3, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
             Method: method,
             Origin: origin,
-            Path: path2,
+            Path: path3,
             "Status code": statusCode,
             Persistent: persist ? PERSISTENT : NOT_PERSISTENT,
             Invocations: timesInvoked,
@@ -22932,7 +22932,7 @@ var require_response = __commonJS({
     var { URLSerializer } = require_data_url();
     var { kConstruct } = require_symbols();
     var assert2 = require("node:assert");
-    var { types } = require("node:util");
+    var { types: types2 } = require("node:util");
     var textEncoder = new TextEncoder("utf-8");
     var Response2 = class _Response {
       // Creates network error Response.
@@ -23253,7 +23253,7 @@ var require_response = __commonJS({
       if (isBlobLike(V)) {
         return webidl.converters.Blob(V, prefix, name, { strict: false });
       }
-      if (ArrayBuffer.isView(V) || types.isArrayBuffer(V)) {
+      if (ArrayBuffer.isView(V) || types2.isArrayBuffer(V)) {
         return webidl.converters.BufferSource(V, prefix, name);
       }
       if (util.isFormDataLike(V)) {
@@ -25489,7 +25489,7 @@ var require_util4 = __commonJS({
     var { ProgressEvent } = require_progressevent();
     var { getEncoding } = require_encoding();
     var { serializeAMimeType, parseMIMEType } = require_data_url();
-    var { types } = require("node:util");
+    var { types: types2 } = require("node:util");
     var { StringDecoder } = require("string_decoder");
     var { btoa: btoa2 } = require("node:buffer");
     var staticPropertyDescriptors = {
@@ -25519,7 +25519,7 @@ var require_util4 = __commonJS({
               });
             }
             isFirstChunk = false;
-            if (!done && types.isUint8Array(value)) {
+            if (!done && types2.isUint8Array(value)) {
               bytes2.push(value);
               if ((fr[kLastProgressEventFired] === void 0 || Date.now() - fr[kLastProgressEventFired] >= 50) && !fr[kAborted]) {
                 fr[kLastProgressEventFired] = Date.now();
@@ -26688,9 +26688,9 @@ var require_util6 = __commonJS({
         }
       }
     }
-    function validateCookiePath(path2) {
-      for (let i = 0; i < path2.length; ++i) {
-        const code = path2.charCodeAt(i);
+    function validateCookiePath(path3) {
+      for (let i = 0; i < path3.length; ++i) {
+        const code = path3.charCodeAt(i);
         if (code < 32 || // exclude CTLs (0-31)
         code > 126 || // exclude DEL and non-ascii
         code === 59) {
@@ -28439,7 +28439,7 @@ var require_websocket = __commonJS({
     var { ByteParser } = require_receiver();
     var { kEnumerableProperty, isBlobLike } = require_util();
     var { getGlobalDispatcher } = require_global2();
-    var { types } = require("node:util");
+    var { types: types2 } = require("node:util");
     var { ErrorEvent, CloseEvent } = require_events();
     var { SendQueue } = require_sender();
     var WebSocket = class _WebSocket extends EventTarget {
@@ -28562,7 +28562,7 @@ var require_websocket = __commonJS({
           this.#sendQueue.add(data, () => {
             this.#bufferedAmount -= length;
           }, sendHints.string);
-        } else if (types.isArrayBuffer(data)) {
+        } else if (types2.isArrayBuffer(data)) {
           this.#bufferedAmount += data.byteLength;
           this.#sendQueue.add(data, () => {
             this.#bufferedAmount -= data.byteLength;
@@ -28774,7 +28774,7 @@ var require_websocket = __commonJS({
         if (isBlobLike(V)) {
           return webidl.converters.Blob(V, { strict: false });
         }
-        if (ArrayBuffer.isView(V) || types.isArrayBuffer(V)) {
+        if (ArrayBuffer.isView(V) || types2.isArrayBuffer(V)) {
           return webidl.converters.BufferSource(V);
         }
       }
@@ -29469,9 +29469,9 @@ var require_eventsource = __commonJS({
 var require_undici = __commonJS({
   "node_modules/undici/index.js"(exports2, module2) {
     "use strict";
-    var Client = require_client();
+    var Client2 = require_client();
     var Dispatcher = require_dispatcher();
-    var Pool = require_pool();
+    var Pool3 = require_pool();
     var BalancedPool = require_balanced_pool();
     var Agent = require_agent();
     var ProxyAgent = require_proxy_agent();
@@ -29493,8 +29493,8 @@ var require_undici = __commonJS({
     var createRedirectInterceptor = require_redirect_interceptor();
     Object.assign(Dispatcher.prototype, api2);
     module2.exports.Dispatcher = Dispatcher;
-    module2.exports.Client = Client;
-    module2.exports.Pool = Pool;
+    module2.exports.Client = Client2;
+    module2.exports.Pool = Pool3;
     module2.exports.BalancedPool = BalancedPool;
     module2.exports.Agent = Agent;
     module2.exports.ProxyAgent = ProxyAgent;
@@ -29532,11 +29532,11 @@ var require_undici = __commonJS({
           if (typeof opts.path !== "string") {
             throw new InvalidArgumentError("invalid opts.path");
           }
-          let path2 = opts.path;
+          let path3 = opts.path;
           if (!opts.path.startsWith("/")) {
-            path2 = `/${path2}`;
+            path3 = `/${path3}`;
           }
-          url2 = new URL(util.parseOrigin(url2).origin + path2);
+          url2 = new URL(util.parseOrigin(url2).origin + path3);
         } else {
           if (!opts) {
             opts = typeof url2 === "object" ? url2 : {};
@@ -29633,6 +29633,5281 @@ var require_throttleit = __commonJS({
       };
     }
     module2.exports = throttle3;
+  }
+});
+
+// node_modules/postgres-array/index.js
+var require_postgres_array = __commonJS({
+  "node_modules/postgres-array/index.js"(exports2) {
+    "use strict";
+    exports2.parse = function(source, transform2) {
+      return new ArrayParser(source, transform2).parse();
+    };
+    var ArrayParser = class _ArrayParser {
+      constructor(source, transform2) {
+        this.source = source;
+        this.transform = transform2 || identity;
+        this.position = 0;
+        this.entries = [];
+        this.recorded = [];
+        this.dimension = 0;
+      }
+      isEof() {
+        return this.position >= this.source.length;
+      }
+      nextCharacter() {
+        var character = this.source[this.position++];
+        if (character === "\\") {
+          return {
+            value: this.source[this.position++],
+            escaped: true
+          };
+        }
+        return {
+          value: character,
+          escaped: false
+        };
+      }
+      record(character) {
+        this.recorded.push(character);
+      }
+      newEntry(includeEmpty) {
+        var entry;
+        if (this.recorded.length > 0 || includeEmpty) {
+          entry = this.recorded.join("");
+          if (entry === "NULL" && !includeEmpty) {
+            entry = null;
+          }
+          if (entry !== null) entry = this.transform(entry);
+          this.entries.push(entry);
+          this.recorded = [];
+        }
+      }
+      consumeDimensions() {
+        if (this.source[0] === "[") {
+          while (!this.isEof()) {
+            var char = this.nextCharacter();
+            if (char.value === "=") break;
+          }
+        }
+      }
+      parse(nested) {
+        var character, parser, quote;
+        this.consumeDimensions();
+        while (!this.isEof()) {
+          character = this.nextCharacter();
+          if (character.value === "{" && !quote) {
+            this.dimension++;
+            if (this.dimension > 1) {
+              parser = new _ArrayParser(this.source.substr(this.position - 1), this.transform);
+              this.entries.push(parser.parse(true));
+              this.position += parser.position - 2;
+            }
+          } else if (character.value === "}" && !quote) {
+            this.dimension--;
+            if (!this.dimension) {
+              this.newEntry();
+              if (nested) return this.entries;
+            }
+          } else if (character.value === '"' && !character.escaped) {
+            if (quote) this.newEntry(true);
+            quote = !quote;
+          } else if (character.value === "," && !quote) {
+            this.newEntry();
+          } else {
+            this.record(character.value);
+          }
+        }
+        if (this.dimension !== 0) {
+          throw new Error("array dimension not balanced");
+        }
+        return this.entries;
+      }
+    };
+    function identity(value) {
+      return value;
+    }
+  }
+});
+
+// node_modules/pg-types/lib/arrayParser.js
+var require_arrayParser = __commonJS({
+  "node_modules/pg-types/lib/arrayParser.js"(exports2, module2) {
+    var array2 = require_postgres_array();
+    module2.exports = {
+      create: function(source, transform2) {
+        return {
+          parse: function() {
+            return array2.parse(source, transform2);
+          }
+        };
+      }
+    };
+  }
+});
+
+// node_modules/postgres-date/index.js
+var require_postgres_date = __commonJS({
+  "node_modules/postgres-date/index.js"(exports2, module2) {
+    "use strict";
+    var DATE_TIME = /(\d{1,})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\.\d{1,})?.*?( BC)?$/;
+    var DATE = /^(\d{1,})-(\d{2})-(\d{2})( BC)?$/;
+    var TIME_ZONE = /([Z+-])(\d{2})?:?(\d{2})?:?(\d{2})?/;
+    var INFINITY = /^-?infinity$/;
+    module2.exports = function parseDate(isoDate2) {
+      if (INFINITY.test(isoDate2)) {
+        return Number(isoDate2.replace("i", "I"));
+      }
+      var matches = DATE_TIME.exec(isoDate2);
+      if (!matches) {
+        return getDate(isoDate2) || null;
+      }
+      var isBC = !!matches[8];
+      var year = parseInt(matches[1], 10);
+      if (isBC) {
+        year = bcYearToNegativeYear(year);
+      }
+      var month = parseInt(matches[2], 10) - 1;
+      var day = matches[3];
+      var hour = parseInt(matches[4], 10);
+      var minute = parseInt(matches[5], 10);
+      var second = parseInt(matches[6], 10);
+      var ms = matches[7];
+      ms = ms ? 1e3 * parseFloat(ms) : 0;
+      var date5;
+      var offset = timeZoneOffset(isoDate2);
+      if (offset != null) {
+        date5 = new Date(Date.UTC(year, month, day, hour, minute, second, ms));
+        if (is0To99(year)) {
+          date5.setUTCFullYear(year);
+        }
+        if (offset !== 0) {
+          date5.setTime(date5.getTime() - offset);
+        }
+      } else {
+        date5 = new Date(year, month, day, hour, minute, second, ms);
+        if (is0To99(year)) {
+          date5.setFullYear(year);
+        }
+      }
+      return date5;
+    };
+    function getDate(isoDate2) {
+      var matches = DATE.exec(isoDate2);
+      if (!matches) {
+        return;
+      }
+      var year = parseInt(matches[1], 10);
+      var isBC = !!matches[4];
+      if (isBC) {
+        year = bcYearToNegativeYear(year);
+      }
+      var month = parseInt(matches[2], 10) - 1;
+      var day = matches[3];
+      var date5 = new Date(year, month, day);
+      if (is0To99(year)) {
+        date5.setFullYear(year);
+      }
+      return date5;
+    }
+    function timeZoneOffset(isoDate2) {
+      if (isoDate2.endsWith("+00")) {
+        return 0;
+      }
+      var zone = TIME_ZONE.exec(isoDate2.split(" ")[1]);
+      if (!zone) return;
+      var type = zone[1];
+      if (type === "Z") {
+        return 0;
+      }
+      var sign = type === "-" ? -1 : 1;
+      var offset = parseInt(zone[2], 10) * 3600 + parseInt(zone[3] || 0, 10) * 60 + parseInt(zone[4] || 0, 10);
+      return offset * sign * 1e3;
+    }
+    function bcYearToNegativeYear(year) {
+      return -(year - 1);
+    }
+    function is0To99(num) {
+      return num >= 0 && num < 100;
+    }
+  }
+});
+
+// node_modules/xtend/mutable.js
+var require_mutable = __commonJS({
+  "node_modules/xtend/mutable.js"(exports2, module2) {
+    module2.exports = extend2;
+    var hasOwnProperty = Object.prototype.hasOwnProperty;
+    function extend2(target) {
+      for (var i = 1; i < arguments.length; i++) {
+        var source = arguments[i];
+        for (var key in source) {
+          if (hasOwnProperty.call(source, key)) {
+            target[key] = source[key];
+          }
+        }
+      }
+      return target;
+    }
+  }
+});
+
+// node_modules/postgres-interval/index.js
+var require_postgres_interval = __commonJS({
+  "node_modules/postgres-interval/index.js"(exports2, module2) {
+    "use strict";
+    var extend2 = require_mutable();
+    module2.exports = PostgresInterval;
+    function PostgresInterval(raw2) {
+      if (!(this instanceof PostgresInterval)) {
+        return new PostgresInterval(raw2);
+      }
+      extend2(this, parse3(raw2));
+    }
+    var properties = ["seconds", "minutes", "hours", "days", "months", "years"];
+    PostgresInterval.prototype.toPostgres = function() {
+      var filtered = properties.filter(this.hasOwnProperty, this);
+      if (this.milliseconds && filtered.indexOf("seconds") < 0) {
+        filtered.push("seconds");
+      }
+      if (filtered.length === 0) return "0";
+      return filtered.map(function(property) {
+        var value = this[property] || 0;
+        if (property === "seconds" && this.milliseconds) {
+          value = (value + this.milliseconds / 1e3).toFixed(6).replace(/\.?0+$/, "");
+        }
+        return value + " " + property;
+      }, this).join(" ");
+    };
+    var propertiesISOEquivalent = {
+      years: "Y",
+      months: "M",
+      days: "D",
+      hours: "H",
+      minutes: "M",
+      seconds: "S"
+    };
+    var dateProperties = ["years", "months", "days"];
+    var timeProperties = ["hours", "minutes", "seconds"];
+    PostgresInterval.prototype.toISOString = PostgresInterval.prototype.toISO = function() {
+      var datePart = dateProperties.map(buildProperty, this).join("");
+      var timePart = timeProperties.map(buildProperty, this).join("");
+      return "P" + datePart + "T" + timePart;
+      function buildProperty(property) {
+        var value = this[property] || 0;
+        if (property === "seconds" && this.milliseconds) {
+          value = (value + this.milliseconds / 1e3).toFixed(6).replace(/0+$/, "");
+        }
+        return value + propertiesISOEquivalent[property];
+      }
+    };
+    var NUMBER = "([+-]?\\d+)";
+    var YEAR = NUMBER + "\\s+years?";
+    var MONTH = NUMBER + "\\s+mons?";
+    var DAY = NUMBER + "\\s+days?";
+    var TIME = "([+-])?([\\d]*):(\\d\\d):(\\d\\d)\\.?(\\d{1,6})?";
+    var INTERVAL = new RegExp([YEAR, MONTH, DAY, TIME].map(function(regexString) {
+      return "(" + regexString + ")?";
+    }).join("\\s*"));
+    var positions = {
+      years: 2,
+      months: 4,
+      days: 6,
+      hours: 9,
+      minutes: 10,
+      seconds: 11,
+      milliseconds: 12
+    };
+    var negatives = ["hours", "minutes", "seconds", "milliseconds"];
+    function parseMilliseconds(fraction) {
+      var microseconds = fraction + "000000".slice(fraction.length);
+      return parseInt(microseconds, 10) / 1e3;
+    }
+    function parse3(interval) {
+      if (!interval) return {};
+      var matches = INTERVAL.exec(interval);
+      var isNegative = matches[8] === "-";
+      return Object.keys(positions).reduce(function(parsed, property) {
+        var position = positions[property];
+        var value = matches[position];
+        if (!value) return parsed;
+        value = property === "milliseconds" ? parseMilliseconds(value) : parseInt(value, 10);
+        if (!value) return parsed;
+        if (isNegative && ~negatives.indexOf(property)) {
+          value *= -1;
+        }
+        parsed[property] = value;
+        return parsed;
+      }, {});
+    }
+  }
+});
+
+// node_modules/postgres-bytea/index.js
+var require_postgres_bytea = __commonJS({
+  "node_modules/postgres-bytea/index.js"(exports2, module2) {
+    "use strict";
+    var bufferFrom = Buffer.from || Buffer;
+    module2.exports = function parseBytea(input2) {
+      if (/^\\x/.test(input2)) {
+        return bufferFrom(input2.substr(2), "hex");
+      }
+      var output2 = "";
+      var i = 0;
+      while (i < input2.length) {
+        if (input2[i] !== "\\") {
+          output2 += input2[i];
+          ++i;
+        } else {
+          if (/[0-7]{3}/.test(input2.substr(i + 1, 3))) {
+            output2 += String.fromCharCode(parseInt(input2.substr(i + 1, 3), 8));
+            i += 4;
+          } else {
+            var backslashes = 1;
+            while (i + backslashes < input2.length && input2[i + backslashes] === "\\") {
+              backslashes++;
+            }
+            for (var k = 0; k < Math.floor(backslashes / 2); ++k) {
+              output2 += "\\";
+            }
+            i += Math.floor(backslashes / 2) * 2;
+          }
+        }
+      }
+      return bufferFrom(output2, "binary");
+    };
+  }
+});
+
+// node_modules/pg-types/lib/textParsers.js
+var require_textParsers = __commonJS({
+  "node_modules/pg-types/lib/textParsers.js"(exports2, module2) {
+    var array2 = require_postgres_array();
+    var arrayParser = require_arrayParser();
+    var parseDate = require_postgres_date();
+    var parseInterval = require_postgres_interval();
+    var parseByteA = require_postgres_bytea();
+    function allowNull(fn) {
+      return function nullAllowed(value) {
+        if (value === null) return value;
+        return fn(value);
+      };
+    }
+    function parseBool(value) {
+      if (value === null) return value;
+      return value === "TRUE" || value === "t" || value === "true" || value === "y" || value === "yes" || value === "on" || value === "1";
+    }
+    function parseBoolArray(value) {
+      if (!value) return null;
+      return array2.parse(value, parseBool);
+    }
+    function parseBaseTenInt(string4) {
+      return parseInt(string4, 10);
+    }
+    function parseIntegerArray(value) {
+      if (!value) return null;
+      return array2.parse(value, allowNull(parseBaseTenInt));
+    }
+    function parseBigIntegerArray(value) {
+      if (!value) return null;
+      return array2.parse(value, allowNull(function(entry) {
+        return parseBigInteger(entry).trim();
+      }));
+    }
+    var parsePointArray = function(value) {
+      if (!value) {
+        return null;
+      }
+      var p = arrayParser.create(value, function(entry) {
+        if (entry !== null) {
+          entry = parsePoint(entry);
+        }
+        return entry;
+      });
+      return p.parse();
+    };
+    var parseFloatArray = function(value) {
+      if (!value) {
+        return null;
+      }
+      var p = arrayParser.create(value, function(entry) {
+        if (entry !== null) {
+          entry = parseFloat(entry);
+        }
+        return entry;
+      });
+      return p.parse();
+    };
+    var parseStringArray = function(value) {
+      if (!value) {
+        return null;
+      }
+      var p = arrayParser.create(value);
+      return p.parse();
+    };
+    var parseDateArray = function(value) {
+      if (!value) {
+        return null;
+      }
+      var p = arrayParser.create(value, function(entry) {
+        if (entry !== null) {
+          entry = parseDate(entry);
+        }
+        return entry;
+      });
+      return p.parse();
+    };
+    var parseIntervalArray = function(value) {
+      if (!value) {
+        return null;
+      }
+      var p = arrayParser.create(value, function(entry) {
+        if (entry !== null) {
+          entry = parseInterval(entry);
+        }
+        return entry;
+      });
+      return p.parse();
+    };
+    var parseByteAArray = function(value) {
+      if (!value) {
+        return null;
+      }
+      return array2.parse(value, allowNull(parseByteA));
+    };
+    var parseInteger = function(value) {
+      return parseInt(value, 10);
+    };
+    var parseBigInteger = function(value) {
+      var valStr = String(value);
+      if (/^\d+$/.test(valStr)) {
+        return valStr;
+      }
+      return value;
+    };
+    var parseJsonArray = function(value) {
+      if (!value) {
+        return null;
+      }
+      return array2.parse(value, allowNull(JSON.parse));
+    };
+    var parsePoint = function(value) {
+      if (value[0] !== "(") {
+        return null;
+      }
+      value = value.substring(1, value.length - 1).split(",");
+      return {
+        x: parseFloat(value[0]),
+        y: parseFloat(value[1])
+      };
+    };
+    var parseCircle = function(value) {
+      if (value[0] !== "<" && value[1] !== "(") {
+        return null;
+      }
+      var point = "(";
+      var radius = "";
+      var pointParsed = false;
+      for (var i = 2; i < value.length - 1; i++) {
+        if (!pointParsed) {
+          point += value[i];
+        }
+        if (value[i] === ")") {
+          pointParsed = true;
+          continue;
+        } else if (!pointParsed) {
+          continue;
+        }
+        if (value[i] === ",") {
+          continue;
+        }
+        radius += value[i];
+      }
+      var result = parsePoint(point);
+      result.radius = parseFloat(radius);
+      return result;
+    };
+    var init = function(register) {
+      register(20, parseBigInteger);
+      register(21, parseInteger);
+      register(23, parseInteger);
+      register(26, parseInteger);
+      register(700, parseFloat);
+      register(701, parseFloat);
+      register(16, parseBool);
+      register(1082, parseDate);
+      register(1114, parseDate);
+      register(1184, parseDate);
+      register(600, parsePoint);
+      register(651, parseStringArray);
+      register(718, parseCircle);
+      register(1e3, parseBoolArray);
+      register(1001, parseByteAArray);
+      register(1005, parseIntegerArray);
+      register(1007, parseIntegerArray);
+      register(1028, parseIntegerArray);
+      register(1016, parseBigIntegerArray);
+      register(1017, parsePointArray);
+      register(1021, parseFloatArray);
+      register(1022, parseFloatArray);
+      register(1231, parseFloatArray);
+      register(1014, parseStringArray);
+      register(1015, parseStringArray);
+      register(1008, parseStringArray);
+      register(1009, parseStringArray);
+      register(1040, parseStringArray);
+      register(1041, parseStringArray);
+      register(1115, parseDateArray);
+      register(1182, parseDateArray);
+      register(1185, parseDateArray);
+      register(1186, parseInterval);
+      register(1187, parseIntervalArray);
+      register(17, parseByteA);
+      register(114, JSON.parse.bind(JSON));
+      register(3802, JSON.parse.bind(JSON));
+      register(199, parseJsonArray);
+      register(3807, parseJsonArray);
+      register(3907, parseStringArray);
+      register(2951, parseStringArray);
+      register(791, parseStringArray);
+      register(1183, parseStringArray);
+      register(1270, parseStringArray);
+    };
+    module2.exports = {
+      init
+    };
+  }
+});
+
+// node_modules/pg-int8/index.js
+var require_pg_int8 = __commonJS({
+  "node_modules/pg-int8/index.js"(exports2, module2) {
+    "use strict";
+    var BASE = 1e6;
+    function readInt8(buffer) {
+      var high = buffer.readInt32BE(0);
+      var low = buffer.readUInt32BE(4);
+      var sign = "";
+      if (high < 0) {
+        high = ~high + (low === 0);
+        low = ~low + 1 >>> 0;
+        sign = "-";
+      }
+      var result = "";
+      var carry;
+      var t;
+      var digits;
+      var pad;
+      var l;
+      var i;
+      {
+        carry = high % BASE;
+        high = high / BASE >>> 0;
+        t = 4294967296 * carry + low;
+        low = t / BASE >>> 0;
+        digits = "" + (t - BASE * low);
+        if (low === 0 && high === 0) {
+          return sign + digits + result;
+        }
+        pad = "";
+        l = 6 - digits.length;
+        for (i = 0; i < l; i++) {
+          pad += "0";
+        }
+        result = pad + digits + result;
+      }
+      {
+        carry = high % BASE;
+        high = high / BASE >>> 0;
+        t = 4294967296 * carry + low;
+        low = t / BASE >>> 0;
+        digits = "" + (t - BASE * low);
+        if (low === 0 && high === 0) {
+          return sign + digits + result;
+        }
+        pad = "";
+        l = 6 - digits.length;
+        for (i = 0; i < l; i++) {
+          pad += "0";
+        }
+        result = pad + digits + result;
+      }
+      {
+        carry = high % BASE;
+        high = high / BASE >>> 0;
+        t = 4294967296 * carry + low;
+        low = t / BASE >>> 0;
+        digits = "" + (t - BASE * low);
+        if (low === 0 && high === 0) {
+          return sign + digits + result;
+        }
+        pad = "";
+        l = 6 - digits.length;
+        for (i = 0; i < l; i++) {
+          pad += "0";
+        }
+        result = pad + digits + result;
+      }
+      {
+        carry = high % BASE;
+        t = 4294967296 * carry + low;
+        digits = "" + t % BASE;
+        return sign + digits + result;
+      }
+    }
+    module2.exports = readInt8;
+  }
+});
+
+// node_modules/pg-types/lib/binaryParsers.js
+var require_binaryParsers = __commonJS({
+  "node_modules/pg-types/lib/binaryParsers.js"(exports2, module2) {
+    var parseInt64 = require_pg_int8();
+    var parseBits = function(data, bits, offset, invert, callback) {
+      offset = offset || 0;
+      invert = invert || false;
+      callback = callback || function(lastValue, newValue, bits2) {
+        return lastValue * Math.pow(2, bits2) + newValue;
+      };
+      var offsetBytes = offset >> 3;
+      var inv = function(value) {
+        if (invert) {
+          return ~value & 255;
+        }
+        return value;
+      };
+      var mask = 255;
+      var firstBits = 8 - offset % 8;
+      if (bits < firstBits) {
+        mask = 255 << 8 - bits & 255;
+        firstBits = bits;
+      }
+      if (offset) {
+        mask = mask >> offset % 8;
+      }
+      var result = 0;
+      if (offset % 8 + bits >= 8) {
+        result = callback(0, inv(data[offsetBytes]) & mask, firstBits);
+      }
+      var bytes2 = bits + offset >> 3;
+      for (var i = offsetBytes + 1; i < bytes2; i++) {
+        result = callback(result, inv(data[i]), 8);
+      }
+      var lastBits = (bits + offset) % 8;
+      if (lastBits > 0) {
+        result = callback(result, inv(data[bytes2]) >> 8 - lastBits, lastBits);
+      }
+      return result;
+    };
+    var parseFloatFromBits = function(data, precisionBits, exponentBits) {
+      var bias = Math.pow(2, exponentBits - 1) - 1;
+      var sign = parseBits(data, 1);
+      var exponent = parseBits(data, exponentBits, 1);
+      if (exponent === 0) {
+        return 0;
+      }
+      var precisionBitsCounter = 1;
+      var parsePrecisionBits = function(lastValue, newValue, bits) {
+        if (lastValue === 0) {
+          lastValue = 1;
+        }
+        for (var i = 1; i <= bits; i++) {
+          precisionBitsCounter /= 2;
+          if ((newValue & 1 << bits - i) > 0) {
+            lastValue += precisionBitsCounter;
+          }
+        }
+        return lastValue;
+      };
+      var mantissa = parseBits(data, precisionBits, exponentBits + 1, false, parsePrecisionBits);
+      if (exponent == Math.pow(2, exponentBits + 1) - 1) {
+        if (mantissa === 0) {
+          return sign === 0 ? Infinity : -Infinity;
+        }
+        return NaN;
+      }
+      return (sign === 0 ? 1 : -1) * Math.pow(2, exponent - bias) * mantissa;
+    };
+    var parseInt16 = function(value) {
+      if (parseBits(value, 1) == 1) {
+        return -1 * (parseBits(value, 15, 1, true) + 1);
+      }
+      return parseBits(value, 15, 1);
+    };
+    var parseInt32 = function(value) {
+      if (parseBits(value, 1) == 1) {
+        return -1 * (parseBits(value, 31, 1, true) + 1);
+      }
+      return parseBits(value, 31, 1);
+    };
+    var parseFloat32 = function(value) {
+      return parseFloatFromBits(value, 23, 8);
+    };
+    var parseFloat64 = function(value) {
+      return parseFloatFromBits(value, 52, 11);
+    };
+    var parseNumeric = function(value) {
+      var sign = parseBits(value, 16, 32);
+      if (sign == 49152) {
+        return NaN;
+      }
+      var weight = Math.pow(1e4, parseBits(value, 16, 16));
+      var result = 0;
+      var digits = [];
+      var ndigits = parseBits(value, 16);
+      for (var i = 0; i < ndigits; i++) {
+        result += parseBits(value, 16, 64 + 16 * i) * weight;
+        weight /= 1e4;
+      }
+      var scale = Math.pow(10, parseBits(value, 16, 48));
+      return (sign === 0 ? 1 : -1) * Math.round(result * scale) / scale;
+    };
+    var parseDate = function(isUTC, value) {
+      var sign = parseBits(value, 1);
+      var rawValue = parseBits(value, 63, 1);
+      var result = new Date((sign === 0 ? 1 : -1) * rawValue / 1e3 + 9466848e5);
+      if (!isUTC) {
+        result.setTime(result.getTime() + result.getTimezoneOffset() * 6e4);
+      }
+      result.usec = rawValue % 1e3;
+      result.getMicroSeconds = function() {
+        return this.usec;
+      };
+      result.setMicroSeconds = function(value2) {
+        this.usec = value2;
+      };
+      result.getUTCMicroSeconds = function() {
+        return this.usec;
+      };
+      return result;
+    };
+    var parseArray = function(value) {
+      var dim = parseBits(value, 32);
+      var flags = parseBits(value, 32, 32);
+      var elementType = parseBits(value, 32, 64);
+      var offset = 96;
+      var dims = [];
+      for (var i = 0; i < dim; i++) {
+        dims[i] = parseBits(value, 32, offset);
+        offset += 32;
+        offset += 32;
+      }
+      var parseElement = function(elementType2) {
+        var length = parseBits(value, 32, offset);
+        offset += 32;
+        if (length == 4294967295) {
+          return null;
+        }
+        var result;
+        if (elementType2 == 23 || elementType2 == 20) {
+          result = parseBits(value, length * 8, offset);
+          offset += length * 8;
+          return result;
+        } else if (elementType2 == 25) {
+          result = value.toString(this.encoding, offset >> 3, (offset += length << 3) >> 3);
+          return result;
+        } else {
+          console.log("ERROR: ElementType not implemented: " + elementType2);
+        }
+      };
+      var parse3 = function(dimension, elementType2) {
+        var array2 = [];
+        var i2;
+        if (dimension.length > 1) {
+          var count = dimension.shift();
+          for (i2 = 0; i2 < count; i2++) {
+            array2[i2] = parse3(dimension, elementType2);
+          }
+          dimension.unshift(count);
+        } else {
+          for (i2 = 0; i2 < dimension[0]; i2++) {
+            array2[i2] = parseElement(elementType2);
+          }
+        }
+        return array2;
+      };
+      return parse3(dims, elementType);
+    };
+    var parseText = function(value) {
+      return value.toString("utf8");
+    };
+    var parseBool = function(value) {
+      if (value === null) return null;
+      return parseBits(value, 8) > 0;
+    };
+    var init = function(register) {
+      register(20, parseInt64);
+      register(21, parseInt16);
+      register(23, parseInt32);
+      register(26, parseInt32);
+      register(1700, parseNumeric);
+      register(700, parseFloat32);
+      register(701, parseFloat64);
+      register(16, parseBool);
+      register(1114, parseDate.bind(null, false));
+      register(1184, parseDate.bind(null, true));
+      register(1e3, parseArray);
+      register(1007, parseArray);
+      register(1016, parseArray);
+      register(1008, parseArray);
+      register(1009, parseArray);
+      register(25, parseText);
+    };
+    module2.exports = {
+      init
+    };
+  }
+});
+
+// node_modules/pg-types/lib/builtins.js
+var require_builtins = __commonJS({
+  "node_modules/pg-types/lib/builtins.js"(exports2, module2) {
+    module2.exports = {
+      BOOL: 16,
+      BYTEA: 17,
+      CHAR: 18,
+      INT8: 20,
+      INT2: 21,
+      INT4: 23,
+      REGPROC: 24,
+      TEXT: 25,
+      OID: 26,
+      TID: 27,
+      XID: 28,
+      CID: 29,
+      JSON: 114,
+      XML: 142,
+      PG_NODE_TREE: 194,
+      SMGR: 210,
+      PATH: 602,
+      POLYGON: 604,
+      CIDR: 650,
+      FLOAT4: 700,
+      FLOAT8: 701,
+      ABSTIME: 702,
+      RELTIME: 703,
+      TINTERVAL: 704,
+      CIRCLE: 718,
+      MACADDR8: 774,
+      MONEY: 790,
+      MACADDR: 829,
+      INET: 869,
+      ACLITEM: 1033,
+      BPCHAR: 1042,
+      VARCHAR: 1043,
+      DATE: 1082,
+      TIME: 1083,
+      TIMESTAMP: 1114,
+      TIMESTAMPTZ: 1184,
+      INTERVAL: 1186,
+      TIMETZ: 1266,
+      BIT: 1560,
+      VARBIT: 1562,
+      NUMERIC: 1700,
+      REFCURSOR: 1790,
+      REGPROCEDURE: 2202,
+      REGOPER: 2203,
+      REGOPERATOR: 2204,
+      REGCLASS: 2205,
+      REGTYPE: 2206,
+      UUID: 2950,
+      TXID_SNAPSHOT: 2970,
+      PG_LSN: 3220,
+      PG_NDISTINCT: 3361,
+      PG_DEPENDENCIES: 3402,
+      TSVECTOR: 3614,
+      TSQUERY: 3615,
+      GTSVECTOR: 3642,
+      REGCONFIG: 3734,
+      REGDICTIONARY: 3769,
+      JSONB: 3802,
+      REGNAMESPACE: 4089,
+      REGROLE: 4096
+    };
+  }
+});
+
+// node_modules/pg-types/index.js
+var require_pg_types = __commonJS({
+  "node_modules/pg-types/index.js"(exports2) {
+    var textParsers = require_textParsers();
+    var binaryParsers = require_binaryParsers();
+    var arrayParser = require_arrayParser();
+    var builtinTypes = require_builtins();
+    exports2.getTypeParser = getTypeParser;
+    exports2.setTypeParser = setTypeParser;
+    exports2.arrayParser = arrayParser;
+    exports2.builtins = builtinTypes;
+    var typeParsers = {
+      text: {},
+      binary: {}
+    };
+    function noParse(val) {
+      return String(val);
+    }
+    function getTypeParser(oid, format) {
+      format = format || "text";
+      if (!typeParsers[format]) {
+        return noParse;
+      }
+      return typeParsers[format][oid] || noParse;
+    }
+    function setTypeParser(oid, format, parseFn) {
+      if (typeof format == "function") {
+        parseFn = format;
+        format = "text";
+      }
+      typeParsers[format][oid] = parseFn;
+    }
+    textParsers.init(function(oid, converter) {
+      typeParsers.text[oid] = converter;
+    });
+    binaryParsers.init(function(oid, converter) {
+      typeParsers.binary[oid] = converter;
+    });
+  }
+});
+
+// node_modules/pg/lib/defaults.js
+var require_defaults = __commonJS({
+  "node_modules/pg/lib/defaults.js"(exports2, module2) {
+    "use strict";
+    var user;
+    try {
+      user = process.platform === "win32" ? process.env.USERNAME : process.env.USER;
+    } catch {
+    }
+    module2.exports = {
+      // database host. defaults to localhost
+      host: "localhost",
+      // database user's name
+      user,
+      // name of database to connect
+      database: void 0,
+      // database user's password
+      password: null,
+      // a Postgres connection string to be used instead of setting individual connection items
+      // NOTE:  Setting this value will cause it to override any other value (such as database or user) defined
+      // in the defaults object.
+      connectionString: void 0,
+      // database port
+      port: 5432,
+      // number of rows to return at a time from a prepared statement's
+      // portal. 0 will return all rows at once
+      rows: 0,
+      // binary result mode
+      binary: false,
+      // Connection pool options - see https://github.com/brianc/node-pg-pool
+      // number of connections to use in connection pool
+      // 0 will disable connection pooling
+      max: 10,
+      // max milliseconds a client can go unused before it is removed
+      // from the pool and destroyed
+      idleTimeoutMillis: 3e4,
+      client_encoding: "",
+      ssl: false,
+      // SSL negotiation style: 'postgres' (traditional SSLRequest) or 'direct'
+      sslnegotiation: void 0,
+      application_name: void 0,
+      fallback_application_name: void 0,
+      options: void 0,
+      parseInputDatesAsUTC: false,
+      // max milliseconds any query using this connection will execute for before timing out in error.
+      // false=unlimited
+      statement_timeout: false,
+      // Abort any statement that waits longer than the specified duration in milliseconds while attempting to acquire a lock.
+      // false=unlimited
+      lock_timeout: false,
+      // Terminate any session with an open transaction that has been idle for longer than the specified duration in milliseconds
+      // false=unlimited
+      idle_in_transaction_session_timeout: false,
+      // max milliseconds to wait for query to complete (client side)
+      query_timeout: false,
+      connect_timeout: 0,
+      keepalives: 1,
+      keepalives_idle: 0
+    };
+    var pgTypes = require_pg_types();
+    var parseBigInteger = pgTypes.getTypeParser(20, "text");
+    var parseBigIntegerArray = pgTypes.getTypeParser(1016, "text");
+    module2.exports.__defineSetter__("parseInt8", function(val) {
+      pgTypes.setTypeParser(20, "text", val ? pgTypes.getTypeParser(23, "text") : parseBigInteger);
+      pgTypes.setTypeParser(1016, "text", val ? pgTypes.getTypeParser(1007, "text") : parseBigIntegerArray);
+    });
+  }
+});
+
+// node_modules/pg/lib/utils.js
+var require_utils2 = __commonJS({
+  "node_modules/pg/lib/utils.js"(exports2, module2) {
+    "use strict";
+    var defaults2 = require_defaults();
+    var { isDate } = require("util/types");
+    function escapeElement(elementRepresentation) {
+      const escaped = elementRepresentation.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+      return '"' + escaped + '"';
+    }
+    function arrayString(val) {
+      let result = "{";
+      for (let i = 0; i < val.length; i++) {
+        if (i > 0) {
+          result += ",";
+        }
+        let item = val[i];
+        if (item == null) {
+          result += "NULL";
+        } else if (Array.isArray(item)) {
+          result += arrayString(item);
+        } else if (ArrayBuffer.isView(item)) {
+          if (!(item instanceof Buffer)) {
+            item = Buffer.from(item.buffer, item.byteOffset, item.byteLength);
+          }
+          result += "\\\\x" + item.toString("hex");
+        } else {
+          result += escapeElement(prepareValue(item));
+        }
+      }
+      result += "}";
+      return result;
+    }
+    var prepareValue = function(val, seen) {
+      if (val == null) {
+        return null;
+      }
+      if (typeof val === "object") {
+        if (val instanceof Buffer) {
+          return val;
+        }
+        if (ArrayBuffer.isView(val)) {
+          return Buffer.from(val.buffer, val.byteOffset, val.byteLength);
+        }
+        if (isDate(val)) {
+          if (defaults2.parseInputDatesAsUTC) {
+            return dateToStringUTC(val);
+          } else {
+            return dateToString(val);
+          }
+        }
+        if (Array.isArray(val)) {
+          return arrayString(val);
+        }
+        return prepareObject(val, seen);
+      }
+      return val.toString();
+    };
+    function prepareObject(val, seen) {
+      if (val && typeof val.toPostgres === "function") {
+        seen = seen || [];
+        if (seen.indexOf(val) !== -1) {
+          throw new Error('circular reference detected while preparing "' + val + '" for query');
+        }
+        seen.push(val);
+        return prepareValue(val.toPostgres(prepareValue), seen);
+      }
+      return JSON.stringify(val);
+    }
+    function dateToString(date5) {
+      let offset = -date5.getTimezoneOffset();
+      let year = date5.getFullYear();
+      const isBCYear = year < 1;
+      if (isBCYear) year = Math.abs(year) + 1;
+      let ret = String(year).padStart(4, "0") + "-" + String(date5.getMonth() + 1).padStart(2, "0") + "-" + String(date5.getDate()).padStart(2, "0") + "T" + String(date5.getHours()).padStart(2, "0") + ":" + String(date5.getMinutes()).padStart(2, "0") + ":" + String(date5.getSeconds()).padStart(2, "0") + "." + String(date5.getMilliseconds()).padStart(3, "0");
+      if (offset < 0) {
+        ret += "-";
+        offset *= -1;
+      } else {
+        ret += "+";
+      }
+      ret += String(Math.floor(offset / 60)).padStart(2, "0") + ":" + String(offset % 60).padStart(2, "0");
+      if (isBCYear) ret += " BC";
+      return ret;
+    }
+    function dateToStringUTC(date5) {
+      let year = date5.getUTCFullYear();
+      const isBCYear = year < 1;
+      if (isBCYear) year = Math.abs(year) + 1;
+      let ret = String(year).padStart(4, "0") + "-" + String(date5.getUTCMonth() + 1).padStart(2, "0") + "-" + String(date5.getUTCDate()).padStart(2, "0") + "T" + String(date5.getUTCHours()).padStart(2, "0") + ":" + String(date5.getUTCMinutes()).padStart(2, "0") + ":" + String(date5.getUTCSeconds()).padStart(2, "0") + "." + String(date5.getUTCMilliseconds()).padStart(3, "0");
+      ret += "+00:00";
+      if (isBCYear) ret += " BC";
+      return ret;
+    }
+    function normalizeQueryConfig(config2, values, callback) {
+      config2 = typeof config2 === "string" ? { text: config2 } : config2;
+      if (values) {
+        if (typeof values === "function") {
+          config2.callback = values;
+        } else {
+          config2.values = values;
+        }
+      }
+      if (callback) {
+        config2.callback = callback;
+      }
+      return config2;
+    }
+    var escapeIdentifier2 = function(str) {
+      return '"' + str.replace(/"/g, '""') + '"';
+    };
+    var escapeLiteral2 = function(str) {
+      let hasBackslash = false;
+      let escaped = "'";
+      if (str == null) {
+        return "''";
+      }
+      if (typeof str !== "string") {
+        return "''";
+      }
+      for (let i = 0; i < str.length; i++) {
+        const c = str[i];
+        if (c === "'") {
+          escaped += c + c;
+        } else if (c === "\\") {
+          escaped += c + c;
+          hasBackslash = true;
+        } else {
+          escaped += c;
+        }
+      }
+      escaped += "'";
+      if (hasBackslash === true) {
+        escaped = " E" + escaped;
+      }
+      return escaped;
+    };
+    module2.exports = {
+      prepareValue: function prepareValueWrapper(value) {
+        return prepareValue(value);
+      },
+      normalizeQueryConfig,
+      escapeIdentifier: escapeIdentifier2,
+      escapeLiteral: escapeLiteral2
+    };
+  }
+});
+
+// node_modules/pg/lib/crypto/utils.js
+var require_utils3 = __commonJS({
+  "node_modules/pg/lib/crypto/utils.js"(exports2, module2) {
+    var nodeCrypto = require("crypto");
+    module2.exports = {
+      postgresMd5PasswordHash,
+      randomBytes,
+      deriveKey,
+      sha256: sha2562,
+      hashByName,
+      hmacSha256,
+      md5
+    };
+    var webCrypto = nodeCrypto.webcrypto || globalThis.crypto;
+    var subtleCrypto = webCrypto.subtle;
+    var textEncoder = new TextEncoder();
+    function randomBytes(length) {
+      return webCrypto.getRandomValues(Buffer.alloc(length));
+    }
+    async function md5(string4) {
+      try {
+        return nodeCrypto.createHash("md5").update(string4, "utf-8").digest("hex");
+      } catch (e) {
+        const data = typeof string4 === "string" ? textEncoder.encode(string4) : string4;
+        const hash2 = await subtleCrypto.digest("MD5", data);
+        return Array.from(new Uint8Array(hash2)).map((b) => b.toString(16).padStart(2, "0")).join("");
+      }
+    }
+    async function postgresMd5PasswordHash(user, password, salt) {
+      const inner = await md5(password + user);
+      const outer = await md5(Buffer.concat([Buffer.from(inner), salt]));
+      return "md5" + outer;
+    }
+    async function sha2562(text) {
+      return await subtleCrypto.digest("SHA-256", text);
+    }
+    async function hashByName(hashName, text) {
+      return await subtleCrypto.digest(hashName, text);
+    }
+    async function hmacSha256(keyBuffer, msg) {
+      const key = await subtleCrypto.importKey("raw", keyBuffer, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+      return await subtleCrypto.sign("HMAC", key, textEncoder.encode(msg));
+    }
+    async function deriveKey(password, salt, iterations) {
+      const key = await subtleCrypto.importKey("raw", textEncoder.encode(password), "PBKDF2", false, ["deriveBits"]);
+      const params = { name: "PBKDF2", hash: "SHA-256", salt, iterations };
+      return await subtleCrypto.deriveBits(params, key, 32 * 8, ["deriveBits"]);
+    }
+  }
+});
+
+// node_modules/pg/lib/crypto/cert-signatures.js
+var require_cert_signatures = __commonJS({
+  "node_modules/pg/lib/crypto/cert-signatures.js"(exports2, module2) {
+    function x509Error(msg, cert) {
+      return new Error("SASL channel binding: " + msg + " when parsing public certificate " + cert.toString("base64"));
+    }
+    function readASN1Length(data, index) {
+      let length = data[index++];
+      if (length < 128) return { length, index };
+      const lengthBytes = length & 127;
+      if (lengthBytes > 4) throw x509Error("bad length", data);
+      length = 0;
+      for (let i = 0; i < lengthBytes; i++) {
+        length = length << 8 | data[index++];
+      }
+      return { length, index };
+    }
+    function readASN1OID(data, index) {
+      if (data[index++] !== 6) throw x509Error("non-OID data", data);
+      const { length: OIDLength, index: indexAfterOIDLength } = readASN1Length(data, index);
+      index = indexAfterOIDLength;
+      const lastIndex = index + OIDLength;
+      const byte1 = data[index++];
+      let oid = (byte1 / 40 >> 0) + "." + byte1 % 40;
+      while (index < lastIndex) {
+        let value = 0;
+        while (index < lastIndex) {
+          const nextByte = data[index++];
+          value = value << 7 | nextByte & 127;
+          if (nextByte < 128) break;
+        }
+        oid += "." + value;
+      }
+      return { oid, index };
+    }
+    function expectASN1Seq(data, index) {
+      if (data[index++] !== 48) throw x509Error("non-sequence data", data);
+      return readASN1Length(data, index);
+    }
+    function signatureAlgorithmHashFromCertificate(data, index) {
+      if (index === void 0) index = 0;
+      index = expectASN1Seq(data, index).index;
+      const { length: certInfoLength, index: indexAfterCertInfoLength } = expectASN1Seq(data, index);
+      index = indexAfterCertInfoLength + certInfoLength;
+      index = expectASN1Seq(data, index).index;
+      const { oid, index: indexAfterOID } = readASN1OID(data, index);
+      switch (oid) {
+        // RSA
+        case "1.2.840.113549.1.1.4":
+          return "MD5";
+        case "1.2.840.113549.1.1.5":
+          return "SHA-1";
+        case "1.2.840.113549.1.1.11":
+          return "SHA-256";
+        case "1.2.840.113549.1.1.12":
+          return "SHA-384";
+        case "1.2.840.113549.1.1.13":
+          return "SHA-512";
+        case "1.2.840.113549.1.1.14":
+          return "SHA-224";
+        case "1.2.840.113549.1.1.15":
+          return "SHA512-224";
+        case "1.2.840.113549.1.1.16":
+          return "SHA512-256";
+        // ECDSA
+        case "1.2.840.10045.4.1":
+          return "SHA-1";
+        case "1.2.840.10045.4.3.1":
+          return "SHA-224";
+        case "1.2.840.10045.4.3.2":
+          return "SHA-256";
+        case "1.2.840.10045.4.3.3":
+          return "SHA-384";
+        case "1.2.840.10045.4.3.4":
+          return "SHA-512";
+        // RSASSA-PSS: hash is indicated separately
+        case "1.2.840.113549.1.1.10": {
+          index = indexAfterOID;
+          index = expectASN1Seq(data, index).index;
+          if (data[index++] !== 160) throw x509Error("non-tag data", data);
+          index = readASN1Length(data, index).index;
+          index = expectASN1Seq(data, index).index;
+          const { oid: hashOID } = readASN1OID(data, index);
+          switch (hashOID) {
+            // standalone hash OIDs
+            case "1.2.840.113549.2.5":
+              return "MD5";
+            case "1.3.14.3.2.26":
+              return "SHA-1";
+            case "2.16.840.1.101.3.4.2.1":
+              return "SHA-256";
+            case "2.16.840.1.101.3.4.2.2":
+              return "SHA-384";
+            case "2.16.840.1.101.3.4.2.3":
+              return "SHA-512";
+          }
+          throw x509Error("unknown hash OID " + hashOID, data);
+        }
+        // Ed25519 -- see https: return//github.com/openssl/openssl/issues/15477
+        case "1.3.101.110":
+        case "1.3.101.112":
+          return "SHA-512";
+        // Ed448 -- still not in pg 17.2 (if supported, digest would be SHAKE256 x 64 bytes)
+        case "1.3.101.111":
+        case "1.3.101.113":
+          throw x509Error("Ed448 certificate channel binding is not currently supported by Postgres");
+      }
+      throw x509Error("unknown OID " + oid, data);
+    }
+    module2.exports = { signatureAlgorithmHashFromCertificate };
+  }
+});
+
+// node_modules/pg/lib/crypto/sasl.js
+var require_sasl = __commonJS({
+  "node_modules/pg/lib/crypto/sasl.js"(exports2, module2) {
+    "use strict";
+    var crypto2 = require_utils3();
+    var { signatureAlgorithmHashFromCertificate } = require_cert_signatures();
+    function saslprep(password) {
+      const nonAsciiSpace = /[\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000]/g;
+      const mappedToNothing = /[\u00AD\u034F\u1806\u180B\u180C\u180D\u200C\u200D\u2060\uFE00-\uFE0F\uFEFF]/g;
+      return password.replace(nonAsciiSpace, " ").replace(mappedToNothing, "").normalize("NFKC");
+    }
+    var DEFAULT_MAX_SCRAM_ITERATIONS = 1e5;
+    function startSession(mechanisms, stream2, scramMaxIterations = DEFAULT_MAX_SCRAM_ITERATIONS) {
+      const candidates = ["SCRAM-SHA-256"];
+      if (stream2) candidates.unshift("SCRAM-SHA-256-PLUS");
+      const mechanism = candidates.find((candidate) => mechanisms.includes(candidate));
+      if (!mechanism) {
+        throw new Error("SASL: Only mechanism(s) " + candidates.join(" and ") + " are supported");
+      }
+      if (mechanism === "SCRAM-SHA-256-PLUS" && typeof stream2.getPeerCertificate !== "function") {
+        throw new Error("SASL: Mechanism SCRAM-SHA-256-PLUS requires a certificate");
+      }
+      const clientNonce = crypto2.randomBytes(18).toString("base64");
+      const gs2Header = mechanism === "SCRAM-SHA-256-PLUS" ? "p=tls-server-end-point" : stream2 ? "y" : "n";
+      return {
+        mechanism,
+        clientNonce,
+        response: gs2Header + ",,n=*,r=" + clientNonce,
+        message: "SASLInitialResponse",
+        scramMaxIterations
+      };
+    }
+    async function continueSession(session, password, serverData, stream2) {
+      if (session.message !== "SASLInitialResponse") {
+        throw new Error("SASL: Last message was not SASLInitialResponse");
+      }
+      if (typeof password !== "string") {
+        throw new Error("SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string");
+      }
+      if (password === "") {
+        throw new Error("SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a non-empty string");
+      }
+      if (typeof serverData !== "string") {
+        throw new Error("SASL: SCRAM-SERVER-FIRST-MESSAGE: serverData must be a string");
+      }
+      const sv = parseServerFirstMessage(serverData);
+      if (!sv.nonce.startsWith(session.clientNonce)) {
+        throw new Error("SASL: SCRAM-SERVER-FIRST-MESSAGE: server nonce does not start with client nonce");
+      } else if (sv.nonce.length === session.clientNonce.length) {
+        throw new Error("SASL: SCRAM-SERVER-FIRST-MESSAGE: server nonce is too short");
+      }
+      const scramMaxIterations = typeof session.scramMaxIterations === "number" ? session.scramMaxIterations : DEFAULT_MAX_SCRAM_ITERATIONS;
+      if (scramMaxIterations !== 0 && sv.iteration > scramMaxIterations) {
+        throw new Error(
+          "SASL: SCRAM-SERVER-FIRST-MESSAGE: iteration count " + sv.iteration + " exceeds scramMaxIterations of " + scramMaxIterations
+        );
+      }
+      const clientFirstMessageBare = "n=*,r=" + session.clientNonce;
+      const serverFirstMessage = "r=" + sv.nonce + ",s=" + sv.salt + ",i=" + sv.iteration;
+      let channelBinding = stream2 ? "eSws" : "biws";
+      if (session.mechanism === "SCRAM-SHA-256-PLUS") {
+        const peerCert = stream2.getPeerCertificate().raw;
+        let hashName = signatureAlgorithmHashFromCertificate(peerCert);
+        if (hashName === "MD5" || hashName === "SHA-1") hashName = "SHA-256";
+        const certHash = await crypto2.hashByName(hashName, peerCert);
+        const bindingData = Buffer.concat([Buffer.from("p=tls-server-end-point,,"), Buffer.from(certHash)]);
+        channelBinding = bindingData.toString("base64");
+      }
+      const clientFinalMessageWithoutProof = "c=" + channelBinding + ",r=" + sv.nonce;
+      const authMessage = clientFirstMessageBare + "," + serverFirstMessage + "," + clientFinalMessageWithoutProof;
+      const saltBytes = Buffer.from(sv.salt, "base64");
+      const saltedPassword = await crypto2.deriveKey(saslprep(password), saltBytes, sv.iteration);
+      const clientKey = await crypto2.hmacSha256(saltedPassword, "Client Key");
+      const storedKey = await crypto2.sha256(clientKey);
+      const clientSignature = await crypto2.hmacSha256(storedKey, authMessage);
+      const clientProof = xorBuffers(Buffer.from(clientKey), Buffer.from(clientSignature)).toString("base64");
+      const serverKey = await crypto2.hmacSha256(saltedPassword, "Server Key");
+      const serverSignatureBytes = await crypto2.hmacSha256(serverKey, authMessage);
+      session.message = "SASLResponse";
+      session.serverSignature = Buffer.from(serverSignatureBytes).toString("base64");
+      session.response = clientFinalMessageWithoutProof + ",p=" + clientProof;
+    }
+    function finalizeSession(session, serverData) {
+      if (session.message !== "SASLResponse") {
+        throw new Error("SASL: Last message was not SASLResponse");
+      }
+      if (typeof serverData !== "string") {
+        throw new Error("SASL: SCRAM-SERVER-FINAL-MESSAGE: serverData must be a string");
+      }
+      const { serverSignature } = parseServerFinalMessage(serverData);
+      if (serverSignature !== session.serverSignature) {
+        throw new Error("SASL: SCRAM-SERVER-FINAL-MESSAGE: server signature does not match");
+      }
+    }
+    function isPrintableChars(text) {
+      if (typeof text !== "string") {
+        throw new TypeError("SASL: text must be a string");
+      }
+      return text.split("").map((_, i) => text.charCodeAt(i)).every((c) => c >= 33 && c <= 43 || c >= 45 && c <= 126);
+    }
+    function isBase64(text) {
+      return /^(?:[a-zA-Z0-9+/]{4})*(?:[a-zA-Z0-9+/]{2}==|[a-zA-Z0-9+/]{3}=)?$/.test(text);
+    }
+    function parseAttributePairs(text) {
+      if (typeof text !== "string") {
+        throw new TypeError("SASL: attribute pairs text must be a string");
+      }
+      return new Map(
+        text.split(",").map((attrValue) => {
+          if (!/^.=/.test(attrValue)) {
+            throw new Error("SASL: Invalid attribute pair entry");
+          }
+          const name = attrValue[0];
+          const value = attrValue.substring(2);
+          return [name, value];
+        })
+      );
+    }
+    function parseServerFirstMessage(data) {
+      const attrPairs = parseAttributePairs(data);
+      const nonce = attrPairs.get("r");
+      if (!nonce) {
+        throw new Error("SASL: SCRAM-SERVER-FIRST-MESSAGE: nonce missing");
+      } else if (!isPrintableChars(nonce)) {
+        throw new Error("SASL: SCRAM-SERVER-FIRST-MESSAGE: nonce must only contain printable characters");
+      }
+      const salt = attrPairs.get("s");
+      if (!salt) {
+        throw new Error("SASL: SCRAM-SERVER-FIRST-MESSAGE: salt missing");
+      } else if (!isBase64(salt)) {
+        throw new Error("SASL: SCRAM-SERVER-FIRST-MESSAGE: salt must be base64");
+      }
+      const iterationText = attrPairs.get("i");
+      if (!iterationText) {
+        throw new Error("SASL: SCRAM-SERVER-FIRST-MESSAGE: iteration missing");
+      } else if (!/^[1-9][0-9]*$/.test(iterationText)) {
+        throw new Error("SASL: SCRAM-SERVER-FIRST-MESSAGE: invalid iteration count");
+      }
+      const iteration = parseInt(iterationText, 10);
+      return {
+        nonce,
+        salt,
+        iteration
+      };
+    }
+    function parseServerFinalMessage(serverData) {
+      const attrPairs = parseAttributePairs(serverData);
+      const error61 = attrPairs.get("e");
+      const serverSignature = attrPairs.get("v");
+      if (error61) {
+        throw new Error(`SASL: SCRAM-SERVER-FINAL-MESSAGE: server returned error: "${error61}"`);
+      }
+      if (!serverSignature) {
+        throw new Error("SASL: SCRAM-SERVER-FINAL-MESSAGE: server signature is missing");
+      } else if (!isBase64(serverSignature)) {
+        throw new Error("SASL: SCRAM-SERVER-FINAL-MESSAGE: server signature must be base64");
+      }
+      return {
+        serverSignature
+      };
+    }
+    function xorBuffers(a, b) {
+      if (!Buffer.isBuffer(a)) {
+        throw new TypeError("first argument must be a Buffer");
+      }
+      if (!Buffer.isBuffer(b)) {
+        throw new TypeError("second argument must be a Buffer");
+      }
+      if (a.length !== b.length) {
+        throw new Error("Buffer lengths must match");
+      }
+      if (a.length === 0) {
+        throw new Error("Buffers cannot be empty");
+      }
+      return Buffer.from(a.map((_, i) => a[i] ^ b[i]));
+    }
+    module2.exports = {
+      startSession,
+      continueSession,
+      finalizeSession,
+      DEFAULT_MAX_SCRAM_ITERATIONS
+    };
+  }
+});
+
+// node_modules/pg/lib/type-overrides.js
+var require_type_overrides = __commonJS({
+  "node_modules/pg/lib/type-overrides.js"(exports2, module2) {
+    "use strict";
+    var types2 = require_pg_types();
+    function TypeOverrides2(userTypes) {
+      this._types = userTypes || types2;
+      this.text = {};
+      this.binary = {};
+    }
+    TypeOverrides2.prototype.getOverrides = function(format) {
+      switch (format) {
+        case "text":
+          return this.text;
+        case "binary":
+          return this.binary;
+        default:
+          return {};
+      }
+    };
+    TypeOverrides2.prototype.setTypeParser = function(oid, format, parseFn) {
+      if (typeof format === "function") {
+        parseFn = format;
+        format = "text";
+      }
+      this.getOverrides(format)[oid] = parseFn;
+    };
+    TypeOverrides2.prototype.getTypeParser = function(oid, format) {
+      format = format || "text";
+      return this.getOverrides(format)[oid] || this._types.getTypeParser(oid, format);
+    };
+    module2.exports = TypeOverrides2;
+  }
+});
+
+// node_modules/pg-connection-string/index.js
+var require_pg_connection_string = __commonJS({
+  "node_modules/pg-connection-string/index.js"(exports2, module2) {
+    "use strict";
+    function parse3(str, options = {}) {
+      if (str.charAt(0) === "/") {
+        const config3 = str.split(" ");
+        return { host: config3[0], database: config3[1] };
+      }
+      const config2 = /* @__PURE__ */ Object.create(null);
+      let result;
+      let dummyHost = false;
+      if (/ |%[^a-f0-9]|%[a-f0-9][^a-f0-9]/i.test(str)) {
+        str = encodeURI(str).replace(/%25(\d\d)/g, "%$1");
+      }
+      try {
+        try {
+          result = new URL(str, "postgres://base");
+        } catch (e) {
+          result = new URL(str.replace("@/", "@___DUMMY___/"), "postgres://base");
+          dummyHost = true;
+        }
+      } catch (err) {
+        err.input && (err.input = "*****REDACTED*****");
+        throw err;
+      }
+      for (const entry of result.searchParams.entries()) {
+        config2[entry[0]] = entry[1];
+      }
+      config2.user = config2.user || decodeURIComponent(result.username);
+      config2.password = config2.password || decodeURIComponent(result.password);
+      if (result.protocol == "socket:") {
+        config2.host = decodeURI(result.pathname);
+        config2.database = result.searchParams.get("db");
+        config2.client_encoding = result.searchParams.get("encoding");
+        return config2;
+      }
+      const hostname3 = dummyHost ? "" : result.hostname;
+      if (!config2.host) {
+        config2.host = decodeURIComponent(hostname3);
+      } else if (hostname3 && /^%2f/i.test(hostname3)) {
+        result.pathname = hostname3 + result.pathname;
+      }
+      if (!config2.port) {
+        config2.port = result.port;
+      }
+      const pathname = result.pathname.slice(1) || null;
+      config2.database = pathname ? decodeURI(pathname) : null;
+      if (config2.ssl === "true" || config2.ssl === "1") {
+        config2.ssl = true;
+      }
+      if (config2.ssl === "0") {
+        config2.ssl = false;
+      }
+      if (config2.sslcert || config2.sslkey || config2.sslrootcert || config2.sslmode) {
+        config2.ssl = {};
+      }
+      if (config2.sslnegotiation === "direct" && config2.ssl === void 0) {
+        config2.ssl = true;
+      }
+      const fs = config2.sslcert || config2.sslkey || config2.sslrootcert ? require("fs") : null;
+      if (config2.sslcert) {
+        config2.ssl.cert = fs.readFileSync(config2.sslcert).toString();
+      }
+      if (config2.sslkey) {
+        config2.ssl.key = fs.readFileSync(config2.sslkey).toString();
+      }
+      if (config2.sslrootcert) {
+        config2.ssl.ca = fs.readFileSync(config2.sslrootcert).toString();
+      }
+      if (options.useLibpqCompat && config2.uselibpqcompat) {
+        throw new Error("Both useLibpqCompat and uselibpqcompat are set. Please use only one of them.");
+      }
+      if (config2.uselibpqcompat === "true" || options.useLibpqCompat) {
+        switch (config2.sslmode) {
+          case "disable": {
+            config2.ssl = false;
+            break;
+          }
+          case "prefer": {
+            config2.ssl.rejectUnauthorized = false;
+            break;
+          }
+          case "require": {
+            if (config2.sslrootcert) {
+              config2.ssl.checkServerIdentity = function() {
+              };
+            } else {
+              config2.ssl.rejectUnauthorized = false;
+            }
+            break;
+          }
+          case "verify-ca": {
+            if (!config2.ssl.ca) {
+              throw new Error(
+                "SECURITY WARNING: Using sslmode=verify-ca requires specifying a CA with sslrootcert. If a public CA is used, verify-ca allows connections to a server that somebody else may have registered with the CA, making you vulnerable to Man-in-the-Middle attacks. Either specify a custom CA certificate with sslrootcert parameter or use sslmode=verify-full for proper security."
+              );
+            }
+            config2.ssl.checkServerIdentity = function() {
+            };
+            break;
+          }
+          case "verify-full": {
+            break;
+          }
+        }
+      } else {
+        switch (config2.sslmode) {
+          case "disable": {
+            config2.ssl = false;
+            break;
+          }
+          case "prefer":
+          case "require":
+          case "verify-ca":
+          case "verify-full": {
+            if (config2.sslmode !== "verify-full") {
+              deprecatedSslModeWarning(config2.sslmode);
+            }
+            break;
+          }
+          case "no-verify": {
+            config2.ssl.rejectUnauthorized = false;
+            break;
+          }
+        }
+      }
+      return config2;
+    }
+    function toConnectionOptions(sslConfig) {
+      const connectionOptions = Object.entries(sslConfig).reduce((c, [key, value]) => {
+        if (value !== void 0 && value !== null) {
+          c[key] = value;
+        }
+        return c;
+      }, /* @__PURE__ */ Object.create(null));
+      return connectionOptions;
+    }
+    function toClientConfig(config2) {
+      const poolConfig = Object.entries(config2).reduce((c, [key, value]) => {
+        if (key === "ssl") {
+          const sslConfig = value;
+          if (typeof sslConfig === "boolean") {
+            c[key] = sslConfig;
+          }
+          if (typeof sslConfig === "object") {
+            c[key] = toConnectionOptions(sslConfig);
+          }
+        } else if (value !== void 0 && value !== null) {
+          if (key === "port") {
+            if (value !== "") {
+              const v = parseInt(value, 10);
+              if (isNaN(v)) {
+                throw new Error(`Invalid ${key}: ${value}`);
+              }
+              c[key] = v;
+            }
+          } else {
+            c[key] = value;
+          }
+        }
+        return c;
+      }, /* @__PURE__ */ Object.create(null));
+      return poolConfig;
+    }
+    function parseIntoClientConfig(str) {
+      return toClientConfig(parse3(str));
+    }
+    function deprecatedSslModeWarning(sslmode) {
+      if (!deprecatedSslModeWarning.warned && typeof process !== "undefined" && process.emitWarning) {
+        deprecatedSslModeWarning.warned = true;
+        process.emitWarning(`SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=${sslmode}'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.`);
+      }
+    }
+    module2.exports = parse3;
+    parse3.parse = parse3;
+    parse3.toClientConfig = toClientConfig;
+    parse3.parseIntoClientConfig = parseIntoClientConfig;
+  }
+});
+
+// node_modules/pg/lib/connection-parameters.js
+var require_connection_parameters = __commonJS({
+  "node_modules/pg/lib/connection-parameters.js"(exports2, module2) {
+    "use strict";
+    var dns = require("dns");
+    var defaults2 = require_defaults();
+    var parse3 = require_pg_connection_string().parse;
+    var val = function(key, config2, envVar) {
+      if (config2[key]) {
+        return config2[key];
+      }
+      if (envVar === void 0) {
+        envVar = process.env["PG" + key.toUpperCase()];
+      } else if (envVar === false) {
+      } else {
+        envVar = process.env[envVar];
+      }
+      return envVar || defaults2[key];
+    };
+    var readSSLConfigFromEnvironment = function() {
+      switch (process.env.PGSSLMODE) {
+        case "disable":
+          return false;
+        case "prefer":
+        case "require":
+        case "verify-ca":
+        case "verify-full":
+          return true;
+        case "no-verify":
+          return { rejectUnauthorized: false };
+      }
+      return defaults2.ssl;
+    };
+    var quoteParamValue = function(value) {
+      return "'" + ("" + value).replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'";
+    };
+    var add = function(params, config2, paramName) {
+      const value = config2[paramName];
+      if (value !== void 0 && value !== null) {
+        params.push(paramName + "=" + quoteParamValue(value));
+      }
+    };
+    var ConnectionParameters = class {
+      constructor(config2) {
+        config2 = typeof config2 === "string" ? parse3(config2) : config2 || {};
+        if (config2.connectionString) {
+          config2 = Object.assign({}, config2, parse3(config2.connectionString));
+        }
+        this.user = val("user", config2);
+        this.database = val("database", config2);
+        if (this.database === void 0) {
+          this.database = this.user;
+        }
+        this.port = parseInt(val("port", config2), 10);
+        this.host = val("host", config2);
+        Object.defineProperty(this, "password", {
+          configurable: true,
+          enumerable: false,
+          writable: true,
+          value: val("password", config2)
+        });
+        this.binary = val("binary", config2);
+        this.options = val("options", config2);
+        this.ssl = typeof config2.ssl === "undefined" ? readSSLConfigFromEnvironment() : config2.ssl;
+        if (typeof this.ssl === "string") {
+          if (this.ssl === "true") {
+            this.ssl = true;
+          }
+        }
+        if (this.ssl === "no-verify") {
+          this.ssl = { rejectUnauthorized: false };
+        }
+        if (this.ssl && this.ssl.key) {
+          Object.defineProperty(this.ssl, "key", {
+            enumerable: false
+          });
+        }
+        this.sslnegotiation = val("sslnegotiation", config2, "PGSSLNEGOTIATION");
+        if (this.sslnegotiation !== void 0 && this.sslnegotiation !== "postgres" && this.sslnegotiation !== "direct") {
+          throw new Error(
+            `Invalid sslnegotiation value: "${this.sslnegotiation}". Valid values are "postgres" and "direct".`
+          );
+        }
+        if (this.sslnegotiation === "direct" && !this.ssl) {
+          throw new Error("sslnegotiation=direct requires SSL to be enabled");
+        }
+        this.client_encoding = val("client_encoding", config2);
+        this.replication = val("replication", config2);
+        this.isDomainSocket = !(this.host || "").indexOf("/");
+        this.application_name = val("application_name", config2, "PGAPPNAME");
+        this.fallback_application_name = val("fallback_application_name", config2, false);
+        this.statement_timeout = val("statement_timeout", config2, false);
+        this.lock_timeout = val("lock_timeout", config2, false);
+        this.idle_in_transaction_session_timeout = val("idle_in_transaction_session_timeout", config2, false);
+        this.query_timeout = val("query_timeout", config2, false);
+        if (config2.connectionTimeoutMillis === void 0) {
+          this.connect_timeout = process.env.PGCONNECT_TIMEOUT || 0;
+        } else {
+          this.connect_timeout = Math.floor(config2.connectionTimeoutMillis / 1e3);
+        }
+        if (config2.keepAlive === false) {
+          this.keepalives = 0;
+        } else if (config2.keepAlive === true) {
+          this.keepalives = 1;
+        }
+        if (typeof config2.keepAliveInitialDelayMillis === "number") {
+          this.keepalives_idle = Math.floor(config2.keepAliveInitialDelayMillis / 1e3);
+        }
+      }
+      getLibpqConnectionString(cb) {
+        const params = [];
+        add(params, this, "user");
+        add(params, this, "password");
+        add(params, this, "port");
+        add(params, this, "application_name");
+        add(params, this, "fallback_application_name");
+        add(params, this, "connect_timeout");
+        add(params, this, "options");
+        const ssl = typeof this.ssl === "object" ? this.ssl : this.ssl ? { sslmode: this.ssl } : {};
+        add(params, ssl, "sslmode");
+        add(params, ssl, "sslca");
+        add(params, ssl, "sslkey");
+        add(params, ssl, "sslcert");
+        add(params, ssl, "sslrootcert");
+        add(params, this, "sslnegotiation");
+        if (this.database) {
+          params.push("dbname=" + quoteParamValue(this.database));
+        }
+        if (this.replication) {
+          params.push("replication=" + quoteParamValue(this.replication));
+        }
+        if (this.host) {
+          params.push("host=" + quoteParamValue(this.host));
+        }
+        if (this.isDomainSocket) {
+          return cb(null, params.join(" "));
+        }
+        if (this.client_encoding) {
+          params.push("client_encoding=" + quoteParamValue(this.client_encoding));
+        }
+        dns.lookup(this.host, function(err, address) {
+          if (err) return cb(err, null);
+          params.push("hostaddr=" + quoteParamValue(address));
+          return cb(null, params.join(" "));
+        });
+      }
+    };
+    module2.exports = ConnectionParameters;
+  }
+});
+
+// node_modules/pg/lib/result.js
+var require_result = __commonJS({
+  "node_modules/pg/lib/result.js"(exports2, module2) {
+    "use strict";
+    var types2 = require_pg_types();
+    var matchRegexp = /^([A-Za-z]+)(?: (\d+))?(?: (\d+))?/;
+    var Result2 = class {
+      constructor(rowMode, types3) {
+        this.command = null;
+        this.rowCount = null;
+        this.oid = null;
+        this.rows = [];
+        this.fields = [];
+        this._parsers = void 0;
+        this._types = types3;
+        this.RowCtor = null;
+        this.rowAsArray = rowMode === "array";
+        if (this.rowAsArray) {
+          this.parseRow = this._parseRowAsArray;
+        }
+        this._prebuiltEmptyResultObject = null;
+      }
+      // adds a command complete message
+      addCommandComplete(msg) {
+        let match2;
+        if (msg.text) {
+          match2 = matchRegexp.exec(msg.text);
+        } else {
+          match2 = matchRegexp.exec(msg.command);
+        }
+        if (match2) {
+          this.command = match2[1];
+          if (match2[3]) {
+            this.oid = parseInt(match2[2], 10);
+            this.rowCount = parseInt(match2[3], 10);
+          } else if (match2[2]) {
+            this.rowCount = parseInt(match2[2], 10);
+          }
+        }
+      }
+      _parseRowAsArray(rowData) {
+        const row = new Array(rowData.length);
+        for (let i = 0, len = rowData.length; i < len; i++) {
+          const rawValue = rowData[i];
+          if (rawValue !== null) {
+            row[i] = this._parsers[i](rawValue);
+          } else {
+            row[i] = null;
+          }
+        }
+        return row;
+      }
+      parseRow(rowData) {
+        const row = { ...this._prebuiltEmptyResultObject };
+        for (let i = 0, len = rowData.length; i < len; i++) {
+          const rawValue = rowData[i];
+          const field = this.fields[i].name;
+          if (rawValue !== null) {
+            const v = this.fields[i].format === "binary" ? Buffer.from(rawValue) : rawValue;
+            row[field] = this._parsers[i](v);
+          } else {
+            row[field] = null;
+          }
+        }
+        return row;
+      }
+      addRow(row) {
+        this.rows.push(row);
+      }
+      addFields(fieldDescriptions) {
+        this.fields = fieldDescriptions;
+        if (this.fields.length) {
+          this._parsers = new Array(fieldDescriptions.length);
+        }
+        const row = /* @__PURE__ */ Object.create(null);
+        for (let i = 0; i < fieldDescriptions.length; i++) {
+          const desc = fieldDescriptions[i];
+          row[desc.name] = null;
+          if (this._types) {
+            this._parsers[i] = this._types.getTypeParser(desc.dataTypeID, desc.format || "text");
+          } else {
+            this._parsers[i] = types2.getTypeParser(desc.dataTypeID, desc.format || "text");
+          }
+        }
+        this._prebuiltEmptyResultObject = { ...row };
+      }
+    };
+    module2.exports = Result2;
+  }
+});
+
+// node_modules/pg/lib/query.js
+var require_query = __commonJS({
+  "node_modules/pg/lib/query.js"(exports2, module2) {
+    "use strict";
+    var { EventEmitter } = require("events");
+    var Result2 = require_result();
+    var utils = require_utils2();
+    var Query2 = class extends EventEmitter {
+      constructor(config2, values, callback) {
+        super();
+        config2 = utils.normalizeQueryConfig(config2, values, callback);
+        this.text = config2.text;
+        this.values = config2.values;
+        this.rows = config2.rows;
+        this.types = config2.types;
+        this.name = config2.name;
+        this.queryMode = config2.queryMode;
+        this.binary = config2.binary;
+        this.portal = config2.portal || "";
+        this.callback = config2.callback;
+        this._rowMode = config2.rowMode;
+        if (process.domain && config2.callback) {
+          this.callback = process.domain.bind(config2.callback);
+        }
+        this._result = new Result2(this._rowMode, this.types);
+        this._results = this._result;
+        this._canceledDueToError = false;
+      }
+      requiresPreparation() {
+        if (this.queryMode === "extended") {
+          return true;
+        }
+        if (this.name) {
+          return true;
+        }
+        if (this.rows) {
+          return true;
+        }
+        if (!this.text) {
+          return false;
+        }
+        if (!this.values) {
+          return false;
+        }
+        return this.values.length > 0;
+      }
+      _checkForMultirow() {
+        if (this._result.command) {
+          if (!Array.isArray(this._results)) {
+            this._results = [this._result];
+          }
+          this._result = new Result2(this._rowMode, this._result._types);
+          this._results.push(this._result);
+        }
+      }
+      // associates row metadata from the supplied
+      // message with this query object
+      // metadata used when parsing row results
+      handleRowDescription(msg) {
+        this._checkForMultirow();
+        this._result.addFields(msg.fields);
+        this._accumulateRows = this.callback || !this.listeners("row").length;
+      }
+      handleDataRow(msg) {
+        let row;
+        if (this._canceledDueToError) {
+          return;
+        }
+        try {
+          row = this._result.parseRow(msg.fields);
+        } catch (err) {
+          this._canceledDueToError = err;
+          return;
+        }
+        this.emit("row", row, this._result);
+        if (this._accumulateRows) {
+          this._result.addRow(row);
+        }
+      }
+      handleCommandComplete(msg, connection) {
+        this._checkForMultirow();
+        this._result.addCommandComplete(msg);
+        if (this.rows) {
+          connection.sync();
+        }
+      }
+      // if a named prepared statement is created with empty query text
+      // the backend will send an emptyQuery message but *not* a command complete message
+      // since we pipeline sync immediately after execute we don't need to do anything here
+      // unless we have rows specified, in which case we did not pipeline the initial sync call
+      handleEmptyQuery(connection) {
+        if (this.rows) {
+          connection.sync();
+        }
+      }
+      handleError(err, connection) {
+        if (this._canceledDueToError) {
+          err = this._canceledDueToError;
+          this._canceledDueToError = false;
+        }
+        if (this.callback) {
+          return this.callback(err);
+        }
+        this.emit("error", err);
+      }
+      handleReadyForQuery(con) {
+        if (this._canceledDueToError) {
+          return this.handleError(this._canceledDueToError, con);
+        }
+        if (this.callback) {
+          try {
+            this.callback(null, this._results);
+          } catch (err) {
+            process.nextTick(() => {
+              throw err;
+            });
+          }
+        }
+        this.emit("end", this._results);
+      }
+      submit(connection) {
+        if (typeof this.text !== "string" && typeof this.name !== "string") {
+          return new Error("A query must have either text or a name. Supplying neither is unsupported.");
+        }
+        const previous = connection.parsedStatements[this.name] || connection.submittedNamedStatements[this.name];
+        if (this.text && previous && this.text !== previous) {
+          return new Error(`Prepared statements must be unique - '${this.name}' was used for a different statement`);
+        }
+        if (this.values && !Array.isArray(this.values)) {
+          return new Error("Query values must be an array");
+        }
+        if (this.requiresPreparation()) {
+          connection.stream.cork && connection.stream.cork();
+          try {
+            this.prepare(connection);
+          } finally {
+            connection.stream.uncork && connection.stream.uncork();
+          }
+        } else {
+          connection.query(this.text);
+        }
+        return null;
+      }
+      hasBeenParsed(connection) {
+        return this.name && (connection.parsedStatements[this.name] || connection.submittedNamedStatements[this.name]);
+      }
+      handlePortalSuspended(connection) {
+        this._getRows(connection, this.rows);
+      }
+      _getRows(connection, rows) {
+        connection.execute({
+          portal: this.portal,
+          rows
+        });
+        if (!rows) {
+          connection.sync();
+        } else {
+          connection.flush();
+        }
+      }
+      // http://developer.postgresql.org/pgdocs/postgres/protocol-flow.html#PROTOCOL-FLOW-EXT-QUERY
+      prepare(connection) {
+        if (!this.hasBeenParsed(connection)) {
+          connection.parse({
+            text: this.text,
+            name: this.name,
+            types: this.types
+          });
+          if (this.name) {
+            connection.submittedNamedStatements[this.name] = this.text;
+          }
+        }
+        try {
+          connection.bind({
+            portal: this.portal,
+            statement: this.name,
+            values: this.values,
+            binary: this.binary,
+            valueMapper: utils.prepareValue
+          });
+        } catch (err) {
+          connection.close({ type: "S", name: this.name });
+          connection.sync();
+          this.handleError(err, connection);
+          return;
+        }
+        connection.describe({
+          type: "P",
+          name: this.portal || ""
+        });
+        this._getRows(connection, this.rows);
+      }
+      handleCopyInResponse(connection) {
+        connection.sendCopyFail("No source stream defined");
+      }
+      handleCopyData(msg, connection) {
+      }
+    };
+    module2.exports = Query2;
+  }
+});
+
+// node_modules/pg-protocol/dist/messages.js
+var require_messages = __commonJS({
+  "node_modules/pg-protocol/dist/messages.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.NoticeMessage = exports2.DataRowMessage = exports2.CommandCompleteMessage = exports2.ReadyForQueryMessage = exports2.NotificationResponseMessage = exports2.BackendKeyDataMessage = exports2.AuthenticationMD5Password = exports2.ParameterStatusMessage = exports2.ParameterDescriptionMessage = exports2.RowDescriptionMessage = exports2.Field = exports2.CopyResponse = exports2.CopyDataMessage = exports2.DatabaseError = exports2.copyDone = exports2.emptyQuery = exports2.replicationStart = exports2.portalSuspended = exports2.noData = exports2.closeComplete = exports2.bindComplete = exports2.parseComplete = void 0;
+    exports2.parseComplete = {
+      name: "parseComplete",
+      length: 5
+    };
+    exports2.bindComplete = {
+      name: "bindComplete",
+      length: 5
+    };
+    exports2.closeComplete = {
+      name: "closeComplete",
+      length: 5
+    };
+    exports2.noData = {
+      name: "noData",
+      length: 5
+    };
+    exports2.portalSuspended = {
+      name: "portalSuspended",
+      length: 5
+    };
+    exports2.replicationStart = {
+      name: "replicationStart",
+      length: 4
+    };
+    exports2.emptyQuery = {
+      name: "emptyQuery",
+      length: 4
+    };
+    exports2.copyDone = {
+      name: "copyDone",
+      length: 4
+    };
+    var DatabaseError2 = class extends Error {
+      constructor(message, length, name) {
+        super(message);
+        this.length = length;
+        this.name = name;
+      }
+    };
+    exports2.DatabaseError = DatabaseError2;
+    var CopyDataMessage = class {
+      constructor(length, chunk) {
+        this.length = length;
+        this.chunk = chunk;
+        this.name = "copyData";
+      }
+    };
+    exports2.CopyDataMessage = CopyDataMessage;
+    var CopyResponse = class {
+      constructor(length, name, binary, columnCount) {
+        this.length = length;
+        this.name = name;
+        this.binary = binary;
+        this.columnTypes = new Array(columnCount);
+      }
+    };
+    exports2.CopyResponse = CopyResponse;
+    var Field = class {
+      constructor(name, tableID, columnID, dataTypeID, dataTypeSize, dataTypeModifier, format) {
+        this.name = name;
+        this.tableID = tableID;
+        this.columnID = columnID;
+        this.dataTypeID = dataTypeID;
+        this.dataTypeSize = dataTypeSize;
+        this.dataTypeModifier = dataTypeModifier;
+        this.format = format;
+      }
+    };
+    exports2.Field = Field;
+    var RowDescriptionMessage = class {
+      constructor(length, fieldCount) {
+        this.length = length;
+        this.fieldCount = fieldCount;
+        this.name = "rowDescription";
+        this.fields = new Array(this.fieldCount);
+      }
+    };
+    exports2.RowDescriptionMessage = RowDescriptionMessage;
+    var ParameterDescriptionMessage = class {
+      constructor(length, parameterCount) {
+        this.length = length;
+        this.parameterCount = parameterCount;
+        this.name = "parameterDescription";
+        this.dataTypeIDs = new Array(this.parameterCount);
+      }
+    };
+    exports2.ParameterDescriptionMessage = ParameterDescriptionMessage;
+    var ParameterStatusMessage = class {
+      constructor(length, parameterName, parameterValue) {
+        this.length = length;
+        this.parameterName = parameterName;
+        this.parameterValue = parameterValue;
+        this.name = "parameterStatus";
+      }
+    };
+    exports2.ParameterStatusMessage = ParameterStatusMessage;
+    var AuthenticationMD5Password = class {
+      constructor(length, salt) {
+        this.length = length;
+        this.salt = salt;
+        this.name = "authenticationMD5Password";
+      }
+    };
+    exports2.AuthenticationMD5Password = AuthenticationMD5Password;
+    var BackendKeyDataMessage = class {
+      constructor(length, processID, secretKey) {
+        this.length = length;
+        this.processID = processID;
+        this.secretKey = secretKey;
+        this.name = "backendKeyData";
+      }
+    };
+    exports2.BackendKeyDataMessage = BackendKeyDataMessage;
+    var NotificationResponseMessage = class {
+      constructor(length, processId, channel, payload) {
+        this.length = length;
+        this.processId = processId;
+        this.channel = channel;
+        this.payload = payload;
+        this.name = "notification";
+      }
+    };
+    exports2.NotificationResponseMessage = NotificationResponseMessage;
+    var ReadyForQueryMessage = class {
+      constructor(length, status) {
+        this.length = length;
+        this.status = status;
+        this.name = "readyForQuery";
+      }
+    };
+    exports2.ReadyForQueryMessage = ReadyForQueryMessage;
+    var CommandCompleteMessage = class {
+      constructor(length, text) {
+        this.length = length;
+        this.text = text;
+        this.name = "commandComplete";
+      }
+    };
+    exports2.CommandCompleteMessage = CommandCompleteMessage;
+    var DataRowMessage = class {
+      constructor(length, fields) {
+        this.length = length;
+        this.fields = fields;
+        this.name = "dataRow";
+        this.fieldCount = fields.length;
+      }
+    };
+    exports2.DataRowMessage = DataRowMessage;
+    var NoticeMessage = class {
+      constructor(length, message) {
+        this.length = length;
+        this.message = message;
+        this.name = "notice";
+      }
+    };
+    exports2.NoticeMessage = NoticeMessage;
+  }
+});
+
+// node_modules/pg-protocol/dist/buffer-writer.js
+var require_buffer_writer = __commonJS({
+  "node_modules/pg-protocol/dist/buffer-writer.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.Writer = void 0;
+    var Writer = class {
+      constructor(size = 256) {
+        this.size = size;
+        this.offset = 5;
+        this.headerPosition = 0;
+        this.buffer = Buffer.allocUnsafe(size);
+      }
+      ensure(size) {
+        const remaining = this.buffer.length - this.offset;
+        if (remaining < size) {
+          const oldBuffer = this.buffer;
+          const newSize = oldBuffer.length + (oldBuffer.length >> 1) + size;
+          this.buffer = Buffer.allocUnsafe(newSize);
+          oldBuffer.copy(this.buffer);
+        }
+      }
+      addInt32(num) {
+        this.ensure(4);
+        this.buffer[this.offset++] = num >>> 24 & 255;
+        this.buffer[this.offset++] = num >>> 16 & 255;
+        this.buffer[this.offset++] = num >>> 8 & 255;
+        this.buffer[this.offset++] = num >>> 0 & 255;
+        return this;
+      }
+      addInt16(num) {
+        this.ensure(2);
+        this.buffer[this.offset++] = num >>> 8 & 255;
+        this.buffer[this.offset++] = num >>> 0 & 255;
+        return this;
+      }
+      addCString(string4) {
+        if (!string4) {
+          this.ensure(1);
+        } else {
+          const len = Buffer.byteLength(string4);
+          this.ensure(len + 1);
+          this.buffer.write(string4, this.offset, "utf-8");
+          this.offset += len;
+        }
+        this.buffer[this.offset++] = 0;
+        return this;
+      }
+      addString(string4 = "") {
+        const len = Buffer.byteLength(string4);
+        this.ensure(len);
+        this.buffer.write(string4, this.offset);
+        this.offset += len;
+        return this;
+      }
+      // Write an Int32 byte-length prefix immediately followed by the string's UTF-8
+      // bytes. Postgres' Bind wire format prefixes every parameter with its length,
+      // and doing it in one method computes Buffer.byteLength ONCE — the previous
+      // `addInt32(Buffer.byteLength(s)).addString(s)` pairing scanned the string
+      // three times (byteLength for the prefix, byteLength again inside addString,
+      // then the encode), which is costly for large text parameters.
+      addInt32PrefixedString(string4) {
+        const len = Buffer.byteLength(string4);
+        this.ensure(4 + len);
+        const buffer = this.buffer;
+        let offset = this.offset;
+        buffer[offset++] = len >>> 24 & 255;
+        buffer[offset++] = len >>> 16 & 255;
+        buffer[offset++] = len >>> 8 & 255;
+        buffer[offset++] = len >>> 0 & 255;
+        buffer.write(string4, offset, "utf-8");
+        this.offset = offset + len;
+        return this;
+      }
+      add(otherBuffer) {
+        this.ensure(otherBuffer.length);
+        otherBuffer.copy(this.buffer, this.offset);
+        this.offset += otherBuffer.length;
+        return this;
+      }
+      join(code) {
+        if (code) {
+          this.buffer[this.headerPosition] = code;
+          const length = this.offset - (this.headerPosition + 1);
+          this.buffer.writeInt32BE(length, this.headerPosition + 1);
+        }
+        return this.buffer.slice(code ? 0 : 5, this.offset);
+      }
+      flush(code) {
+        const result = this.join(code);
+        this.offset = 5;
+        this.headerPosition = 0;
+        this.buffer = Buffer.allocUnsafe(this.size);
+        return result;
+      }
+      clear() {
+        this.offset = 5;
+        this.headerPosition = 0;
+      }
+    };
+    exports2.Writer = Writer;
+  }
+});
+
+// node_modules/pg-protocol/dist/serializer.js
+var require_serializer = __commonJS({
+  "node_modules/pg-protocol/dist/serializer.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.serialize = void 0;
+    var buffer_writer_1 = require_buffer_writer();
+    var writer = new buffer_writer_1.Writer();
+    var startup = (opts) => {
+      writer.addInt16(3).addInt16(0);
+      for (const key of Object.keys(opts)) {
+        writer.addCString(key).addCString(opts[key]);
+      }
+      writer.addCString("client_encoding").addCString("UTF8");
+      const bodyBuffer = writer.addCString("").flush();
+      const length = bodyBuffer.length + 4;
+      return new buffer_writer_1.Writer().addInt32(length).add(bodyBuffer).flush();
+    };
+    var requestSsl = () => {
+      const response = Buffer.allocUnsafe(8);
+      response.writeInt32BE(8, 0);
+      response.writeInt32BE(80877103, 4);
+      return response;
+    };
+    var password = (password2) => {
+      return writer.addCString(password2).flush(
+        112
+        /* code.startup */
+      );
+    };
+    var sendSASLInitialResponseMessage = function(mechanism, initialResponse) {
+      writer.addCString(mechanism).addInt32PrefixedString(initialResponse);
+      return writer.flush(
+        112
+        /* code.startup */
+      );
+    };
+    var sendSCRAMClientFinalMessage = function(additionalData) {
+      return writer.addString(additionalData).flush(
+        112
+        /* code.startup */
+      );
+    };
+    var query = (text) => {
+      return writer.addCString(text).flush(
+        81
+        /* code.query */
+      );
+    };
+    var emptyArray = [];
+    var parse3 = (query2) => {
+      const name = query2.name || "";
+      if (name.length > 63) {
+        console.error("Warning! Postgres only supports 63 characters for query names.");
+        console.error("You supplied %s (%s)", name, name.length);
+        console.error("This can cause conflicts and silent errors executing queries");
+      }
+      const types2 = query2.types || emptyArray;
+      const len = types2.length;
+      const buffer = writer.addCString(name).addCString(query2.text).addInt16(len);
+      for (let i = 0; i < len; i++) {
+        buffer.addInt32(types2[i]);
+      }
+      return writer.flush(
+        80
+        /* code.parse */
+      );
+    };
+    var paramWriter = new buffer_writer_1.Writer();
+    var writeValues = function(values, valueMapper) {
+      for (let i = 0; i < values.length; i++) {
+        const mappedVal = valueMapper ? valueMapper(values[i], i) : values[i];
+        if (mappedVal == null) {
+          writer.addInt16(
+            0
+            /* ParamType.STRING */
+          );
+          paramWriter.addInt32(-1);
+        } else if (mappedVal instanceof Buffer) {
+          writer.addInt16(
+            1
+            /* ParamType.BINARY */
+          );
+          paramWriter.addInt32(mappedVal.length);
+          paramWriter.add(mappedVal);
+        } else {
+          writer.addInt16(
+            0
+            /* ParamType.STRING */
+          );
+          paramWriter.addInt32PrefixedString(mappedVal);
+        }
+      }
+    };
+    var bind = (config2 = {}) => {
+      const portal = config2.portal || "";
+      const statement = config2.statement || "";
+      const binary = config2.binary || false;
+      const values = config2.values || emptyArray;
+      const len = values.length;
+      writer.addCString(portal).addCString(statement);
+      writer.addInt16(len);
+      try {
+        writeValues(values, config2.valueMapper);
+      } catch (err) {
+        writer.clear();
+        paramWriter.clear();
+        throw err;
+      }
+      writer.addInt16(len);
+      writer.add(paramWriter.flush());
+      writer.addInt16(1);
+      writer.addInt16(
+        binary ? 1 : 0
+        /* ParamType.STRING */
+      );
+      return writer.flush(
+        66
+        /* code.bind */
+      );
+    };
+    var emptyExecute = Buffer.from([69, 0, 0, 0, 9, 0, 0, 0, 0, 0]);
+    var execute = (config2) => {
+      if (!config2 || !config2.portal && !config2.rows) {
+        return emptyExecute;
+      }
+      const portal = config2.portal || "";
+      const rows = config2.rows || 0;
+      const portalLength = Buffer.byteLength(portal);
+      const len = 4 + portalLength + 1 + 4;
+      const buff = Buffer.allocUnsafe(1 + len);
+      buff[0] = 69;
+      buff.writeInt32BE(len, 1);
+      buff.write(portal, 5, "utf-8");
+      buff[portalLength + 5] = 0;
+      buff.writeUInt32BE(rows, buff.length - 4);
+      return buff;
+    };
+    var cancel = (processID, secretKey) => {
+      const buffer = Buffer.allocUnsafe(16);
+      buffer.writeInt32BE(16, 0);
+      buffer.writeInt16BE(1234, 4);
+      buffer.writeInt16BE(5678, 6);
+      buffer.writeInt32BE(processID, 8);
+      buffer.writeInt32BE(secretKey, 12);
+      return buffer;
+    };
+    var cstringMessage = (code, string4) => {
+      const stringLen = Buffer.byteLength(string4);
+      const len = 4 + stringLen + 1;
+      const buffer = Buffer.allocUnsafe(1 + len);
+      buffer[0] = code;
+      buffer.writeInt32BE(len, 1);
+      buffer.write(string4, 5, "utf-8");
+      buffer[len] = 0;
+      return buffer;
+    };
+    var emptyDescribePortal = writer.addCString("P").flush(
+      68
+      /* code.describe */
+    );
+    var emptyDescribeStatement = writer.addCString("S").flush(
+      68
+      /* code.describe */
+    );
+    var describe3 = (msg) => {
+      return msg.name ? cstringMessage(68, `${msg.type}${msg.name || ""}`) : msg.type === "P" ? emptyDescribePortal : emptyDescribeStatement;
+    };
+    var close = (msg) => {
+      const text = `${msg.type}${msg.name || ""}`;
+      return cstringMessage(67, text);
+    };
+    var copyData = (chunk) => {
+      return writer.add(chunk).flush(
+        100
+        /* code.copyFromChunk */
+      );
+    };
+    var copyFail = (message) => {
+      return cstringMessage(102, message);
+    };
+    var codeOnlyBuffer = (code) => Buffer.from([code, 0, 0, 0, 4]);
+    var flushBuffer = codeOnlyBuffer(
+      72
+      /* code.flush */
+    );
+    var syncBuffer = codeOnlyBuffer(
+      83
+      /* code.sync */
+    );
+    var endBuffer = codeOnlyBuffer(
+      88
+      /* code.end */
+    );
+    var copyDoneBuffer = codeOnlyBuffer(
+      99
+      /* code.copyDone */
+    );
+    var serialize = {
+      startup,
+      password,
+      requestSsl,
+      sendSASLInitialResponseMessage,
+      sendSCRAMClientFinalMessage,
+      query,
+      parse: parse3,
+      bind,
+      execute,
+      describe: describe3,
+      close,
+      flush: () => flushBuffer,
+      sync: () => syncBuffer,
+      end: () => endBuffer,
+      copyData,
+      copyDone: () => copyDoneBuffer,
+      copyFail,
+      cancel
+    };
+    exports2.serialize = serialize;
+  }
+});
+
+// node_modules/pg-protocol/dist/buffer-reader.js
+var require_buffer_reader = __commonJS({
+  "node_modules/pg-protocol/dist/buffer-reader.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.BufferReader = void 0;
+    var BufferReader = class {
+      constructor(offset = 0) {
+        this.offset = offset;
+        this.buffer = Buffer.allocUnsafe(0);
+        this.encoding = "utf-8";
+      }
+      setBuffer(offset, buffer) {
+        this.offset = offset;
+        this.buffer = buffer;
+      }
+      int16() {
+        const result = this.buffer.readInt16BE(this.offset);
+        this.offset += 2;
+        return result;
+      }
+      byte() {
+        const result = this.buffer[this.offset];
+        this.offset++;
+        return result;
+      }
+      int32() {
+        const result = this.buffer.readInt32BE(this.offset);
+        this.offset += 4;
+        return result;
+      }
+      uint32() {
+        const result = this.buffer.readUInt32BE(this.offset);
+        this.offset += 4;
+        return result;
+      }
+      string(length) {
+        const result = this.buffer.toString(this.encoding, this.offset, this.offset + length);
+        this.offset += length;
+        return result;
+      }
+      cstring() {
+        const start = this.offset;
+        let end = start;
+        while (this.buffer[end++]) {
+        }
+        this.offset = end;
+        return this.buffer.toString(this.encoding, start, end - 1);
+      }
+      bytes(length) {
+        const result = this.buffer.slice(this.offset, this.offset + length);
+        this.offset += length;
+        return result;
+      }
+    };
+    exports2.BufferReader = BufferReader;
+  }
+});
+
+// node_modules/pg-protocol/dist/parser.js
+var require_parser = __commonJS({
+  "node_modules/pg-protocol/dist/parser.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.Parser = void 0;
+    var messages_1 = require_messages();
+    var buffer_reader_1 = require_buffer_reader();
+    var CODE_LENGTH = 1;
+    var LEN_LENGTH = 4;
+    var HEADER_LENGTH = CODE_LENGTH + LEN_LENGTH;
+    var LATEINIT_LENGTH = -1;
+    var emptyBuffer = Buffer.allocUnsafe(0);
+    var Parser = class {
+      constructor(opts) {
+        this.buffer = emptyBuffer;
+        this.bufferLength = 0;
+        this.bufferOffset = 0;
+        this.reader = new buffer_reader_1.BufferReader();
+        if ((opts === null || opts === void 0 ? void 0 : opts.mode) === "binary") {
+          throw new Error("Binary mode not supported yet");
+        }
+        this.mode = (opts === null || opts === void 0 ? void 0 : opts.mode) || "text";
+      }
+      parse(buffer, callback) {
+        this.mergeBuffer(buffer);
+        const bufferFullLength = this.bufferOffset + this.bufferLength;
+        let offset = this.bufferOffset;
+        while (offset + HEADER_LENGTH <= bufferFullLength) {
+          const code = this.buffer[offset];
+          const length = this.buffer.readUInt32BE(offset + CODE_LENGTH);
+          const fullMessageLength = CODE_LENGTH + length;
+          if (fullMessageLength + offset <= bufferFullLength) {
+            const message = this.handlePacket(offset + HEADER_LENGTH, code, length, this.buffer);
+            callback(message);
+            offset += fullMessageLength;
+          } else {
+            break;
+          }
+        }
+        if (offset === bufferFullLength) {
+          this.buffer = emptyBuffer;
+          this.bufferLength = 0;
+          this.bufferOffset = 0;
+        } else {
+          this.bufferLength = bufferFullLength - offset;
+          this.bufferOffset = offset;
+        }
+      }
+      mergeBuffer(buffer) {
+        if (this.bufferLength > 0) {
+          const newLength = this.bufferLength + buffer.byteLength;
+          const newFullLength = newLength + this.bufferOffset;
+          if (newFullLength > this.buffer.byteLength) {
+            let newBuffer;
+            if (newLength <= this.buffer.byteLength && this.bufferOffset >= this.bufferLength) {
+              newBuffer = this.buffer;
+            } else {
+              let newBufferLength = this.buffer.byteLength * 2;
+              while (newLength >= newBufferLength) {
+                newBufferLength *= 2;
+              }
+              newBuffer = Buffer.allocUnsafe(newBufferLength);
+            }
+            this.buffer.copy(newBuffer, 0, this.bufferOffset, this.bufferOffset + this.bufferLength);
+            this.buffer = newBuffer;
+            this.bufferOffset = 0;
+          }
+          buffer.copy(this.buffer, this.bufferOffset + this.bufferLength);
+          this.bufferLength = newLength;
+        } else {
+          this.buffer = buffer;
+          this.bufferOffset = 0;
+          this.bufferLength = buffer.byteLength;
+        }
+      }
+      handlePacket(offset, code, length, bytes2) {
+        const { reader } = this;
+        reader.setBuffer(offset, bytes2);
+        let message;
+        switch (code) {
+          case 50:
+            message = messages_1.bindComplete;
+            break;
+          case 49:
+            message = messages_1.parseComplete;
+            break;
+          case 51:
+            message = messages_1.closeComplete;
+            break;
+          case 110:
+            message = messages_1.noData;
+            break;
+          case 115:
+            message = messages_1.portalSuspended;
+            break;
+          case 99:
+            message = messages_1.copyDone;
+            break;
+          case 87:
+            message = messages_1.replicationStart;
+            break;
+          case 73:
+            message = messages_1.emptyQuery;
+            break;
+          case 68:
+            message = parseDataRowMessage(reader);
+            break;
+          case 67:
+            message = parseCommandCompleteMessage(reader);
+            break;
+          case 90:
+            message = parseReadyForQueryMessage(reader);
+            break;
+          case 65:
+            message = parseNotificationMessage(reader);
+            break;
+          case 82:
+            message = parseAuthenticationResponse(reader, length);
+            break;
+          case 83:
+            message = parseParameterStatusMessage(reader);
+            break;
+          case 75:
+            message = parseBackendKeyData(reader);
+            break;
+          case 69:
+            message = parseErrorMessage(reader, "error");
+            break;
+          case 78:
+            message = parseErrorMessage(reader, "notice");
+            break;
+          case 84:
+            message = parseRowDescriptionMessage(reader);
+            break;
+          case 116:
+            message = parseParameterDescriptionMessage(reader);
+            break;
+          case 71:
+            message = parseCopyInMessage(reader);
+            break;
+          case 72:
+            message = parseCopyOutMessage(reader);
+            break;
+          case 100:
+            message = parseCopyData(reader, length);
+            break;
+          default:
+            return new messages_1.DatabaseError("received invalid response: " + code.toString(16), length, "error");
+        }
+        reader.setBuffer(0, emptyBuffer);
+        message.length = length;
+        return message;
+      }
+    };
+    exports2.Parser = Parser;
+    var parseReadyForQueryMessage = (reader) => {
+      const status = reader.string(1);
+      return new messages_1.ReadyForQueryMessage(LATEINIT_LENGTH, status);
+    };
+    var parseCommandCompleteMessage = (reader) => {
+      const text = reader.cstring();
+      return new messages_1.CommandCompleteMessage(LATEINIT_LENGTH, text);
+    };
+    var parseCopyData = (reader, length) => {
+      const chunk = reader.bytes(length - 4);
+      return new messages_1.CopyDataMessage(LATEINIT_LENGTH, chunk);
+    };
+    var parseCopyInMessage = (reader) => parseCopyMessage(reader, "copyInResponse");
+    var parseCopyOutMessage = (reader) => parseCopyMessage(reader, "copyOutResponse");
+    var parseCopyMessage = (reader, messageName) => {
+      const isBinary = reader.byte() !== 0;
+      const columnCount = reader.int16();
+      const message = new messages_1.CopyResponse(LATEINIT_LENGTH, messageName, isBinary, columnCount);
+      for (let i = 0; i < columnCount; i++) {
+        message.columnTypes[i] = reader.int16();
+      }
+      return message;
+    };
+    var parseNotificationMessage = (reader) => {
+      const processId = reader.int32();
+      const channel = reader.cstring();
+      const payload = reader.cstring();
+      return new messages_1.NotificationResponseMessage(LATEINIT_LENGTH, processId, channel, payload);
+    };
+    var parseRowDescriptionMessage = (reader) => {
+      const fieldCount = reader.int16();
+      const message = new messages_1.RowDescriptionMessage(LATEINIT_LENGTH, fieldCount);
+      for (let i = 0; i < fieldCount; i++) {
+        message.fields[i] = parseField(reader);
+      }
+      return message;
+    };
+    var parseField = (reader) => {
+      const name = reader.cstring();
+      const tableID = reader.uint32();
+      const columnID = reader.int16();
+      const dataTypeID = reader.uint32();
+      const dataTypeSize = reader.int16();
+      const dataTypeModifier = reader.int32();
+      const mode = reader.int16() === 0 ? "text" : "binary";
+      return new messages_1.Field(name, tableID, columnID, dataTypeID, dataTypeSize, dataTypeModifier, mode);
+    };
+    var parseParameterDescriptionMessage = (reader) => {
+      const parameterCount = reader.int16();
+      const message = new messages_1.ParameterDescriptionMessage(LATEINIT_LENGTH, parameterCount);
+      for (let i = 0; i < parameterCount; i++) {
+        message.dataTypeIDs[i] = reader.uint32();
+      }
+      return message;
+    };
+    var parseDataRowMessage = (reader) => {
+      const fieldCount = reader.int16();
+      const fields = new Array(fieldCount);
+      for (let i = 0; i < fieldCount; i++) {
+        const len = reader.int32();
+        fields[i] = len === -1 ? null : reader.string(len);
+      }
+      return new messages_1.DataRowMessage(LATEINIT_LENGTH, fields);
+    };
+    var parseParameterStatusMessage = (reader) => {
+      const name = reader.cstring();
+      const value = reader.cstring();
+      return new messages_1.ParameterStatusMessage(LATEINIT_LENGTH, name, value);
+    };
+    var parseBackendKeyData = (reader) => {
+      const processID = reader.int32();
+      const secretKey = reader.int32();
+      return new messages_1.BackendKeyDataMessage(LATEINIT_LENGTH, processID, secretKey);
+    };
+    var parseAuthenticationResponse = (reader, length) => {
+      const code = reader.int32();
+      const message = {
+        name: "authenticationOk",
+        length
+      };
+      switch (code) {
+        case 0:
+          break;
+        case 3:
+          if (message.length === 8) {
+            message.name = "authenticationCleartextPassword";
+          }
+          break;
+        case 5:
+          if (message.length === 12) {
+            message.name = "authenticationMD5Password";
+            const salt = reader.bytes(4);
+            return new messages_1.AuthenticationMD5Password(LATEINIT_LENGTH, salt);
+          }
+          break;
+        case 10:
+          {
+            message.name = "authenticationSASL";
+            message.mechanisms = [];
+            let mechanism;
+            do {
+              mechanism = reader.cstring();
+              if (mechanism) {
+                message.mechanisms.push(mechanism);
+              }
+            } while (mechanism);
+          }
+          break;
+        case 11:
+          message.name = "authenticationSASLContinue";
+          message.data = reader.string(length - 8);
+          break;
+        case 12:
+          message.name = "authenticationSASLFinal";
+          message.data = reader.string(length - 8);
+          break;
+        default:
+          throw new Error("Unknown authenticationOk message type " + code);
+      }
+      return message;
+    };
+    var parseErrorMessage = (reader, name) => {
+      const fields = {};
+      let fieldType = reader.string(1);
+      while (fieldType !== "\0") {
+        fields[fieldType] = reader.cstring();
+        fieldType = reader.string(1);
+      }
+      const messageValue = fields.M;
+      const message = name === "notice" ? new messages_1.NoticeMessage(LATEINIT_LENGTH, messageValue) : new messages_1.DatabaseError(messageValue, LATEINIT_LENGTH, name);
+      message.severity = fields.S;
+      message.code = fields.C;
+      message.detail = fields.D;
+      message.hint = fields.H;
+      message.position = fields.P;
+      message.internalPosition = fields.p;
+      message.internalQuery = fields.q;
+      message.where = fields.W;
+      message.schema = fields.s;
+      message.table = fields.t;
+      message.column = fields.c;
+      message.dataType = fields.d;
+      message.constraint = fields.n;
+      message.file = fields.F;
+      message.line = fields.L;
+      message.routine = fields.R;
+      return message;
+    };
+  }
+});
+
+// node_modules/pg-protocol/dist/index.js
+var require_dist4 = __commonJS({
+  "node_modules/pg-protocol/dist/index.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.DatabaseError = exports2.serialize = void 0;
+    exports2.parse = parse3;
+    var messages_1 = require_messages();
+    Object.defineProperty(exports2, "DatabaseError", { enumerable: true, get: function() {
+      return messages_1.DatabaseError;
+    } });
+    var serializer_1 = require_serializer();
+    Object.defineProperty(exports2, "serialize", { enumerable: true, get: function() {
+      return serializer_1.serialize;
+    } });
+    var parser_1 = require_parser();
+    function parse3(stream2, callback) {
+      const parser = new parser_1.Parser();
+      stream2.on("data", (buffer) => parser.parse(buffer, callback));
+      return new Promise((resolve) => stream2.on("end", () => resolve()));
+    }
+  }
+});
+
+// node_modules/pg-cloudflare/dist/empty.js
+var require_empty = __commonJS({
+  "node_modules/pg-cloudflare/dist/empty.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.default = {};
+  }
+});
+
+// node_modules/pg/lib/stream.js
+var require_stream2 = __commonJS({
+  "node_modules/pg/lib/stream.js"(exports2, module2) {
+    var { getStream, getSecureStream } = getStreamFuncs();
+    module2.exports = {
+      /**
+       * Get a socket stream compatible with the current runtime environment.
+       * @returns {Duplex}
+       */
+      getStream,
+      /**
+       * Get a TLS secured socket, compatible with the current environment,
+       * using the socket and other settings given in `options`.
+       * @returns {Duplex}
+       */
+      getSecureStream
+    };
+    function getNodejsStreamFuncs() {
+      function getStream2(ssl) {
+        const net = require("net");
+        return new net.Socket();
+      }
+      function getSecureStream2(options) {
+        const tls = require("tls");
+        return tls.connect(options);
+      }
+      return {
+        getStream: getStream2,
+        getSecureStream: getSecureStream2
+      };
+    }
+    function getCloudflareStreamFuncs() {
+      function getStream2(ssl) {
+        const { CloudflareSocket } = require_empty();
+        return new CloudflareSocket(ssl);
+      }
+      function getSecureStream2(options) {
+        options.socket.startTls(options);
+        return options.socket;
+      }
+      return {
+        getStream: getStream2,
+        getSecureStream: getSecureStream2
+      };
+    }
+    function isCloudflareRuntime() {
+      if (typeof navigator === "object" && navigator !== null && typeof navigator.userAgent === "string") {
+        return navigator.userAgent === "Cloudflare-Workers";
+      }
+      if (typeof Response === "function") {
+        const resp = new Response(null, { cf: { thing: true } });
+        if (typeof resp.cf === "object" && resp.cf !== null && resp.cf.thing) {
+          return true;
+        }
+      }
+      return false;
+    }
+    function getStreamFuncs() {
+      if (isCloudflareRuntime()) {
+        return getCloudflareStreamFuncs();
+      }
+      return getNodejsStreamFuncs();
+    }
+  }
+});
+
+// node_modules/pg/lib/connection.js
+var require_connection2 = __commonJS({
+  "node_modules/pg/lib/connection.js"(exports2, module2) {
+    "use strict";
+    var EventEmitter = require("events").EventEmitter;
+    var { parse: parse3, serialize } = require_dist4();
+    var stream2 = require_stream2();
+    var { getStream } = stream2;
+    var flushBuffer = serialize.flush();
+    var syncBuffer = serialize.sync();
+    var endBuffer = serialize.end();
+    var Connection2 = class extends EventEmitter {
+      constructor(config2) {
+        super();
+        config2 = config2 || {};
+        this.stream = config2.stream || getStream(config2.ssl);
+        if (typeof this.stream === "function") {
+          this.stream = this.stream(config2);
+        }
+        this._keepAlive = config2.keepAlive;
+        this._keepAliveInitialDelayMillis = config2.keepAliveInitialDelayMillis;
+        this.parsedStatements = {};
+        this.submittedNamedStatements = {};
+        this.ssl = config2.ssl || false;
+        this.sslNegotiation = config2.sslNegotiation || "postgres";
+        this._ending = false;
+        this._emitMessage = false;
+        const self = this;
+        this.on("newListener", function(eventName) {
+          if (eventName === "message") {
+            self._emitMessage = true;
+          }
+        });
+      }
+      connect(port, host) {
+        const self = this;
+        this._connecting = true;
+        this.stream.setNoDelay(true);
+        this.stream.connect(port, host);
+        this.stream.once("connect", function() {
+          if (self._keepAlive) {
+            self.stream.setKeepAlive(true, self._keepAliveInitialDelayMillis);
+          }
+          self.emit("connect");
+        });
+        const reportStreamError = function(error61) {
+          if (self._ending && (error61.code === "ECONNRESET" || error61.code === "EPIPE")) {
+            return;
+          }
+          self.emit("error", error61);
+        };
+        this.stream.on("error", reportStreamError);
+        this.stream.on("close", function() {
+          self.emit("end");
+        });
+        if (!this.ssl) {
+          return this.attachListeners(this.stream);
+        }
+        if (this.sslNegotiation === "direct") {
+          return this.stream.once("connect", function() {
+            self.upgradeToSSL(host, reportStreamError);
+          });
+        }
+        this.stream.once("data", function(buffer) {
+          const responseCode = buffer.toString("utf8");
+          switch (responseCode) {
+            case "S":
+              break;
+            case "N":
+              self.stream.end();
+              return self.emit("error", new Error("The server does not support SSL connections"));
+            default:
+              self.stream.end();
+              return self.emit("error", new Error("There was an error establishing an SSL connection"));
+          }
+          self.upgradeToSSL(host, reportStreamError);
+        });
+      }
+      upgradeToSSL(host, reportStreamError) {
+        const self = this;
+        const options = {
+          socket: self.stream
+        };
+        if (self.ssl !== true) {
+          Object.assign(options, self.ssl);
+          if ("key" in self.ssl) {
+            options.key = self.ssl.key;
+          }
+        }
+        if (self.sslNegotiation === "direct") {
+          options.ALPNProtocols = ["postgresql"];
+        }
+        const net = require("net");
+        if (net.isIP && net.isIP(host) === 0) {
+          options.servername = host;
+        }
+        try {
+          self.stream = stream2.getSecureStream(options);
+        } catch (err) {
+          return self.emit("error", err);
+        }
+        self.attachListeners(self.stream);
+        self.stream.on("error", reportStreamError);
+        self.emit("sslconnect");
+      }
+      attachListeners(stream3) {
+        parse3(stream3, (msg) => {
+          const eventName = msg.name === "error" ? "errorMessage" : msg.name;
+          if (this._emitMessage) {
+            this.emit("message", msg);
+          }
+          this.emit(eventName, msg);
+        });
+      }
+      requestSsl() {
+        this.stream.write(serialize.requestSsl());
+      }
+      startup(config2) {
+        this.stream.write(serialize.startup(config2));
+      }
+      cancel(processID, secretKey) {
+        this._send(serialize.cancel(processID, secretKey));
+      }
+      password(password) {
+        this._send(serialize.password(password));
+      }
+      sendSASLInitialResponseMessage(mechanism, initialResponse) {
+        this._send(serialize.sendSASLInitialResponseMessage(mechanism, initialResponse));
+      }
+      sendSCRAMClientFinalMessage(additionalData) {
+        this._send(serialize.sendSCRAMClientFinalMessage(additionalData));
+      }
+      _send(buffer) {
+        if (!this.stream.writable) {
+          return false;
+        }
+        return this.stream.write(buffer);
+      }
+      query(text) {
+        this._send(serialize.query(text));
+      }
+      // send parse message
+      parse(query) {
+        this._send(serialize.parse(query));
+      }
+      // send bind message
+      bind(config2) {
+        this._send(serialize.bind(config2));
+      }
+      // send execute message
+      execute(config2) {
+        this._send(serialize.execute(config2));
+      }
+      flush() {
+        if (this.stream.writable) {
+          this.stream.write(flushBuffer);
+        }
+      }
+      sync() {
+        this._ending = true;
+        this._send(syncBuffer);
+      }
+      ref() {
+        this.stream.ref();
+      }
+      unref() {
+        this.stream.unref();
+      }
+      end() {
+        this._ending = true;
+        if (!this._connecting || !this.stream.writable) {
+          this.stream.end();
+          return;
+        }
+        return this.stream.write(endBuffer, () => {
+          this.stream.end();
+        });
+      }
+      close(msg) {
+        this._send(serialize.close(msg));
+      }
+      describe(msg) {
+        this._send(serialize.describe(msg));
+      }
+      sendCopyFromChunk(chunk) {
+        this._send(serialize.copyData(chunk));
+      }
+      endCopyFrom() {
+        this._send(serialize.copyDone());
+      }
+      sendCopyFail(msg) {
+        this._send(serialize.copyFail(msg));
+      }
+    };
+    module2.exports = Connection2;
+  }
+});
+
+// node_modules/split2/index.js
+var require_split2 = __commonJS({
+  "node_modules/split2/index.js"(exports2, module2) {
+    "use strict";
+    var { Transform } = require("stream");
+    var { StringDecoder } = require("string_decoder");
+    var kLast = Symbol("last");
+    var kDecoder = Symbol("decoder");
+    function transform2(chunk, enc, cb) {
+      let list;
+      if (this.overflow) {
+        const buf = this[kDecoder].write(chunk);
+        list = buf.split(this.matcher);
+        if (list.length === 1) return cb();
+        list.shift();
+        this.overflow = false;
+      } else {
+        this[kLast] += this[kDecoder].write(chunk);
+        list = this[kLast].split(this.matcher);
+      }
+      this[kLast] = list.pop();
+      for (let i = 0; i < list.length; i++) {
+        try {
+          push2(this, this.mapper(list[i]));
+        } catch (error61) {
+          return cb(error61);
+        }
+      }
+      this.overflow = this[kLast].length > this.maxLength;
+      if (this.overflow && !this.skipOverflow) {
+        cb(new Error("maximum buffer reached"));
+        return;
+      }
+      cb();
+    }
+    function flush(cb) {
+      this[kLast] += this[kDecoder].end();
+      if (this[kLast]) {
+        try {
+          push2(this, this.mapper(this[kLast]));
+        } catch (error61) {
+          return cb(error61);
+        }
+      }
+      cb();
+    }
+    function push2(self, val) {
+      if (val !== void 0) {
+        self.push(val);
+      }
+    }
+    function noop(incoming) {
+      return incoming;
+    }
+    function split(matcher, mapper, options) {
+      matcher = matcher || /\r?\n/;
+      mapper = mapper || noop;
+      options = options || {};
+      switch (arguments.length) {
+        case 1:
+          if (typeof matcher === "function") {
+            mapper = matcher;
+            matcher = /\r?\n/;
+          } else if (typeof matcher === "object" && !(matcher instanceof RegExp) && !matcher[Symbol.split]) {
+            options = matcher;
+            matcher = /\r?\n/;
+          }
+          break;
+        case 2:
+          if (typeof matcher === "function") {
+            options = mapper;
+            mapper = matcher;
+            matcher = /\r?\n/;
+          } else if (typeof mapper === "object") {
+            options = mapper;
+            mapper = noop;
+          }
+      }
+      options = Object.assign({}, options);
+      options.autoDestroy = true;
+      options.transform = transform2;
+      options.flush = flush;
+      options.readableObjectMode = true;
+      const stream2 = new Transform(options);
+      stream2[kLast] = "";
+      stream2[kDecoder] = new StringDecoder("utf8");
+      stream2.matcher = matcher;
+      stream2.mapper = mapper;
+      stream2.maxLength = options.maxLength;
+      stream2.skipOverflow = options.skipOverflow || false;
+      stream2.overflow = false;
+      stream2._destroy = function(err, cb) {
+        this._writableState.errorEmitted = false;
+        cb(err);
+      };
+      return stream2;
+    }
+    module2.exports = split;
+  }
+});
+
+// node_modules/pgpass/lib/helper.js
+var require_helper = __commonJS({
+  "node_modules/pgpass/lib/helper.js"(exports2, module2) {
+    "use strict";
+    var path3 = require("path");
+    var Stream = require("stream").Stream;
+    var split = require_split2();
+    var util = require("util");
+    var defaultPort = 5432;
+    var isWin = process.platform === "win32";
+    var warnStream = process.stderr;
+    var S_IRWXG = 56;
+    var S_IRWXO = 7;
+    var S_IFMT = 61440;
+    var S_IFREG = 32768;
+    function isRegFile(mode) {
+      return (mode & S_IFMT) == S_IFREG;
+    }
+    var fieldNames = ["host", "port", "database", "user", "password"];
+    var nrOfFields = fieldNames.length;
+    var passKey = fieldNames[nrOfFields - 1];
+    function warn() {
+      var isWritable = warnStream instanceof Stream && true === warnStream.writable;
+      if (isWritable) {
+        var args = Array.prototype.slice.call(arguments).concat("\n");
+        warnStream.write(util.format.apply(util, args));
+      }
+    }
+    Object.defineProperty(module2.exports, "isWin", {
+      get: function() {
+        return isWin;
+      },
+      set: function(val) {
+        isWin = val;
+      }
+    });
+    module2.exports.warnTo = function(stream2) {
+      var old = warnStream;
+      warnStream = stream2;
+      return old;
+    };
+    module2.exports.getFileName = function(rawEnv) {
+      var env = rawEnv || process.env;
+      var file2 = env.PGPASSFILE || (isWin ? path3.join(env.APPDATA || "./", "postgresql", "pgpass.conf") : path3.join(env.HOME || "./", ".pgpass"));
+      return file2;
+    };
+    module2.exports.usePgPass = function(stats, fname) {
+      if (Object.prototype.hasOwnProperty.call(process.env, "PGPASSWORD")) {
+        return false;
+      }
+      if (isWin) {
+        return true;
+      }
+      fname = fname || "<unkn>";
+      if (!isRegFile(stats.mode)) {
+        warn('WARNING: password file "%s" is not a plain file', fname);
+        return false;
+      }
+      if (stats.mode & (S_IRWXG | S_IRWXO)) {
+        warn('WARNING: password file "%s" has group or world access; permissions should be u=rw (0600) or less', fname);
+        return false;
+      }
+      return true;
+    };
+    var matcher = module2.exports.match = function(connInfo, entry) {
+      return fieldNames.slice(0, -1).reduce(function(prev, field, idx) {
+        if (idx == 1) {
+          if (Number(connInfo[field] || defaultPort) === Number(entry[field])) {
+            return prev && true;
+          }
+        }
+        return prev && (entry[field] === "*" || entry[field] === connInfo[field]);
+      }, true);
+    };
+    module2.exports.getPassword = function(connInfo, stream2, cb) {
+      var pass;
+      var lineStream = stream2.pipe(split());
+      function onLine(line) {
+        var entry = parseLine(line);
+        if (entry && isValidEntry(entry) && matcher(connInfo, entry)) {
+          pass = entry[passKey];
+          lineStream.end();
+        }
+      }
+      var onEnd = function() {
+        stream2.destroy();
+        cb(pass);
+      };
+      var onErr = function(err) {
+        stream2.destroy();
+        warn("WARNING: error on reading file: %s", err);
+        cb(void 0);
+      };
+      stream2.on("error", onErr);
+      lineStream.on("data", onLine).on("end", onEnd).on("error", onErr);
+    };
+    var parseLine = module2.exports.parseLine = function(line) {
+      if (line.length < 11 || line.match(/^\s+#/)) {
+        return null;
+      }
+      var curChar = "";
+      var prevChar = "";
+      var fieldIdx = 0;
+      var startIdx = 0;
+      var endIdx = 0;
+      var obj = {};
+      var isLastField = false;
+      var addToObj = function(idx, i0, i1) {
+        var field = line.substring(i0, i1);
+        if (!Object.hasOwnProperty.call(process.env, "PGPASS_NO_DEESCAPE")) {
+          field = field.replace(/\\([:\\])/g, "$1");
+        }
+        obj[fieldNames[idx]] = field;
+      };
+      for (var i = 0; i < line.length - 1; i += 1) {
+        curChar = line.charAt(i + 1);
+        prevChar = line.charAt(i);
+        isLastField = fieldIdx == nrOfFields - 1;
+        if (isLastField) {
+          addToObj(fieldIdx, startIdx);
+          break;
+        }
+        if (i >= 0 && curChar == ":" && prevChar !== "\\") {
+          addToObj(fieldIdx, startIdx, i + 1);
+          startIdx = i + 2;
+          fieldIdx += 1;
+        }
+      }
+      obj = Object.keys(obj).length === nrOfFields ? obj : null;
+      return obj;
+    };
+    var isValidEntry = module2.exports.isValidEntry = function(entry) {
+      var rules = {
+        // host
+        0: function(x) {
+          return x.length > 0;
+        },
+        // port
+        1: function(x) {
+          if (x === "*") {
+            return true;
+          }
+          x = Number(x);
+          return isFinite(x) && x > 0 && x < 9007199254740992 && Math.floor(x) === x;
+        },
+        // database
+        2: function(x) {
+          return x.length > 0;
+        },
+        // username
+        3: function(x) {
+          return x.length > 0;
+        },
+        // password
+        4: function(x) {
+          return x.length > 0;
+        }
+      };
+      for (var idx = 0; idx < fieldNames.length; idx += 1) {
+        var rule = rules[idx];
+        var value = entry[fieldNames[idx]] || "";
+        var res = rule(value);
+        if (!res) {
+          return false;
+        }
+      }
+      return true;
+    };
+  }
+});
+
+// node_modules/pgpass/lib/index.js
+var require_lib2 = __commonJS({
+  "node_modules/pgpass/lib/index.js"(exports2, module2) {
+    "use strict";
+    var path3 = require("path");
+    var fs = require("fs");
+    var helper = require_helper();
+    module2.exports = function(connInfo, cb) {
+      var file2 = helper.getFileName();
+      fs.stat(file2, function(err, stat) {
+        if (err || !helper.usePgPass(stat, file2)) {
+          return cb(void 0);
+        }
+        var st = fs.createReadStream(file2);
+        helper.getPassword(connInfo, st, cb);
+      });
+    };
+    module2.exports.warnTo = helper.warnTo;
+  }
+});
+
+// node_modules/pg/lib/client.js
+var require_client2 = __commonJS({
+  "node_modules/pg/lib/client.js"(exports2, module2) {
+    var EventEmitter = require("events").EventEmitter;
+    var utils = require_utils2();
+    var nodeUtils = require("util");
+    var sasl = require_sasl();
+    var TypeOverrides2 = require_type_overrides();
+    var ConnectionParameters = require_connection_parameters();
+    var Query2 = require_query();
+    var defaults2 = require_defaults();
+    var Connection2 = require_connection2();
+    var crypto2 = require_utils3();
+    var activeQueryDeprecationNotice = nodeUtils.deprecate(
+      () => {
+      },
+      "Client.activeQuery is deprecated and will be removed in pg@9.0"
+    );
+    var queryQueueDeprecationNotice = nodeUtils.deprecate(
+      () => {
+      },
+      "Client.queryQueue is deprecated and will be removed in pg@9.0."
+    );
+    var pgPassDeprecationNotice = nodeUtils.deprecate(
+      () => {
+      },
+      "pgpass support is deprecated and will be removed in pg@9.0. You can provide an async function as the password property to the Client/Pool constructor that returns a password instead. Within this function you can call the pgpass module in your own code."
+    );
+    var byoPromiseDeprecationNotice = nodeUtils.deprecate(
+      () => {
+      },
+      "Passing a custom Promise implementation to the Client/Pool constructor is deprecated and will be removed in pg@9.0."
+    );
+    var queryQueueLengthDeprecationNotice = nodeUtils.deprecate(
+      () => {
+      },
+      "Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead."
+    );
+    function coerceNumberOrDefault(value, defaultValue) {
+      if (typeof value === "number") {
+        return Number.isFinite(value) ? value : defaultValue;
+      }
+      if (typeof value === "string" && value.trim() !== "") {
+        const n = Number(value);
+        return Number.isFinite(n) ? n : defaultValue;
+      }
+      return defaultValue;
+    }
+    var Client2 = class extends EventEmitter {
+      constructor(config2) {
+        super();
+        this.connectionParameters = new ConnectionParameters(config2);
+        this.user = this.connectionParameters.user;
+        this.database = this.connectionParameters.database;
+        this.port = this.connectionParameters.port;
+        this.host = this.connectionParameters.host;
+        Object.defineProperty(this, "password", {
+          configurable: true,
+          enumerable: false,
+          writable: true,
+          value: this.connectionParameters.password
+        });
+        this.replication = this.connectionParameters.replication;
+        const c = config2 || {};
+        if (c.Promise) {
+          byoPromiseDeprecationNotice();
+        }
+        this._Promise = c.Promise || global.Promise;
+        this._types = new TypeOverrides2(c.types);
+        this._ending = false;
+        this._ended = false;
+        this._connecting = false;
+        this._connected = false;
+        this._connectionError = false;
+        this._queryable = true;
+        this._activeQuery = null;
+        this._txStatus = null;
+        this.enableChannelBinding = Boolean(c.enableChannelBinding);
+        this.scramMaxIterations = coerceNumberOrDefault(c.scramMaxIterations, sasl.DEFAULT_MAX_SCRAM_ITERATIONS);
+        this.connection = c.connection || new Connection2({
+          stream: c.stream,
+          ssl: this.connectionParameters.ssl,
+          sslNegotiation: this.connectionParameters.sslnegotiation,
+          keepAlive: c.keepAlive || false,
+          keepAliveInitialDelayMillis: c.keepAliveInitialDelayMillis || 0,
+          encoding: this.connectionParameters.client_encoding || "utf8"
+        });
+        this._queryQueue = [];
+        this._sentQueryQueue = [];
+        this.pipeline = Boolean(c.pipeline);
+        this.binary = c.binary || defaults2.binary;
+        this.processID = null;
+        this.secretKey = null;
+        this.ssl = this.connectionParameters.ssl || false;
+        this.sslNegotiation = this.connectionParameters.sslnegotiation || "postgres";
+        if (this.ssl && this.ssl.key) {
+          Object.defineProperty(this.ssl, "key", {
+            enumerable: false
+          });
+        }
+        this._connectionTimeoutMillis = c.connectionTimeoutMillis || 0;
+      }
+      get activeQuery() {
+        activeQueryDeprecationNotice();
+        return this._activeQuery;
+      }
+      set activeQuery(val) {
+        activeQueryDeprecationNotice();
+        this._activeQuery = val;
+      }
+      _getActiveQuery() {
+        return this._activeQuery;
+      }
+      _errorAllQueries(err) {
+        const enqueueError = (query) => {
+          process.nextTick(() => {
+            query.handleError(err, this.connection);
+          });
+        };
+        const activeQuery = this._getActiveQuery();
+        if (activeQuery) {
+          enqueueError(activeQuery);
+          this._activeQuery = null;
+        }
+        this._sentQueryQueue.forEach(enqueueError);
+        this._sentQueryQueue.length = 0;
+        this._queryQueue.forEach(enqueueError);
+        this._queryQueue.length = 0;
+      }
+      _connect(callback) {
+        const self = this;
+        const con = this.connection;
+        this._connectionCallback = callback;
+        if (this._connecting || this._connected) {
+          const err = new Error("Client has already been connected. You cannot reuse a client.");
+          process.nextTick(() => {
+            callback(err);
+          });
+          return;
+        }
+        this._connecting = true;
+        if (this._connectionTimeoutMillis > 0) {
+          this.connectionTimeoutHandle = setTimeout(() => {
+            con._ending = true;
+            con.stream.destroy(new Error("timeout expired"));
+          }, this._connectionTimeoutMillis);
+          if (this.connectionTimeoutHandle.unref) {
+            this.connectionTimeoutHandle.unref();
+          }
+        }
+        if (this.host && this.host.indexOf("/") === 0) {
+          con.connect(this.host + "/.s.PGSQL." + this.port);
+        } else {
+          con.connect(this.port, this.host);
+        }
+        con.on("connect", function() {
+          if (self.ssl) {
+            if (self.sslNegotiation !== "direct") {
+              con.requestSsl();
+            }
+          } else {
+            con.startup(self.getStartupConf());
+          }
+        });
+        con.on("sslconnect", function() {
+          con.startup(self.getStartupConf());
+        });
+        this._attachListeners(con);
+        con.once("end", () => {
+          const error61 = this._ending ? new Error("Connection terminated") : new Error("Connection terminated unexpectedly");
+          clearTimeout(this.connectionTimeoutHandle);
+          this._errorAllQueries(error61);
+          this._ended = true;
+          if (!this._ending) {
+            if (this._connecting && !this._connectionError) {
+              if (this._connectionCallback) {
+                this._connectionCallback(error61);
+              } else {
+                this._handleErrorEvent(error61);
+              }
+            } else if (!this._connectionError) {
+              this._handleErrorEvent(error61);
+            }
+          }
+          process.nextTick(() => {
+            this.emit("end");
+          });
+        });
+      }
+      connect(callback) {
+        if (callback) {
+          this._connect(callback);
+          return;
+        }
+        return new this._Promise((resolve, reject) => {
+          this._connect((error61) => {
+            if (error61) {
+              reject(error61);
+            } else {
+              resolve(this);
+            }
+          });
+        });
+      }
+      _attachListeners(con) {
+        con.on("authenticationCleartextPassword", this._handleAuthCleartextPassword.bind(this));
+        con.on("authenticationMD5Password", this._handleAuthMD5Password.bind(this));
+        con.on("authenticationSASL", this._handleAuthSASL.bind(this));
+        con.on("authenticationSASLContinue", this._handleAuthSASLContinue.bind(this));
+        con.on("authenticationSASLFinal", this._handleAuthSASLFinal.bind(this));
+        con.on("backendKeyData", this._handleBackendKeyData.bind(this));
+        con.on("error", this._handleErrorEvent.bind(this));
+        con.on("errorMessage", this._handleErrorMessage.bind(this));
+        con.on("readyForQuery", this._handleReadyForQuery.bind(this));
+        con.on("notice", this._handleNotice.bind(this));
+        con.on("rowDescription", this._handleRowDescription.bind(this));
+        con.on("dataRow", this._handleDataRow.bind(this));
+        con.on("portalSuspended", this._handlePortalSuspended.bind(this));
+        con.on("emptyQuery", this._handleEmptyQuery.bind(this));
+        con.on("commandComplete", this._handleCommandComplete.bind(this));
+        con.on("parseComplete", this._handleParseComplete.bind(this));
+        con.on("copyInResponse", this._handleCopyInResponse.bind(this));
+        con.on("copyData", this._handleCopyData.bind(this));
+        con.on("notification", this._handleNotification.bind(this));
+      }
+      _getPassword(cb) {
+        const con = this.connection;
+        if (typeof this.password === "function") {
+          this._Promise.resolve().then(() => this.password(this.connectionParameters)).then((pass) => {
+            if (pass !== void 0) {
+              if (typeof pass !== "string") {
+                con.emit("error", new TypeError("Password must be a string"));
+                return;
+              }
+              this.connectionParameters.password = this.password = pass;
+            } else {
+              this.connectionParameters.password = this.password = null;
+            }
+            cb();
+          }).catch((err) => {
+            con.emit("error", err);
+          });
+        } else if (this.password !== null) {
+          cb();
+        } else {
+          try {
+            const pgPass = require_lib2();
+            pgPass(this.connectionParameters, (pass) => {
+              if (void 0 !== pass) {
+                pgPassDeprecationNotice();
+                this.connectionParameters.password = this.password = pass;
+              }
+              cb();
+            });
+          } catch (e) {
+            this.emit("error", e);
+          }
+        }
+      }
+      _handleAuthCleartextPassword(msg) {
+        this._getPassword(() => {
+          this.connection.password(this.password);
+        });
+      }
+      _handleAuthMD5Password(msg) {
+        this._getPassword(async () => {
+          try {
+            const hashedPassword = await crypto2.postgresMd5PasswordHash(this.user, this.password, msg.salt);
+            this.connection.password(hashedPassword);
+          } catch (e) {
+            this.emit("error", e);
+          }
+        });
+      }
+      _handleAuthSASL(msg) {
+        this._getPassword(() => {
+          try {
+            this.saslSession = sasl.startSession(
+              msg.mechanisms,
+              this.enableChannelBinding && this.connection.stream,
+              this.scramMaxIterations
+            );
+            this.connection.sendSASLInitialResponseMessage(this.saslSession.mechanism, this.saslSession.response);
+          } catch (err) {
+            this.connection.emit("error", err);
+          }
+        });
+      }
+      async _handleAuthSASLContinue(msg) {
+        try {
+          await sasl.continueSession(
+            this.saslSession,
+            this.password,
+            msg.data,
+            this.enableChannelBinding && this.connection.stream
+          );
+          this.connection.sendSCRAMClientFinalMessage(this.saslSession.response);
+        } catch (err) {
+          this.connection.emit("error", err);
+        }
+      }
+      _handleAuthSASLFinal(msg) {
+        try {
+          sasl.finalizeSession(this.saslSession, msg.data);
+          this.saslSession = null;
+        } catch (err) {
+          this.connection.emit("error", err);
+        }
+      }
+      _handleBackendKeyData(msg) {
+        this.processID = msg.processID;
+        this.secretKey = msg.secretKey;
+      }
+      _handleReadyForQuery(msg) {
+        if (this._connecting) {
+          this._connecting = false;
+          this._connected = true;
+          clearTimeout(this.connectionTimeoutHandle);
+          if (this._connectionCallback) {
+            this._connectionCallback(null, this);
+            this._connectionCallback = null;
+          }
+          this.emit("connect");
+        }
+        const activeQuery = this._getActiveQuery();
+        this._activeQuery = null;
+        this._txStatus = msg?.status ?? null;
+        this.readyForQuery = true;
+        if (activeQuery) {
+          activeQuery.handleReadyForQuery(this.connection);
+        }
+        this._pulseQueryQueue();
+      }
+      // if we receive an error event or error message
+      // during the connection process we handle it here
+      _handleErrorWhileConnecting(err) {
+        if (this._connectionError) {
+          return;
+        }
+        this._connectionError = true;
+        clearTimeout(this.connectionTimeoutHandle);
+        if (this._connectionCallback) {
+          return this._connectionCallback(err);
+        }
+        this.emit("error", err);
+      }
+      // if we're connected and we receive an error event from the connection
+      // this means the socket is dead - do a hard abort of all queries and emit
+      // the socket error on the client as well
+      _handleErrorEvent(err) {
+        if (this._connecting) {
+          return this._handleErrorWhileConnecting(err);
+        }
+        this._queryable = false;
+        this._errorAllQueries(err);
+        this.emit("error", err);
+      }
+      // handle error messages from the postgres backend
+      _handleErrorMessage(msg) {
+        if (this._connecting) {
+          return this._handleErrorWhileConnecting(msg);
+        }
+        const activeQuery = this._getActiveQuery();
+        if (!activeQuery) {
+          this._handleErrorEvent(msg);
+          return;
+        }
+        this._activeQuery = null;
+        if (activeQuery.name) {
+          delete this.connection.submittedNamedStatements[activeQuery.name];
+        }
+        activeQuery.handleError(msg, this.connection);
+      }
+      _handleRowDescription(msg) {
+        const activeQuery = this._getActiveQuery();
+        if (activeQuery == null) {
+          const error61 = new Error("Received unexpected rowDescription message from backend.");
+          this._handleErrorEvent(error61);
+          return;
+        }
+        activeQuery.handleRowDescription(msg);
+      }
+      _handleDataRow(msg) {
+        const activeQuery = this._getActiveQuery();
+        if (activeQuery == null) {
+          const error61 = new Error("Received unexpected dataRow message from backend.");
+          this._handleErrorEvent(error61);
+          return;
+        }
+        activeQuery.handleDataRow(msg);
+      }
+      _handlePortalSuspended(msg) {
+        const activeQuery = this._getActiveQuery();
+        if (activeQuery == null) {
+          const error61 = new Error("Received unexpected portalSuspended message from backend.");
+          this._handleErrorEvent(error61);
+          return;
+        }
+        activeQuery.handlePortalSuspended(this.connection);
+      }
+      _handleEmptyQuery(msg) {
+        const activeQuery = this._getActiveQuery();
+        if (activeQuery == null) {
+          const error61 = new Error("Received unexpected emptyQuery message from backend.");
+          this._handleErrorEvent(error61);
+          return;
+        }
+        activeQuery.handleEmptyQuery(this.connection);
+      }
+      _handleCommandComplete(msg) {
+        const activeQuery = this._getActiveQuery();
+        if (activeQuery == null) {
+          const error61 = new Error("Received unexpected commandComplete message from backend.");
+          this._handleErrorEvent(error61);
+          return;
+        }
+        activeQuery.handleCommandComplete(msg, this.connection);
+      }
+      _handleParseComplete() {
+        const activeQuery = this._getActiveQuery();
+        if (activeQuery == null) {
+          const error61 = new Error("Received unexpected parseComplete message from backend.");
+          this._handleErrorEvent(error61);
+          return;
+        }
+        if (activeQuery.name) {
+          this.connection.parsedStatements[activeQuery.name] = activeQuery.text;
+          delete this.connection.submittedNamedStatements[activeQuery.name];
+        }
+      }
+      _handleCopyInResponse(msg) {
+        const activeQuery = this._getActiveQuery();
+        if (activeQuery == null) {
+          const error61 = new Error("Received unexpected copyInResponse message from backend.");
+          this._handleErrorEvent(error61);
+          return;
+        }
+        activeQuery.handleCopyInResponse(this.connection);
+      }
+      _handleCopyData(msg) {
+        const activeQuery = this._getActiveQuery();
+        if (activeQuery == null) {
+          const error61 = new Error("Received unexpected copyData message from backend.");
+          this._handleErrorEvent(error61);
+          return;
+        }
+        activeQuery.handleCopyData(msg, this.connection);
+      }
+      _handleNotification(msg) {
+        this.emit("notification", msg);
+      }
+      _handleNotice(msg) {
+        this.emit("notice", msg);
+      }
+      getStartupConf() {
+        const params = this.connectionParameters;
+        const data = {
+          user: params.user,
+          database: params.database
+        };
+        const appName = params.application_name || params.fallback_application_name;
+        if (appName) {
+          data.application_name = appName;
+        }
+        if (params.replication) {
+          data.replication = "" + params.replication;
+        }
+        if (params.statement_timeout) {
+          data.statement_timeout = String(parseInt(params.statement_timeout, 10));
+        }
+        if (params.lock_timeout) {
+          data.lock_timeout = String(parseInt(params.lock_timeout, 10));
+        }
+        if (params.idle_in_transaction_session_timeout) {
+          data.idle_in_transaction_session_timeout = String(parseInt(params.idle_in_transaction_session_timeout, 10));
+        }
+        if (params.options) {
+          data.options = params.options;
+        }
+        return data;
+      }
+      cancel(client, query) {
+        if (client.activeQuery === query) {
+          const con = this.connection;
+          if (this.host && this.host.indexOf("/") === 0) {
+            con.connect(this.host + "/.s.PGSQL." + this.port);
+          } else {
+            con.connect(this.port, this.host);
+          }
+          con.on("connect", function() {
+            con.cancel(client.processID, client.secretKey);
+          });
+        } else if (client._queryQueue.indexOf(query) !== -1) {
+          client._queryQueue.splice(client._queryQueue.indexOf(query), 1);
+        } else if (client._sentQueryQueue.indexOf(query) !== -1) {
+          query.callback = () => {
+          };
+        }
+      }
+      setTypeParser(oid, format, parseFn) {
+        return this._types.setTypeParser(oid, format, parseFn);
+      }
+      getTypeParser(oid, format) {
+        return this._types.getTypeParser(oid, format);
+      }
+      // escapeIdentifier and escapeLiteral moved to utility functions & exported
+      // on PG
+      // re-exported here for backwards compatibility
+      escapeIdentifier(str) {
+        return utils.escapeIdentifier(str);
+      }
+      escapeLiteral(str) {
+        return utils.escapeLiteral(str);
+      }
+      _pulseQueryQueue() {
+        if (this.pipeline) {
+          this._pulsePipelinedQueryQueue();
+          return;
+        }
+        if (this.readyForQuery === true) {
+          this._activeQuery = this._queryQueue.shift();
+          const activeQuery = this._getActiveQuery();
+          if (activeQuery) {
+            this.readyForQuery = false;
+            this.hasExecuted = true;
+            const queryError = activeQuery.submit(this.connection);
+            if (queryError) {
+              process.nextTick(() => {
+                activeQuery.handleError(queryError, this.connection);
+                this.readyForQuery = true;
+                this._pulseQueryQueue();
+              });
+            }
+          } else if (this.hasExecuted) {
+            this._activeQuery = null;
+            this.emit("drain");
+          }
+        }
+      }
+      _pulsePipelinedQueryQueue() {
+        if (!this._connected || !this._queryable) {
+          return;
+        }
+        while (this._queryQueue.length > 0) {
+          const query = this._queryQueue.shift();
+          this.hasExecuted = true;
+          const queryError = query.submit(this.connection);
+          if (queryError) {
+            process.nextTick(() => {
+              query.handleError(queryError, this.connection);
+            });
+            continue;
+          }
+          this._sentQueryQueue.push(query);
+        }
+        if (this.readyForQuery && !this._activeQuery && this._sentQueryQueue.length > 0) {
+          this._activeQuery = this._sentQueryQueue.shift();
+          this.readyForQuery = false;
+        }
+        if (!this._activeQuery && this._sentQueryQueue.length === 0 && this._queryQueue.length === 0 && this.hasExecuted) {
+          this.emit("drain");
+        }
+      }
+      query(config2, values, callback) {
+        let query;
+        let result;
+        if (config2 == null) {
+          throw new TypeError("Client was passed a null or undefined query");
+        }
+        if (typeof config2.submit === "function") {
+          result = query = config2;
+          if (!query.callback) {
+            if (typeof values === "function") {
+              query.callback = values;
+            } else if (callback) {
+              query.callback = callback;
+            }
+          }
+        } else {
+          query = new Query2(config2, values, callback);
+          if (!query.callback) {
+            result = new this._Promise((resolve, reject) => {
+              query.callback = (err, res) => err ? reject(err) : resolve(res);
+            }).catch((err) => {
+              Error.captureStackTrace(err);
+              throw err;
+            });
+          } else if (typeof query.callback !== "function") {
+            throw new TypeError("callback is not a function");
+          }
+        }
+        const readTimeout = config2.query_timeout || this.connectionParameters.query_timeout;
+        if (readTimeout) {
+          const queryCallback = query.callback || (() => {
+          });
+          const readTimeoutTimer = setTimeout(() => {
+            const error61 = new Error("Query read timeout");
+            process.nextTick(() => {
+              query.handleError(error61, this.connection);
+            });
+            queryCallback(error61);
+            query.callback = () => {
+            };
+            const index = this._queryQueue.indexOf(query);
+            if (index > -1) {
+              this._queryQueue.splice(index, 1);
+            } else if (this.pipeline) {
+              this.connection.stream.destroy();
+              return;
+            }
+            this._pulseQueryQueue();
+          }, readTimeout);
+          query.callback = (err, res) => {
+            clearTimeout(readTimeoutTimer);
+            queryCallback(err, res);
+          };
+        }
+        if (this.binary && !query.binary) {
+          query.binary = true;
+        }
+        if (query._result && !query._result._types) {
+          query._result._types = this._types;
+        }
+        if (!this._queryable) {
+          process.nextTick(() => {
+            query.handleError(new Error("Client has encountered a connection error and is not queryable"), this.connection);
+          });
+          return result;
+        }
+        if (this._ending) {
+          process.nextTick(() => {
+            query.handleError(new Error("Client was closed and is not queryable"), this.connection);
+          });
+          return result;
+        }
+        if (this._queryQueue.length > 0 && !this.pipeline) {
+          queryQueueLengthDeprecationNotice();
+        }
+        this._queryQueue.push(query);
+        this._pulseQueryQueue();
+        return result;
+      }
+      ref() {
+        this.connection.ref();
+      }
+      unref() {
+        this.connection.unref();
+      }
+      getTransactionStatus() {
+        return this._txStatus;
+      }
+      end(cb) {
+        this._ending = true;
+        if (!this.connection._connecting || this._ended) {
+          if (cb) {
+            cb();
+            return;
+          } else {
+            return this._Promise.resolve();
+          }
+        }
+        if (!this._queryable) {
+          this.connection.stream.destroy();
+        } else if (this.pipeline && (this._getActiveQuery() || this._sentQueryQueue.length > 0 || this._queryQueue.length > 0)) {
+          this.once("drain", () => this.connection.end());
+        } else if (this._getActiveQuery()) {
+          this.connection.stream.destroy();
+        } else {
+          this.connection.end();
+        }
+        if (cb) {
+          this.connection.once("end", cb);
+        } else {
+          return new this._Promise((resolve) => {
+            this.connection.once("end", resolve);
+          });
+        }
+      }
+      get queryQueue() {
+        queryQueueDeprecationNotice();
+        return this._queryQueue;
+      }
+    };
+    Client2.Query = Query2;
+    module2.exports = Client2;
+  }
+});
+
+// node_modules/pg-pool/index.js
+var require_pg_pool = __commonJS({
+  "node_modules/pg-pool/index.js"(exports2, module2) {
+    "use strict";
+    var EventEmitter = require("events").EventEmitter;
+    var NOOP = function() {
+    };
+    var removeWhere = (list, predicate) => {
+      const i = list.findIndex(predicate);
+      return i === -1 ? void 0 : list.splice(i, 1)[0];
+    };
+    var IdleItem = class {
+      constructor(client, idleListener, timeoutId) {
+        this.client = client;
+        this.idleListener = idleListener;
+        this.timeoutId = timeoutId;
+      }
+    };
+    var PendingItem = class {
+      constructor(callback) {
+        this.callback = callback;
+      }
+    };
+    function throwOnDoubleRelease() {
+      throw new Error("Release called on client which has already been released to the pool.");
+    }
+    function promisify(Promise2, callback) {
+      if (callback) {
+        return { callback, result: void 0 };
+      }
+      let rej;
+      let res;
+      const cb = function(err, client) {
+        err ? rej(err) : res(client);
+      };
+      const result = new Promise2(function(resolve, reject) {
+        res = resolve;
+        rej = reject;
+      }).catch((err) => {
+        Error.captureStackTrace(err);
+        throw err;
+      });
+      return { callback: cb, result };
+    }
+    function makeIdleListener(pool2, client) {
+      return function idleListener(err) {
+        err.client = client;
+        client.removeListener("error", idleListener);
+        client.on("error", () => {
+          pool2.log("additional client error after disconnection due to error", err);
+        });
+        pool2._remove(client);
+        pool2.emit("error", err, client);
+      };
+    }
+    var Pool3 = class extends EventEmitter {
+      constructor(options, Client2) {
+        super();
+        this.options = Object.assign({}, options);
+        if (options != null && "password" in options) {
+          Object.defineProperty(this.options, "password", {
+            configurable: true,
+            enumerable: false,
+            writable: true,
+            value: options.password
+          });
+        }
+        if (options != null && options.ssl && options.ssl.key) {
+          Object.defineProperty(this.options.ssl, "key", {
+            enumerable: false
+          });
+        }
+        this.options.max = this.options.max || this.options.poolSize || 10;
+        this.options.min = this.options.min || 0;
+        this.options.maxUses = this.options.maxUses || Infinity;
+        this.options.allowExitOnIdle = this.options.allowExitOnIdle || false;
+        this.options.maxLifetimeSeconds = this.options.maxLifetimeSeconds || 0;
+        this.log = this.options.log || function() {
+        };
+        this.Client = this.options.Client || Client2 || require_lib3().Client;
+        this.Promise = this.options.Promise || global.Promise;
+        if (typeof this.options.idleTimeoutMillis === "undefined") {
+          this.options.idleTimeoutMillis = 1e4;
+        }
+        this._clients = [];
+        this._idle = [];
+        this._expired = /* @__PURE__ */ new WeakSet();
+        this._pendingQueue = [];
+        this._endCallback = void 0;
+        this.ending = false;
+        this.ended = false;
+      }
+      _promiseTry(f) {
+        const Promise2 = this.Promise;
+        if (typeof Promise2.try === "function") {
+          return Promise2.try(f);
+        }
+        return new Promise2((resolve) => resolve(f()));
+      }
+      _isFull() {
+        return this._clients.length >= this.options.max;
+      }
+      _isAboveMin() {
+        return this._clients.length > this.options.min;
+      }
+      _pulseQueue() {
+        this.log("pulse queue");
+        if (this.ended) {
+          this.log("pulse queue ended");
+          return;
+        }
+        if (this.ending) {
+          this.log("pulse queue on ending");
+          if (this._idle.length) {
+            this._idle.slice().map((item) => {
+              this._remove(item.client);
+            });
+          }
+          if (!this._clients.length) {
+            this.ended = true;
+            this._endCallback();
+          }
+          return;
+        }
+        if (!this._pendingQueue.length) {
+          this.log("no queued requests");
+          return;
+        }
+        if (!this._idle.length && this._isFull()) {
+          return;
+        }
+        const pendingItem = this._pendingQueue.shift();
+        if (this._idle.length) {
+          const idleItem = this._idle.pop();
+          clearTimeout(idleItem.timeoutId);
+          const client = idleItem.client;
+          client.ref && client.ref();
+          const idleListener = idleItem.idleListener;
+          return this._acquireClient(client, pendingItem, idleListener, false);
+        }
+        if (!this._isFull()) {
+          return this.newClient(pendingItem);
+        }
+        throw new Error("unexpected condition");
+      }
+      _remove(client, callback) {
+        const removed = removeWhere(this._idle, (item) => item.client === client);
+        if (removed !== void 0) {
+          clearTimeout(removed.timeoutId);
+        }
+        this._clients = this._clients.filter((c) => c !== client);
+        const context = this;
+        client.end(() => {
+          context.emit("remove", client);
+          if (typeof callback === "function") {
+            callback();
+          }
+        });
+      }
+      connect(cb) {
+        if (this.ending) {
+          const err = new Error("Cannot use a pool after calling end on the pool");
+          return cb ? cb(err) : this.Promise.reject(err);
+        }
+        const response = promisify(this.Promise, cb);
+        const result = response.result;
+        if (this._isFull() || this._idle.length) {
+          if (this._idle.length) {
+            process.nextTick(() => this._pulseQueue());
+          }
+          if (!this.options.connectionTimeoutMillis) {
+            this._pendingQueue.push(new PendingItem(response.callback));
+            return result;
+          }
+          const queueCallback = (err, res, done) => {
+            clearTimeout(tid);
+            response.callback(err, res, done);
+          };
+          const pendingItem = new PendingItem(queueCallback);
+          const tid = setTimeout(() => {
+            removeWhere(this._pendingQueue, (i) => i.callback === queueCallback);
+            pendingItem.timedOut = true;
+            response.callback(new Error("timeout exceeded when trying to connect"));
+          }, this.options.connectionTimeoutMillis);
+          if (tid.unref) {
+            tid.unref();
+          }
+          this._pendingQueue.push(pendingItem);
+          return result;
+        }
+        this.newClient(new PendingItem(response.callback));
+        return result;
+      }
+      newClient(pendingItem) {
+        const client = new this.Client(this.options);
+        this._clients.push(client);
+        const idleListener = makeIdleListener(this, client);
+        this.log("checking client timeout");
+        let tid;
+        let timeoutHit = false;
+        if (this.options.connectionTimeoutMillis) {
+          tid = setTimeout(() => {
+            if (client.connection) {
+              this.log("ending client due to timeout");
+              timeoutHit = true;
+              client.connection.stream.destroy();
+            } else if (!client.isConnected()) {
+              this.log("ending client due to timeout");
+              timeoutHit = true;
+              client.end();
+            }
+          }, this.options.connectionTimeoutMillis);
+        }
+        this.log("connecting new client");
+        client.connect((err) => {
+          if (tid) {
+            clearTimeout(tid);
+          }
+          client.on("error", idleListener);
+          if (err) {
+            this.log("client failed to connect", err);
+            this._clients = this._clients.filter((c) => c !== client);
+            if (timeoutHit) {
+              err = new Error("Connection terminated due to connection timeout", { cause: err });
+            }
+            this._pulseQueue();
+            if (!pendingItem.timedOut) {
+              pendingItem.callback(err, void 0, NOOP);
+            }
+          } else {
+            this.log("new client connected");
+            if (this.options.onConnect) {
+              this._promiseTry(() => this.options.onConnect(client)).then(
+                () => {
+                  this._afterConnect(client, pendingItem, idleListener);
+                },
+                (hookErr) => {
+                  this._clients = this._clients.filter((c) => c !== client);
+                  client.end(() => {
+                    this._pulseQueue();
+                    if (!pendingItem.timedOut) {
+                      pendingItem.callback(hookErr, void 0, NOOP);
+                    }
+                  });
+                }
+              );
+              return;
+            }
+            return this._afterConnect(client, pendingItem, idleListener);
+          }
+        });
+      }
+      _afterConnect(client, pendingItem, idleListener) {
+        if (this.options.maxLifetimeSeconds !== 0) {
+          const maxLifetimeTimeout = setTimeout(() => {
+            this.log("ending client due to expired lifetime");
+            this._expired.add(client);
+            const idleIndex = this._idle.findIndex((idleItem) => idleItem.client === client);
+            if (idleIndex !== -1) {
+              this._acquireClient(
+                client,
+                new PendingItem((err, client2, clientRelease) => clientRelease()),
+                idleListener,
+                false
+              );
+            }
+          }, this.options.maxLifetimeSeconds * 1e3);
+          maxLifetimeTimeout.unref();
+          client.once("end", () => clearTimeout(maxLifetimeTimeout));
+        }
+        return this._acquireClient(client, pendingItem, idleListener, true);
+      }
+      // acquire a client for a pending work item
+      _acquireClient(client, pendingItem, idleListener, isNew) {
+        if (isNew) {
+          this.emit("connect", client);
+        }
+        this.emit("acquire", client);
+        client.release = this._releaseOnce(client, idleListener);
+        client.removeListener("error", idleListener);
+        if (!pendingItem.timedOut) {
+          if (isNew && this.options.verify) {
+            this.options.verify(client, (err) => {
+              if (err) {
+                client.release(err);
+                return pendingItem.callback(err, void 0, NOOP);
+              }
+              pendingItem.callback(void 0, client, client.release);
+            });
+          } else {
+            pendingItem.callback(void 0, client, client.release);
+          }
+        } else {
+          if (isNew && this.options.verify) {
+            this.options.verify(client, client.release);
+          } else {
+            client.release();
+          }
+        }
+      }
+      // returns a function that wraps _release and throws if called more than once
+      _releaseOnce(client, idleListener) {
+        let released = false;
+        return (err) => {
+          if (released) {
+            throwOnDoubleRelease();
+          }
+          released = true;
+          this._release(client, idleListener, err);
+        };
+      }
+      // release a client back to the poll, include an error
+      // to remove it from the pool
+      _release(client, idleListener, err) {
+        client.on("error", idleListener);
+        client._poolUseCount = (client._poolUseCount || 0) + 1;
+        this.emit("release", err, client);
+        if (err || this.ending || !client._queryable || client._ending || client._poolUseCount >= this.options.maxUses) {
+          if (client._poolUseCount >= this.options.maxUses) {
+            this.log("remove expended client");
+          }
+          return this._remove(client, this._pulseQueue.bind(this));
+        }
+        const isExpired = this._expired.has(client);
+        if (isExpired) {
+          this.log("remove expired client");
+          this._expired.delete(client);
+          return this._remove(client, this._pulseQueue.bind(this));
+        }
+        let tid;
+        if (this.options.idleTimeoutMillis && this._isAboveMin()) {
+          tid = setTimeout(() => {
+            if (this._isAboveMin()) {
+              this.log("remove idle client");
+              this._remove(client, this._pulseQueue.bind(this));
+            }
+          }, this.options.idleTimeoutMillis);
+          if (this.options.allowExitOnIdle) {
+            tid.unref();
+          }
+        }
+        if (this.options.allowExitOnIdle) {
+          client.unref();
+        }
+        this._idle.push(new IdleItem(client, idleListener, tid));
+        this._pulseQueue();
+      }
+      query(text, values, cb) {
+        if (typeof text === "function") {
+          const response2 = promisify(this.Promise, text);
+          setImmediate(function() {
+            return response2.callback(new Error("Passing a function as the first parameter to pool.query is not supported"));
+          });
+          return response2.result;
+        }
+        if (typeof values === "function") {
+          cb = values;
+          values = void 0;
+        }
+        const response = promisify(this.Promise, cb);
+        cb = response.callback;
+        this.connect((err, client) => {
+          if (err) {
+            return cb(err);
+          }
+          let clientReleased = false;
+          const onError = (err2) => {
+            if (clientReleased) {
+              return;
+            }
+            clientReleased = true;
+            client.release(err2);
+            cb(err2);
+          };
+          client.once("error", onError);
+          this.log("dispatching query");
+          try {
+            client.query(text, values, (err2, res) => {
+              this.log("query dispatched");
+              client.removeListener("error", onError);
+              if (clientReleased) {
+                return;
+              }
+              clientReleased = true;
+              client.release(err2);
+              if (err2) {
+                return cb(err2);
+              }
+              return cb(void 0, res);
+            });
+          } catch (err2) {
+            client.release(err2);
+            return cb(err2);
+          }
+        });
+        return response.result;
+      }
+      end(cb) {
+        this.log("ending");
+        if (this.ending) {
+          const err = new Error("Called end on pool more than once");
+          return cb ? cb(err) : this.Promise.reject(err);
+        }
+        this.ending = true;
+        const promised = promisify(this.Promise, cb);
+        this._endCallback = promised.callback;
+        this._pulseQueue();
+        return promised.result;
+      }
+      get waitingCount() {
+        return this._pendingQueue.length;
+      }
+      get idleCount() {
+        return this._idle.length;
+      }
+      get expiredCount() {
+        return this._clients.reduce((acc, client) => acc + (this._expired.has(client) ? 1 : 0), 0);
+      }
+      get totalCount() {
+        return this._clients.length;
+      }
+    };
+    module2.exports = Pool3;
+  }
+});
+
+// node_modules/pg/lib/native/query.js
+var require_query2 = __commonJS({
+  "node_modules/pg/lib/native/query.js"(exports2, module2) {
+    "use strict";
+    var EventEmitter = require("events").EventEmitter;
+    var util = require("util");
+    var utils = require_utils2();
+    var NativeQuery = module2.exports = function(config2, values, callback) {
+      EventEmitter.call(this);
+      config2 = utils.normalizeQueryConfig(config2, values, callback);
+      this.text = config2.text;
+      this.values = config2.values;
+      this.name = config2.name;
+      this.queryMode = config2.queryMode;
+      this.callback = config2.callback;
+      this.state = "new";
+      this._arrayMode = config2.rowMode === "array";
+      this._emitRowEvents = false;
+      this.on(
+        "newListener",
+        function(event) {
+          if (event === "row") this._emitRowEvents = true;
+        }.bind(this)
+      );
+    };
+    util.inherits(NativeQuery, EventEmitter);
+    var errorFieldMap = {
+      sqlState: "code",
+      statementPosition: "position",
+      messagePrimary: "message",
+      context: "where",
+      schemaName: "schema",
+      tableName: "table",
+      columnName: "column",
+      dataTypeName: "dataType",
+      constraintName: "constraint",
+      sourceFile: "file",
+      sourceLine: "line",
+      sourceFunction: "routine"
+    };
+    NativeQuery.prototype.handleError = function(err) {
+      const fields = this.native && this.native.pq.resultErrorFields();
+      if (fields) {
+        for (const key in fields) {
+          const normalizedFieldName = errorFieldMap[key] || key;
+          err[normalizedFieldName] = fields[key];
+        }
+      }
+      if (this.callback) {
+        this.callback(err);
+      } else {
+        this.emit("error", err);
+      }
+      this.state = "error";
+    };
+    NativeQuery.prototype.then = function(onSuccess, onFailure) {
+      return this._getPromise().then(onSuccess, onFailure);
+    };
+    NativeQuery.prototype.catch = function(callback) {
+      return this._getPromise().catch(callback);
+    };
+    NativeQuery.prototype._getPromise = function() {
+      if (this._promise) return this._promise;
+      this._promise = new Promise(
+        function(resolve, reject) {
+          this._once("end", resolve);
+          this._once("error", reject);
+        }.bind(this)
+      );
+      return this._promise;
+    };
+    NativeQuery.prototype.submit = function(client) {
+      this.state = "running";
+      const self = this;
+      this.native = client.native;
+      client.native.arrayMode = this._arrayMode;
+      let after = function(err, rows, results) {
+        client.native.arrayMode = false;
+        setImmediate(function() {
+          self.emit("_done");
+        });
+        if (err) {
+          return self.handleError(err);
+        }
+        if (self._emitRowEvents) {
+          if (results.length > 1) {
+            rows.forEach((rowOfRows, i) => {
+              rowOfRows.forEach((row) => {
+                self.emit("row", row, results[i]);
+              });
+            });
+          } else {
+            rows.forEach(function(row) {
+              self.emit("row", row, results);
+            });
+          }
+        }
+        self.state = "end";
+        self.emit("end", results);
+        if (self.callback) {
+          self.callback(null, results);
+        }
+      };
+      if (process.domain) {
+        after = process.domain.bind(after);
+      }
+      if (this.name) {
+        if (this.name.length > 63) {
+          console.error("Warning! Postgres only supports 63 characters for query names.");
+          console.error("You supplied %s (%s)", this.name, this.name.length);
+          console.error("This can cause conflicts and silent errors executing queries");
+        }
+        const values = (this.values || []).map(utils.prepareValue);
+        if (client.namedQueries[this.name]) {
+          if (this.text && client.namedQueries[this.name] !== this.text) {
+            const err = new Error(`Prepared statements must be unique - '${this.name}' was used for a different statement`);
+            return after(err);
+          }
+          return client.native.execute(this.name, values, after);
+        }
+        return client.native.prepare(this.name, this.text, values.length, function(err) {
+          if (err) return after(err);
+          client.namedQueries[self.name] = self.text;
+          return self.native.execute(self.name, values, after);
+        });
+      } else if (this.values) {
+        if (!Array.isArray(this.values)) {
+          const err = new Error("Query values must be an array");
+          return after(err);
+        }
+        const vals = this.values.map(utils.prepareValue);
+        client.native.query(this.text, vals, after);
+      } else if (this.queryMode === "extended") {
+        client.native.query(this.text, [], after);
+      } else {
+        client.native.query(this.text, after);
+      }
+    };
+  }
+});
+
+// node_modules/pg/lib/native/client.js
+var require_client3 = __commonJS({
+  "node_modules/pg/lib/native/client.js"(exports2, module2) {
+    var nodeUtils = require("util");
+    var Native;
+    try {
+      Native = require("pg-native");
+    } catch (e) {
+      throw e;
+    }
+    var TypeOverrides2 = require_type_overrides();
+    var EventEmitter = require("events").EventEmitter;
+    var util = require("util");
+    var ConnectionParameters = require_connection_parameters();
+    var NativeQuery = require_query2();
+    var queryQueueLengthDeprecationNotice = nodeUtils.deprecate(
+      () => {
+      },
+      "Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead."
+    );
+    var Client2 = module2.exports = function(config2) {
+      EventEmitter.call(this);
+      config2 = config2 || {};
+      this._Promise = config2.Promise || global.Promise;
+      this._types = new TypeOverrides2(config2.types);
+      this.native = new Native({
+        types: this._types
+      });
+      this._queryQueue = [];
+      this._ending = false;
+      this._connecting = false;
+      this._connected = false;
+      this._queryable = true;
+      this.pipeline = Boolean(config2.pipeline);
+      this._pipelineInFlight = false;
+      const cp = this.connectionParameters = new ConnectionParameters(config2);
+      if (config2.nativeConnectionString) cp.nativeConnectionString = config2.nativeConnectionString;
+      this.user = cp.user;
+      Object.defineProperty(this, "password", {
+        configurable: true,
+        enumerable: false,
+        writable: true,
+        value: cp.password
+      });
+      this.database = cp.database;
+      this.host = cp.host;
+      this.port = cp.port;
+      this.namedQueries = {};
+    };
+    Client2.Query = NativeQuery;
+    util.inherits(Client2, EventEmitter);
+    Client2.prototype._errorAllQueries = function(err) {
+      const enqueueError = (query) => {
+        process.nextTick(() => {
+          query.native = this.native;
+          query.handleError(err);
+        });
+      };
+      if (this._hasActiveQuery()) {
+        enqueueError(this._activeQuery);
+        this._activeQuery = null;
+      }
+      this._queryQueue.forEach(enqueueError);
+      this._queryQueue.length = 0;
+    };
+    Client2.prototype._connect = function(cb) {
+      const self = this;
+      if (this._connecting) {
+        process.nextTick(() => cb(new Error("Client has already been connected. You cannot reuse a client.")));
+        return;
+      }
+      this._connecting = true;
+      this.connectionParameters.getLibpqConnectionString(function(err, conString) {
+        if (self.connectionParameters.nativeConnectionString) conString = self.connectionParameters.nativeConnectionString;
+        if (err) return cb(err);
+        self.native.connect(conString, function(err2) {
+          if (err2) {
+            self.native.end();
+            return cb(err2);
+          }
+          self._connected = true;
+          self.native.on("error", function(err3) {
+            self._queryable = false;
+            self._errorAllQueries(err3);
+            self.emit("error", err3);
+          });
+          self.native.on("notification", function(msg) {
+            self.emit("notification", {
+              channel: msg.relname,
+              payload: msg.extra
+            });
+          });
+          self.emit("connect");
+          self._pulseQueryQueue(true);
+          cb(null, this);
+        });
+      });
+    };
+    Client2.prototype.connect = function(callback) {
+      if (callback) {
+        this._connect(callback);
+        return;
+      }
+      return new this._Promise((resolve, reject) => {
+        this._connect((error61) => {
+          if (error61) {
+            reject(error61);
+          } else {
+            resolve(this);
+          }
+        });
+      });
+    };
+    Client2.prototype.query = function(config2, values, callback) {
+      let query;
+      let result;
+      let readTimeout;
+      let readTimeoutTimer;
+      let queryCallback;
+      if (config2 === null || config2 === void 0) {
+        throw new TypeError("Client was passed a null or undefined query");
+      } else if (typeof config2.submit === "function") {
+        readTimeout = config2.query_timeout || this.connectionParameters.query_timeout;
+        result = query = config2;
+        if (typeof values === "function") {
+          config2.callback = values;
+        }
+      } else {
+        readTimeout = config2.query_timeout || this.connectionParameters.query_timeout;
+        query = new NativeQuery(config2, values, callback);
+        if (!query.callback) {
+          let resolveOut, rejectOut;
+          result = new this._Promise((resolve, reject) => {
+            resolveOut = resolve;
+            rejectOut = reject;
+          }).catch((err) => {
+            Error.captureStackTrace(err);
+            throw err;
+          });
+          query.callback = (err, res) => err ? rejectOut(err) : resolveOut(res);
+        }
+      }
+      if (readTimeout) {
+        queryCallback = query.callback || (() => {
+        });
+        readTimeoutTimer = setTimeout(() => {
+          const error61 = new Error("Query read timeout");
+          process.nextTick(() => {
+            query.handleError(error61, this.connection);
+          });
+          queryCallback(error61);
+          query.callback = () => {
+          };
+          const index = this._queryQueue.indexOf(query);
+          if (index > -1) {
+            this._queryQueue.splice(index, 1);
+          }
+          this._pulseQueryQueue();
+        }, readTimeout);
+        query.callback = (err, res) => {
+          clearTimeout(readTimeoutTimer);
+          queryCallback(err, res);
+        };
+      }
+      if (!this._queryable) {
+        query.native = this.native;
+        process.nextTick(() => {
+          query.handleError(new Error("Client has encountered a connection error and is not queryable"));
+        });
+        return result;
+      }
+      if (this._ending) {
+        query.native = this.native;
+        process.nextTick(() => {
+          query.handleError(new Error("Client was closed and is not queryable"));
+        });
+        return result;
+      }
+      if (this._queryQueue.length > 0 && !this.pipeline) {
+        queryQueueLengthDeprecationNotice();
+      }
+      this._queryQueue.push(query);
+      this._pulseQueryQueue();
+      return result;
+    };
+    Client2.prototype.end = function(cb) {
+      const self = this;
+      this._ending = true;
+      if (this._connecting && !this._connected) {
+        this.once("connect", () => {
+          this.end(() => {
+          });
+        });
+      }
+      let result;
+      if (!cb) {
+        result = new this._Promise(function(resolve, reject) {
+          cb = (err) => err ? reject(err) : resolve();
+        });
+      }
+      const doEnd = function() {
+        self.native.end(function() {
+          self._connected = false;
+          self._errorAllQueries(new Error("Connection terminated"));
+          process.nextTick(() => {
+            self.emit("end");
+            if (cb) cb();
+          });
+        });
+      };
+      if (this.pipeline && (this._pipelineInFlight || this._queryQueue.length > 0)) {
+        this.once("drain", doEnd);
+      } else {
+        doEnd();
+      }
+      return result;
+    };
+    Client2.prototype._hasActiveQuery = function() {
+      return this._activeQuery && this._activeQuery.state !== "error" && this._activeQuery.state !== "end";
+    };
+    Client2.prototype._pulseQueryQueue = function(initialConnection) {
+      if (!this._connected) {
+        return;
+      }
+      if (this.pipeline && !initialConnection) {
+        return this._pulsePipelinedQueryQueue();
+      }
+      if (this._hasActiveQuery()) {
+        return;
+      }
+      const query = this._queryQueue.shift();
+      if (!query) {
+        if (!initialConnection) {
+          this.emit("drain");
+        }
+        return;
+      }
+      this._activeQuery = query;
+      query.submit(this);
+      const self = this;
+      query.once("_done", function() {
+        self._pulseQueryQueue();
+      });
+    };
+    Client2.prototype._pulsePipelinedQueryQueue = function() {
+      if (!this._connected || this._pipelineInFlight) {
+        return;
+      }
+      if (this._queryQueue.length === 0) {
+        if (this.hasExecuted) {
+          this.emit("drain");
+        }
+        return;
+      }
+      this._pipelineInFlight = true;
+      const self = this;
+      const queries = [];
+      const nativeQueries = [];
+      const utils = require_utils2();
+      while (this._queryQueue.length > 0) {
+        const query = this._queryQueue.shift();
+        this.hasExecuted = true;
+        nativeQueries.push(query);
+        const values = query.values ? query.values.map(utils.prepareValue) : null;
+        const pipelineEntry = { text: query.text, name: query.name };
+        if (values) {
+          pipelineEntry.values = values;
+        }
+        if (query.name && this.namedQueries[query.name]) {
+          pipelineEntry._alreadyPrepared = true;
+        }
+        queries.push(pipelineEntry);
+      }
+      this.native.pipeline(queries, function(err, results) {
+        self._pipelineInFlight = false;
+        if (err) {
+          for (let i = 0; i < nativeQueries.length; i++) {
+            const q = nativeQueries[i];
+            q.native = self.native;
+            q.handleError(err);
+          }
+          self._pulsePipelinedQueryQueue();
+          return;
+        }
+        for (let i = 0; i < nativeQueries.length; i++) {
+          const q = nativeQueries[i];
+          const r = results[i];
+          q.native = self.native;
+          if (r.err) {
+            q.handleError(r.err);
+          } else {
+            if (q.name) {
+              self.namedQueries[q.name] = q.text;
+            }
+            q.state = "end";
+            q.emit("end", r.result);
+            if (q.callback) {
+              q.callback(null, r.result);
+            }
+          }
+          setImmediate(function() {
+            q.emit("_done");
+          });
+        }
+        self._pulsePipelinedQueryQueue();
+      });
+    };
+    Client2.prototype.cancel = function(query) {
+      if (this._activeQuery === query) {
+        this.native.cancel(function() {
+        });
+      } else if (this._queryQueue.indexOf(query) !== -1) {
+        this._queryQueue.splice(this._queryQueue.indexOf(query), 1);
+      }
+    };
+    Client2.prototype.ref = function() {
+    };
+    Client2.prototype.unref = function() {
+    };
+    Client2.prototype.setTypeParser = function(oid, format, parseFn) {
+      return this._types.setTypeParser(oid, format, parseFn);
+    };
+    Client2.prototype.getTypeParser = function(oid, format) {
+      return this._types.getTypeParser(oid, format);
+    };
+    Client2.prototype.isConnected = function() {
+      return this._connected;
+    };
+    Client2.prototype.getTransactionStatus = function() {
+      return this.native.getTransactionStatus();
+    };
+  }
+});
+
+// node_modules/pg/lib/native/index.js
+var require_native = __commonJS({
+  "node_modules/pg/lib/native/index.js"(exports2, module2) {
+    "use strict";
+    module2.exports = require_client3();
+  }
+});
+
+// node_modules/pg/lib/index.js
+var require_lib3 = __commonJS({
+  "node_modules/pg/lib/index.js"(exports2, module2) {
+    "use strict";
+    var Client2 = require_client2();
+    var defaults2 = require_defaults();
+    var Connection2 = require_connection2();
+    var Result2 = require_result();
+    var utils = require_utils2();
+    var Pool3 = require_pg_pool();
+    var TypeOverrides2 = require_type_overrides();
+    var { DatabaseError: DatabaseError2 } = require_dist4();
+    var { escapeIdentifier: escapeIdentifier2, escapeLiteral: escapeLiteral2 } = require_utils2();
+    var poolFactory = (Client3) => {
+      return class BoundPool extends Pool3 {
+        constructor(options) {
+          super(options, Client3);
+        }
+      };
+    };
+    var PG = function(clientConstructor2) {
+      this.defaults = defaults2;
+      this.Client = clientConstructor2;
+      this.Query = this.Client.Query;
+      this.Pool = poolFactory(this.Client);
+      this._pools = [];
+      this.Connection = Connection2;
+      this.types = require_pg_types();
+      this.DatabaseError = DatabaseError2;
+      this.TypeOverrides = TypeOverrides2;
+      this.escapeIdentifier = escapeIdentifier2;
+      this.escapeLiteral = escapeLiteral2;
+      this.Result = Result2;
+      this.utils = utils;
+    };
+    var clientConstructor = Client2;
+    var forceNative = false;
+    try {
+      forceNative = !!process.env.NODE_PG_FORCE_NATIVE;
+    } catch {
+    }
+    if (forceNative) {
+      clientConstructor = require_native();
+    }
+    module2.exports = new PG(clientConstructor);
+    Object.defineProperty(module2.exports, "native", {
+      configurable: true,
+      enumerable: false,
+      get() {
+        let native = null;
+        try {
+          native = new PG(require_native());
+        } catch (err) {
+          if (err.code !== "MODULE_NOT_FOUND") {
+            throw err;
+          }
+        }
+        Object.defineProperty(module2.exports, "native", {
+          value: native
+        });
+        return native;
+      }
+    });
   }
 });
 
@@ -29800,26 +35075,26 @@ var throwNestingLimitExceeded = () => {
 };
 
 // node_modules/hono/dist/utils/url.js
-var splitPath = (path2) => {
-  const paths = path2.split("/");
+var splitPath = (path3) => {
+  const paths = path3.split("/");
   if (paths[0] === "") {
     paths.shift();
   }
   return paths;
 };
 var splitRoutingPath = (routePath) => {
-  const { groups, path: path2 } = extractGroupsFromPath(routePath);
-  const paths = splitPath(path2);
+  const { groups, path: path3 } = extractGroupsFromPath(routePath);
+  const paths = splitPath(path3);
   return replaceGroupMarks(paths, groups);
 };
-var extractGroupsFromPath = (path2) => {
+var extractGroupsFromPath = (path3) => {
   const groups = [];
-  path2 = path2.replace(/\{[^}]+\}/g, (match2, index) => {
+  path3 = path3.replace(/\{[^}]+\}/g, (match2, index) => {
     const mark = `@${index}`;
     groups.push([mark, match2]);
     return mark;
   });
-  return { groups, path: path2 };
+  return { groups, path: path3 };
 };
 var replaceGroupMarks = (paths, groups) => {
   for (let i = groups.length - 1; i >= 0; i--) {
@@ -29876,8 +35151,8 @@ var getPath = (request) => {
       const queryIndex = url2.indexOf("?", i);
       const hashIndex = url2.indexOf("#", i);
       const end = queryIndex === -1 ? hashIndex === -1 ? void 0 : hashIndex : hashIndex === -1 ? queryIndex : Math.min(queryIndex, hashIndex);
-      const path2 = url2.slice(start, end);
-      return tryDecodeURI(path2.includes("%25") ? path2.replace(/%25/g, "%2525") : path2);
+      const path3 = url2.slice(start, end);
+      return tryDecodeURI(path3.includes("%25") ? path3.replace(/%25/g, "%2525") : path3);
     } else if (charCode === 63 || charCode === 35) {
       break;
     }
@@ -29894,11 +35169,11 @@ var mergePath = (base, sub, ...rest) => {
   }
   return `${base?.[0] === "/" ? "" : "/"}${base}${sub === "/" ? "" : `${base?.at(-1) === "/" ? "" : "/"}${sub?.[0] === "/" ? sub.slice(1) : sub}`}`;
 };
-var checkOptionalParameter = (path2) => {
-  if (path2.charCodeAt(path2.length - 1) !== 63 || !path2.includes(":")) {
+var checkOptionalParameter = (path3) => {
+  if (path3.charCodeAt(path3.length - 1) !== 63 || !path3.includes(":")) {
     return null;
   }
-  const segments = path2.split("/");
+  const segments = path3.split("/");
   const results = [];
   let basePath = "";
   segments.forEach((segment) => {
@@ -30040,9 +35315,9 @@ var HonoRequest = class {
    */
   path;
   bodyCache = {};
-  constructor(request, path2 = "/", matchResult = [[]]) {
+  constructor(request, path3 = "/", matchResult = [[]]) {
     this.raw = request;
-    this.path = path2;
+    this.path = path3;
     this.#matchResult = matchResult;
   }
   param(key) {
@@ -30813,8 +36088,8 @@ var Hono = class _Hono {
         return this;
       };
     });
-    this.on = (method, path2, ...handlers) => {
-      for (const p of [path2].flat()) {
+    this.on = (method, path3, ...handlers) => {
+      for (const p of [path3].flat()) {
         this.#path = p;
         for (const m of [method].flat()) {
           handlers.map((handler2) => {
@@ -30871,8 +36146,8 @@ var Hono = class _Hono {
    * app.route("/api", app2) // GET /api/user
    * ```
    */
-  route(path2, app2) {
-    const subApp = this.basePath(path2);
+  route(path3, app2) {
+    const subApp = this.basePath(path3);
     app2.routes.map((r) => {
       let handler2;
       if (app2.errorHandler === errorHandler) {
@@ -30898,9 +36173,9 @@ var Hono = class _Hono {
    * const api = new Hono().basePath('/api')
    * ```
    */
-  basePath(path2) {
+  basePath(path3) {
     const subApp = this.#clone();
-    subApp._basePath = mergePath(this._basePath, path2);
+    subApp._basePath = mergePath(this._basePath, path3);
     return subApp;
   }
   /**
@@ -30974,7 +36249,7 @@ var Hono = class _Hono {
    * })
    * ```
    */
-  mount(path2, applicationHandler, options) {
+  mount(path3, applicationHandler, options) {
     let replaceRequest;
     let optionHandler;
     if (options) {
@@ -31001,7 +36276,7 @@ var Hono = class _Hono {
       return [c.env, executionContext];
     };
     replaceRequest ||= (() => {
-      const mergedPath = mergePath(this._basePath, path2);
+      const mergedPath = mergePath(this._basePath, path3);
       const pathPrefixLength = mergedPath === "/" ? 0 : mergedPath.length;
       return (request) => {
         const url2 = new URL(request.url);
@@ -31016,19 +36291,19 @@ var Hono = class _Hono {
       }
       await next();
     };
-    this.#addRoute(METHOD_NAME_ALL, mergePath(path2, "*"), handler2);
+    this.#addRoute(METHOD_NAME_ALL, mergePath(path3, "*"), handler2);
     return this;
   }
-  #addRoute(method, path2, handler2, baseRoutePath) {
+  #addRoute(method, path3, handler2, baseRoutePath) {
     method = method.toUpperCase();
-    path2 = mergePath(this._basePath, path2);
+    path3 = mergePath(this._basePath, path3);
     const r = {
       basePath: baseRoutePath !== void 0 ? mergePath(this._basePath, baseRoutePath) : this._basePath,
-      path: path2,
+      path: path3,
       method,
       handler: handler2
     };
-    this.router.add(method, path2, [handler2, r]);
+    this.router.add(method, path3, [handler2, r]);
     this.routes.push(r);
   }
   #handleError(err, c) {
@@ -31041,10 +36316,10 @@ var Hono = class _Hono {
     if (method === "HEAD") {
       return (async () => new Response(null, await this.#dispatch(request, executionCtx, env, "GET")))();
     }
-    const path2 = this.getPath(request, { env });
-    const matchResult = this.router.match(method, path2);
+    const path3 = this.getPath(request, { env });
+    const matchResult = this.router.match(method, path3);
     const c = new Context(request, {
-      path: path2,
+      path: path3,
       matchResult,
       env,
       executionCtx,
@@ -31147,7 +36422,7 @@ var createNullObject = () => /* @__PURE__ */ Object.create(null);
 
 // node_modules/hono/dist/router/reg-exp-router/matcher.js
 var emptyParam = [];
-function match(method, path2) {
+function match(method, path3) {
   const matchers = this.buildAllMatchers();
   const match2 = ((method2, path22) => {
     const matcher = matchers[method2] || matchers[METHOD_NAME_ALL];
@@ -31163,7 +36438,7 @@ function match(method, path2) {
     return [matcher[1][index], match3];
   });
   this.match = match2;
-  return match2(method, path2);
+  return match2(method, path3);
 }
 
 // node_modules/hono/dist/router/reg-exp-router/node.js
@@ -31280,14 +36555,14 @@ var Trie = class {
   #index = 0;
   // dynamic path -> [handler index, param assoc]; static paths are not registered
   paths = createNullObject();
-  insert(path2, isStatic) {
+  insert(path3, isStatic) {
     if (isStatic) {
-      this.#root.insert(path2.split(""), 0, [], this.#context, true);
+      this.#root.insert(path3.split(""), 0, [], this.#context, true);
       return;
     }
     const paramAssoc = [];
     const groups = [];
-    let markedPath = path2;
+    let markedPath = path3;
     for (let i = 0; ; ) {
       let replaced = false;
       markedPath = markedPath.replace(/\{[^}]+\}/g, (m) => {
@@ -31312,7 +36587,7 @@ var Trie = class {
       }
     }
     this.#root.insert(tokens, this.#index, paramAssoc, this.#context, false);
-    this.paths[path2] = [this.#index++, paramAssoc];
+    this.paths[path3] = [this.#index++, paramAssoc];
   }
   buildRegExp() {
     let regexp = this.#root.buildRegExpStr();
@@ -31339,17 +36614,17 @@ var Trie = class {
 
 // node_modules/hono/dist/router/reg-exp-router/router.js
 var wildcardRegExpCache = createNullObject();
-function buildWildcardRegExp(path2) {
-  return wildcardRegExpCache[path2] ??= new RegExp(
-    `^${path2.replace(
+function buildWildcardRegExp(path3) {
+  return wildcardRegExpCache[path3] ??= new RegExp(
+    `^${path3.replace(
       /\/:[^/{}]+(?:\{\[\^\/]\+})?(?=[/{]|$)|\/?\*$|([.\\+*[^\]$()?{}|])/g,
       (match2, metaChar) => metaChar ? `\\${metaChar}` : match2 === "/*" ? TAIL_WILDCARD_REG_EXP_STR : match2 === "*" ? ONLY_WILDCARD_REG_EXP_STR : `/:${LABEL_REG_EXP_STR}`
     )}$`
   );
 }
-function findMiddleware(middleware, path2) {
+function findMiddleware(middleware, path3) {
   for (const k of Object.keys(middleware).sort((a, b) => b.length - a.length)) {
-    if (buildWildcardRegExp(k).test(path2)) {
+    if (buildWildcardRegExp(k).test(path3)) {
       return [...middleware[k]];
     }
   }
@@ -31365,14 +36640,14 @@ var RegExpRouter = class {
     this.#routes = { [METHOD_NAME_ALL]: createNullObject() };
     this.#tries = { [METHOD_NAME_ALL]: new Trie() };
   }
-  #insertPath(method, path2) {
+  #insertPath(method, path3) {
     try {
-      this.#tries[method].insert(path2, !/\*|\/:/.test(path2));
+      this.#tries[method].insert(path3, !/\*|\/:/.test(path3));
     } catch (e) {
-      throw e === PATH_ERROR ? new UnsupportedPathError(path2) : e;
+      throw e === PATH_ERROR ? new UnsupportedPathError(path3) : e;
     }
   }
-  add(method, path2, handler2) {
+  add(method, path3, handler2) {
     const middleware = this.#middleware;
     const routes = this.#routes;
     if (!middleware) {
@@ -31388,28 +36663,28 @@ var RegExpRouter = class {
         }
       }
     }
-    if (path2 === "/*") {
-      path2 = "*";
+    if (path3 === "/*") {
+      path3 = "*";
     }
     const methods = method === METHOD_NAME_ALL ? Object.keys(middleware) : [method];
-    if (/\*$/.test(path2)) {
-      const re = buildWildcardRegExp(path2);
+    if (/\*$/.test(path3)) {
+      const re = buildWildcardRegExp(path3);
       for (const m of methods) {
-        if (!middleware[m][path2]) {
-          this.#insertPath(m, path2);
-          middleware[m][path2] = findMiddleware(middleware[m], path2) || findMiddleware(middleware[METHOD_NAME_ALL], path2) || [];
+        if (!middleware[m][path3]) {
+          this.#insertPath(m, path3);
+          middleware[m][path3] = findMiddleware(middleware[m], path3) || findMiddleware(middleware[METHOD_NAME_ALL], path3) || [];
         }
       }
       for (const handlerMap of [middleware, routes]) {
         for (const m of methods) {
           for (const p in handlerMap[m]) {
-            re.test(p) && handlerMap[m][p].push([handler2, path2]);
+            re.test(p) && handlerMap[m][p].push([handler2, path3]);
           }
         }
       }
       return;
     }
-    const paths = checkOptionalParameter(path2) || [path2];
+    const paths = checkOptionalParameter(path3) || [path3];
     for (const path22 of paths) {
       for (const m of methods) {
         if (!routes[m][path22]) {
@@ -31438,11 +36713,11 @@ var RegExpRouter = class {
     const handlerData = [];
     const [regexp, indexReplacementMap, paramReplacementMap] = trie.buildRegExp();
     for (const r of [middleware, routes]) {
-      for (const path2 in r) {
-        const handlers = r[path2];
-        const pathData = trie.paths[path2];
+      for (const path3 in r) {
+        const handlers = r[path3];
+        const pathData = trie.paths[path3];
         if (!pathData) {
-          staticMap[path2] = [handlers.map(([h]) => [h, createNullObject()]), emptyParam];
+          staticMap[path3] = [handlers.map(([h]) => [h, createNullObject()]), emptyParam];
           continue;
         }
         handlerData[pathData[0]] = handlers.map(([h, handlerPath]) => [
@@ -31466,13 +36741,13 @@ var SmartRouter = class {
   constructor(init) {
     this.#routers = init.routers;
   }
-  add(method, path2, handler2) {
+  add(method, path3, handler2) {
     if (!this.#routes) {
       throw new Error(MESSAGE_MATCHER_IS_ALREADY_BUILT);
     }
-    this.#routes.push([method, path2, handler2]);
+    this.#routes.push([method, path3, handler2]);
   }
-  match(method, path2) {
+  match(method, path3) {
     if (!this.#routes) {
       throw new Error("Fatal error");
     }
@@ -31487,7 +36762,7 @@ var SmartRouter = class {
         for (let i2 = 0, len2 = routes.length; i2 < len2; i2++) {
           router.add(...routes[i2]);
         }
-        res = router.match(method, path2);
+        res = router.match(method, path3);
       } catch (e) {
         if (e instanceof UnsupportedPathError) {
           continue;
@@ -31522,9 +36797,9 @@ var Node2 = class _Node2 {
   #patterns = [];
   #pattern;
   #params = emptyParams;
-  insert(method, path2, handler2) {
+  insert(method, path3, handler2) {
     let curNode = this;
-    const parts = splitRoutingPath(path2);
+    const parts = splitRoutingPath(path3);
     const possibleKeys = /* @__PURE__ */ new Set();
     let i = 0;
     for (const p of parts) {
@@ -31564,12 +36839,12 @@ var Node2 = class _Node2 {
       }
     }
   }
-  search(method, path2) {
+  search(method, path3) {
     const handlerSets = [];
     this.#params = emptyParams;
     const curNode = this;
     let curNodes = [curNode];
-    const parts = splitPath(path2);
+    const parts = splitPath(path3);
     const curNodesQueue = [];
     const len = parts.length;
     let partOffsets = null;
@@ -31611,13 +36886,13 @@ var Node2 = class _Node2 {
           if (matcher !== true) {
             if (!partOffsets) {
               partOffsets = [];
-              let offset = path2[0] === "/" ? 1 : 0;
+              let offset = path3[0] === "/" ? 1 : 0;
               for (let p = 0; p < len; p++) {
                 partOffsets[p] = offset;
                 offset += parts[p].length + 1;
               }
             }
-            const restPathString = path2.slice(partOffsets[i]);
+            const restPathString = path3.slice(partOffsets[i]);
             const m = matcher.exec(restPathString);
             if (m) {
               params[name] = m[0];
@@ -31677,13 +36952,13 @@ var Node2 = class _Node2 {
 var TrieRouter = class {
   name = "TrieRouter";
   #node = new Node2();
-  add(method, path2, handler2) {
-    for (const result of checkOptionalParameter(path2) || [path2]) {
+  add(method, path3, handler2) {
+    for (const result of checkOptionalParameter(path3) || [path3]) {
       this.#node.insert(method, result, handler2);
     }
   }
-  match(method, path2) {
-    return this.#node.search(method, path2);
+  match(method, path3) {
+    return this.#node.search(method, path3);
   }
 };
 
@@ -31835,18 +37110,18 @@ var colorStatus = async (status) => {
   }
   return `${status}`;
 };
-async function log(fn, prefix, method, path2, status = 0, elapsed) {
-  const out = prefix === "<--" ? `${prefix} ${method} ${path2}` : `${prefix} ${method} ${path2} ${await colorStatus(status)} ${elapsed}`;
+async function log(fn, prefix, method, path3, status = 0, elapsed) {
+  const out = prefix === "<--" ? `${prefix} ${method} ${path3}` : `${prefix} ${method} ${path3} ${await colorStatus(status)} ${elapsed}`;
   fn(out);
 }
 var logger = (fn = console.log) => {
   return async function logger2(c, next) {
     const { method, url: url2 } = c.req;
-    const path2 = url2.slice(url2.indexOf("/", 8));
-    await log(fn, "<--", method, path2);
+    const path3 = url2.slice(url2.indexOf("/", 8));
+    await log(fn, "<--", method, path3);
     const start = Date.now();
     await next();
-    await log(fn, "-->", method, path2, c.res.status, time(start));
+    await log(fn, "-->", method, path3, c.res.status, time(start));
   };
 };
 
@@ -32755,10 +38030,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path2) {
-  if (!path2)
+function getElementAtPath(obj, path3) {
+  if (!path3)
     return obj;
-  return path2.reduce((acc, key) => acc?.[key], obj);
+  return path3.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -33170,11 +38445,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path2, issues) {
+function prefixIssues(path3, issues) {
   return issues.map((iss) => {
     var _a4;
     (_a4 = iss).path ?? (_a4.path = []);
-    iss.path.unshift(path2);
+    iss.path.unshift(path3);
     return iss;
   });
 }
@@ -33607,16 +38882,16 @@ function flattenError(error61, mapper = (issue2) => issue2.message) {
 }
 function formatError(error61, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error62, path2 = []) => {
+  const processError = (error62, path3 = []) => {
     for (const issue2 of error62.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path2, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path3, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path2, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path3, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path2, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path3, ...issue2.path]);
       } else {
-        const fullpath = [...path2, ...issue2.path];
+        const fullpath = [...path3, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -33655,17 +38930,17 @@ function formatError(error61, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error61, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error62, path2 = []) => {
+  const processError = (error62, path3 = []) => {
     var _a4;
     for (const issue2 of error62.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path2, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path3, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path2, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path3, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path2, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path3, ...issue2.path]);
       } else {
-        const fullpath = [...path2, ...issue2.path];
+        const fullpath = [...path3, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -33704,8 +38979,8 @@ function treeifyError(error61, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path2 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path2) {
+  const path3 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path3) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -46722,10 +51997,10 @@ function _properties(shape) {
   return Object.entries(shape).map(([property, schema]) => new $ZodCheckProperty({ check: "property", property, schema }));
 }
 // @__NO_SIDE_EFFECTS__
-function _mime(types, params) {
+function _mime(types2, params) {
   return new $ZodCheckMimeType({
     check: "mime_type",
-    mime: types,
+    mime: types2,
     ...normalizeParams(params)
   });
 }
@@ -47313,7 +52588,7 @@ function compactTypeUnion(schema) {
   const options = schema.anyOf;
   if (!Array.isArray(options) || options.length === 0 || schema.type !== void 0)
     return;
-  const types = [];
+  const types2 = [];
   for (const option of options) {
     if (!option || typeof option !== "object")
       return;
@@ -47325,12 +52600,12 @@ function compactTypeUnion(schema) {
     for (const member of Array.isArray(type) ? type : [type]) {
       if (typeof member !== "string")
         return;
-      if (!types.includes(member))
-        types.push(member);
+      if (!types2.includes(member))
+        types2.push(member);
     }
   }
   delete schema.anyOf;
-  schema.type = types.length === 1 ? types[0] : types;
+  schema.type = types2.length === 1 ? types2[0] : types2;
 }
 var FOLDABLE_KEYS = /* @__PURE__ */ new Set(["type", "properties", "required", "additionalProperties"]);
 var UNION_KEYS = ["oneOf", "anyOf"];
@@ -48038,8 +53313,8 @@ function stringifyKeyNames(bySchema, json2, visited) {
     if (mapped.some((branch, i) => branch !== branches[i]))
       json2 = { ...json2, [keyword]: mapped };
   }
-  const types = Array.isArray(json2.type) ? json2.type : [json2.type];
-  const numericType = !types.includes("string") && types.some((t) => t === "number" || t === "integer");
+  const types2 = Array.isArray(json2.type) ? json2.type : [json2.type];
+  const numericType = !types2.includes("string") && types2.some((t) => t === "number" || t === "integer");
   const values = json2.enum ?? (json2.const !== void 0 ? [json2.const] : void 0);
   if (!numericType && !values?.some((v) => typeof v === "number"))
     return json2;
@@ -48052,7 +53327,7 @@ function stringifyKeyNames(bySchema, json2, visited) {
     return rest;
   rest.type = "string";
   if (!values)
-    rest.pattern = (types.includes("number") ? number : integer).source;
+    rest.pattern = (types2.includes("number") ? number : integer).source;
   return rest;
 }
 var pendingRecords = /* @__PURE__ */ new WeakMap();
@@ -49735,7 +55010,7 @@ var ZodFile = /* @__PURE__ */ $constructor("ZodFile", (inst, def) => {
   inst._zod.processJSONSchema = (ctx, json2, params) => fileProcessor(inst, ctx, json2, params);
   inst.min = (size, params) => inst.check(_minSize(size, params));
   inst.max = (size, params) => inst.check(_maxSize(size, params));
-  inst.mime = (types, params) => inst.check(_mime(Array.isArray(types) ? types : [types], params));
+  inst.mime = (types2, params) => inst.check(_mime(Array.isArray(types2) ? types2 : [types2], params));
 });
 function file(params) {
   return _file(ZodFile, params);
@@ -50215,13 +55490,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path2 = ref.slice(1).split("/").filter(Boolean);
-  if (path2.length === 0) {
+  const path3 = ref.slice(1).split("/").filter(Boolean);
+  if (path3.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path2[0] === defsKey) {
-    const key = path2[1] === void 0 ? void 0 : decodeJSONPointerSegment(path2[1]);
+  if (path3[0] === defsKey) {
+    const key = path3[1] === void 0 ? void 0 : decodeJSONPointerSegment(path3[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -50943,6 +56218,26 @@ function workTypeLabel(id, other) {
 function districtLabel(id) {
   return DISTRICT_LABEL[id] ?? id;
 }
+function districtIds(district) {
+  if (district == null) return ["national"];
+  const raw2 = Array.isArray(district) ? district : [district];
+  const ids = raw2.flatMap((value) => {
+    const text = String(value).trim();
+    if (!text) return [];
+    if (text.startsWith("[")) {
+      try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) return parsed.map(String);
+      } catch {
+      }
+    }
+    return [text];
+  }).filter(Boolean);
+  return ids.length ? ids : ["national"];
+}
+function districtLabels(district) {
+  return districtIds(district).map((id) => districtLabel(id)).join(", ");
+}
 function logKindLabel(id) {
   return LOG_KIND_LABEL[id] ?? id;
 }
@@ -50954,7 +56249,7 @@ function activityKindLabel(id, other) {
   return ACTIVITY_KIND_LABEL[id] ?? id;
 }
 function placeLine(workKind2, district, facility, workKindOther) {
-  const base = `${workTypeLabel(workKind2, workKindOther)} \xB7 ${districtLabel(district)}`;
+  const base = `${workTypeLabel(workKind2, workKindOther)} \xB7 ${districtLabels(district)}`;
   return facility?.trim() ? `${base} \xB7 ${facility.trim()}` : base;
 }
 
@@ -51000,8 +56295,8 @@ function startOfYear(date5) {
   d.setMonth(0, 1);
   return d;
 }
-function isInRange(iso, start, end) {
-  const t = new Date(iso).getTime();
+function isInRange(iso3, start, end) {
+  const t = new Date(iso3).getTime();
   return t >= start.getTime() && t <= end.getTime();
 }
 function formatRange(start, end) {
@@ -51021,8 +56316,8 @@ function formatRange(start, end) {
 function isSameDay(a, b) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
-function formatTime(iso) {
-  return new Date(iso).toLocaleTimeString("en-US", {
+function formatTime(iso3) {
+  return new Date(iso3).toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit"
   });
@@ -51030,8 +56325,8 @@ function formatTime(iso) {
 function formatTimeRange(startIso, endIso) {
   return `${formatTime(startIso)} \u2013 ${formatTime(endIso)}`;
 }
-function formatDate(iso) {
-  return new Date(iso).toLocaleDateString([], {
+function formatDate(iso3) {
+  return new Date(iso3).toLocaleDateString([], {
     weekday: "short",
     month: "short",
     day: "numeric"
@@ -51042,11 +56337,40 @@ function uid(prefix) {
 }
 
 // src/utils/metrics.ts
+var PERIODS = ["Daily", "Weekly", "Monthly", "Yearly"];
+var PERIOD_CLOSED_LABEL = {
+  Daily: "Tasks closed today",
+  Weekly: "Tasks closed this week",
+  Monthly: "Tasks closed this month",
+  Yearly: "Tasks closed this year"
+};
 function memberById(members2, id) {
   return members2.find((m) => m.id === id);
 }
 function memberName(members2, id) {
   return memberById(members2, id)?.name ?? "Unassigned";
+}
+function assigneeIds(assignedTo) {
+  if (assignedTo == null) return [];
+  if (Array.isArray(assignedTo)) return assignedTo.map(String).filter(Boolean);
+  const raw2 = String(assignedTo).trim();
+  if (!raw2) return [];
+  if (raw2.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(raw2);
+      if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+    } catch {
+    }
+  }
+  return [raw2];
+}
+function isAssignedTo(assignedTo, memberId) {
+  return assigneeIds(assignedTo).includes(memberId);
+}
+function memberNames(members2, assignedTo) {
+  const ids = assigneeIds(assignedTo);
+  if (ids.length === 0) return "Unassigned";
+  return ids.map((id) => memberName(members2, id)).join(", ");
 }
 function displayStatus(task, now = /* @__PURE__ */ new Date()) {
   if (task.status === "completed") return "completed";
@@ -51133,7 +56457,7 @@ function teamMetrics(state, now = /* @__PURE__ */ new Date()) {
 }
 function memberWorkloads(state, now = /* @__PURE__ */ new Date()) {
   return state.members.map((member) => {
-    const assigned = state.tasks.filter((t) => t.assignedTo === member.id);
+    const assigned = state.tasks.filter((t) => isAssignedTo(t.assignedTo, member.id));
     const overdue = assigned.filter((t) => displayStatus(t, now) === "overdue").length;
     const completed = assigned.filter((t) => displayStatus(t, now) === "completed").length;
     const active = assigned.filter((t) => {
@@ -51159,17 +56483,29 @@ function periodBounds(period, now = /* @__PURE__ */ new Date()) {
 }
 
 // src/utils/report.ts
-function buildWeeklyReport(state, now = /* @__PURE__ */ new Date()) {
-  const { start, end } = periodBounds("Weekly", now);
+var PERIOD_SCOPE = {
+  Daily: "today",
+  Weekly: "this week",
+  Monthly: "this month",
+  Yearly: "this year"
+};
+function parseReportPeriod(value) {
+  if (value && PERIODS.includes(value)) return value;
+  return "Weekly";
+}
+function buildOpsReport(state, period = "Weekly", now = /* @__PURE__ */ new Date()) {
+  const { start, end } = periodBounds(period, now);
   const metrics = teamMetrics(state, now);
-  const closed = state.tasks.filter((t) => t.completedAt && isInRange(t.completedAt, start, end));
-  const meetings = state.meetings.filter((m) => isInRange(m.startTime, start, end)).sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime));
-  const weekActivities = [...state.activities ?? []].filter((item) => isInRange(item.startTime, start, end)).sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime));
+  const tasks = state.tasks ?? [];
+  const meetings = [...state.meetings ?? []].filter((m) => isInRange(m.startTime, start, end)).sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime));
+  const actionItems = state.actionItems ?? [];
+  const closed = tasks.filter((t) => t.completedAt && isInRange(t.completedAt, start, end));
+  const periodActivities = [...state.activities ?? []].filter((item) => isInRange(item.startTime, start, end)).sort((a, b) => +new Date(a.startTime) - +new Date(b.startTime));
   const people = memberWorkloads(state, now).map((row) => ({
     name: row.member.name,
     role: row.member.role,
-    closed: state.tasks.filter(
-      (t) => t.assignedTo === row.member.id && t.completedAt && isInRange(t.completedAt, start, end)
+    closed: tasks.filter(
+      (t) => isAssignedTo(t.assignedTo, row.member.id) && t.completedAt && isInRange(t.completedAt, start, end)
     ).length,
     open: row.active,
     overdue: row.overdue
@@ -51184,6 +56520,7 @@ function buildWeeklyReport(state, now = /* @__PURE__ */ new Date()) {
   }));
   return {
     generatedAt: now.toISOString(),
+    period,
     rangeLabel: formatRange(start, end),
     performance: {
       completionRate: metrics.completionRate,
@@ -51192,42 +56529,43 @@ function buildWeeklyReport(state, now = /* @__PURE__ */ new Date()) {
       inProgress: metrics.inProgress,
       onTime: closed.filter((t) => completedOnTime(t)).length,
       meetings: meetings.length,
-      activities: weekActivities.length,
-      openActions: state.actionItems.filter((a) => a.status !== "completed").length,
+      activities: periodActivities.length,
+      openActions: actionItems.filter((a) => a.status !== "completed").length,
       hubLog: hubLog.length
     },
     people,
     hubLog,
     meetings: meetings.map((meeting) => {
-      const actions = state.actionItems.filter((a) => a.meetingId === meeting.id);
+      const actions = actionItems.filter((a) => a.meetingId === meeting.id);
       return {
         id: meeting.id,
         title: meeting.title,
         when: `${formatDate(meeting.startTime)} \xB7 ${formatTimeRange(meeting.startTime, meeting.endTime)} \xB7 ${meetingStatus(meeting, now)}`,
-        attendees: meeting.participantIds.map((id) => memberName(state.members, id)).join(", "),
+        attendees: (meeting.participantIds ?? []).map((id) => memberName(state.members, id)).join(", "),
         agenda: meeting.agenda?.trim() ?? "",
         notes: meeting.notes?.trim() ?? "",
         actions: actions.map((item) => ({
           title: item.title,
           place: placeLine(item.workKind, item.district, item.facility, item.workKindOther),
-          owner: memberName(state.members, item.assignedTo),
-          status: item.status.replace("_", " "),
+          owner: memberNames(state.members, item.assignedTo),
+          status: (item.status ?? "open").replace("_", " "),
           deadline: formatDate(item.deadline)
         }))
       };
     }),
-    activities: weekActivities.map((item) => ({
+    activities: periodActivities.map((item) => ({
       id: item.id,
       title: item.title,
       kind: activityKindLabel(item.kind, item.kindOther),
       when: `${formatDate(item.startTime)} \xB7 ${formatTimeRange(item.startTime, item.endTime)} \xB7 ${meetingStatus(item, now)}`,
       place: item.facility ? `${districtLabel(item.district)} \xB7 ${item.facility}` : districtLabel(item.district),
-      attendees: item.participantIds.map((id) => memberName(state.members, id)).join(", "),
+      attendees: (item.participantIds ?? []).map((id) => memberName(state.members, id)).join(", "),
       notes: item.notes?.trim() ?? ""
     }))
   };
 }
 function reportToHtml(report) {
+  const scope = PERIOD_SCOPE[report.period] ?? "this week";
   const peopleRows = report.people.map(
     (p) => `<tr><td>${esc2(p.name)}</td><td>${esc2(p.role)}</td><td>${p.closed}</td><td>${p.open}</td><td>${p.overdue}</td></tr>`
   ).join("");
@@ -51250,7 +56588,7 @@ function reportToHtml(report) {
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>NHIH Weekly Operations Report \xB7 ${esc2(report.rangeLabel)}</title>
+  <title>NHIH ${esc2(report.period)} Operations Report \xB7 ${esc2(report.rangeLabel)}</title>
   <style>
     body { font-family: Inter, "Segoe UI", sans-serif; color: #1f2933; background: #fff; margin: 0; padding: 32px; }
     h1 { font-size: 22px; margin: 0 0 4px; }
@@ -51275,28 +56613,28 @@ function reportToHtml(report) {
 </head>
 <body>
   <div class="kicker">NHIH Team Operations</div>
-  <h1>Weekly operations report</h1>
+  <h1>${esc2(report.period)} operations report</h1>
   <p class="meta">${esc2(report.rangeLabel)} \xB7 Generated ${esc2(new Date(report.generatedAt).toLocaleString())}</p>
 
   <h2>Team performance</h2>
   <div class="kpis">
     <div class="kpi"><strong>${report.performance.completionRate}%</strong><span>Completion rate</span></div>
-    <div class="kpi"><strong>${report.performance.closed}</strong><span>Tasks closed this week</span></div>
+    <div class="kpi"><strong>${report.performance.closed}</strong><span>${esc2(PERIOD_CLOSED_LABEL[report.period] ?? "Tasks closed")}</span></div>
     <div class="kpi"><strong>${report.performance.onTime}</strong><span>Closed on time</span></div>
     <div class="kpi"><strong>${report.performance.overdue}</strong><span>Still overdue</span></div>
     <div class="kpi"><strong>${report.performance.inProgress}</strong><span>In progress</span></div>
-    <div class="kpi"><strong>${report.performance.meetings}</strong><span>Meetings this week</span></div>
-    <div class="kpi"><strong>${report.performance.activities}</strong><span>Activities this week</span></div>
+    <div class="kpi"><strong>${report.performance.meetings}</strong><span>Meetings ${esc2(scope)}</span></div>
+    <div class="kpi"><strong>${report.performance.activities}</strong><span>Activities ${esc2(scope)}</span></div>
     <div class="kpi"><strong>${report.performance.openActions}</strong><span>Open action items</span></div>
     <div class="kpi"><strong>${report.performance.hubLog}</strong><span>Hub incident log entries</span></div>
   </div>
 
   <h2>Hub incident log</h2>
-  ${hubLogRows ? `<table><thead><tr><th>When</th><th>Kind</th><th>What happened</th><th>Where</th><th>Detail</th><th>Logged by</th></tr></thead><tbody>${hubLogRows}</tbody></table>` : '<p class="mute">No extract, late-reporting, or incident entries this week.</p>'}
+  ${hubLogRows ? `<table><thead><tr><th>When</th><th>Kind</th><th>What happened</th><th>Where</th><th>Detail</th><th>Logged by</th></tr></thead><tbody>${hubLogRows}</tbody></table>` : `<p class="mute">No extract, late-reporting, or incident entries ${esc2(scope)}.</p>`}
 
   <h2>Individual performance</h2>
   <table>
-    <thead><tr><th>Name</th><th>Role</th><th>Closed this week</th><th>Open</th><th>Overdue</th></tr></thead>
+    <thead><tr><th>Name</th><th>Role</th><th>Closed ${esc2(scope)}</th><th>Open</th><th>Overdue</th></tr></thead>
     <tbody>${peopleRows}</tbody>
   </table>
 
@@ -51309,7 +56647,7 @@ function reportToHtml(report) {
 </html>`;
 }
 function esc2(value) {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 // src/data/seed.ts
@@ -51402,10 +56740,11 @@ function tickOverdue(state, now = /* @__PURE__ */ new Date()) {
   );
 }
 function addTask(state, task) {
+  const next = task.status === "completed" ? { ...task, progress: 100, completedAt: task.completedAt ?? nowIso() } : task;
   return pushEvent(
-    { ...state, tasks: [task, ...state.tasks] },
-    `New task assigned \xB7 ${task.title}`,
-    task.priority === "critical" ? "danger" : "info"
+    { ...state, tasks: [next, ...state.tasks] },
+    `New task assigned \xB7 ${next.title}`,
+    next.priority === "critical" ? "danger" : "info"
   );
 }
 function updateTask(state, id, patch) {
@@ -51423,7 +56762,7 @@ function updateTask(state, id, patch) {
   if (current.status !== next.status && next.status === "completed") {
     following = pushEvent(
       following,
-      `${memberName(state.members, next.assignedTo)} completed \xB7 ${next.title}`,
+      `${memberNames(state.members, next.assignedTo)} completed \xB7 ${next.title}`,
       "success"
     );
   } else if (current.status !== next.status) {
@@ -51432,7 +56771,7 @@ function updateTask(state, id, patch) {
       `Status change \xB7 ${next.title}`,
       next.status === "overdue" ? "danger" : "info"
     );
-  } else if (current.assignedTo !== next.assignedTo) {
+  } else if (JSON.stringify(current.assignedTo) !== JSON.stringify(next.assignedTo)) {
     following = pushEvent(following, `Reassigned \xB7 ${next.title}`, "info");
   }
   return following;
@@ -51485,21 +56824,39 @@ function updateActivity(state, id, patch) {
   }
   return following;
 }
-function addActionItem(state, item) {
-  return pushEvent(
-    { ...state, actionItems: [item, ...state.actionItems] },
-    `Action item created \xB7 ${item.title}`,
-    "info"
-  );
+function addActionItem(state, item, assignedBy) {
+  const withItem = { ...state, actionItems: [item, ...state.actionItems] };
+  const by = assignedBy || state.members.find((member) => member.role === "Team Lead")?.id || state.members[0]?.id || "m1";
+  return convertAction(withItem, item.id, by);
 }
 function updateActionItem(state, id, patch) {
   const current = state.actionItems.find((item) => item.id === id);
   if (!current) throw new HttpError(404, "Action item not found");
   const next = { ...current, ...patch };
-  return {
+  let following = {
     ...state,
     actionItems: state.actionItems.map((item) => item.id === id ? next : item)
   };
+  if (patch.assignedTo && current.convertedToTaskId) {
+    following = {
+      ...following,
+      tasks: following.tasks.map(
+        (task) => task.id === current.convertedToTaskId ? {
+          ...task,
+          assignedTo: [...patch.assignedTo],
+          ...patch.district ? { district: [...patch.district] } : {}
+        } : task
+      )
+    };
+  } else if (patch.district && current.convertedToTaskId) {
+    following = {
+      ...following,
+      tasks: following.tasks.map(
+        (task) => task.id === current.convertedToTaskId ? { ...task, district: [...patch.district] } : task
+      )
+    };
+  }
+  return following;
 }
 function convertAction(state, actionId, assignedBy) {
   const item = state.actionItems.find((entry) => entry.id === actionId);
@@ -51509,7 +56866,7 @@ function convertAction(state, actionId, assignedBy) {
     id: uid("t"),
     title: item.title,
     description: `Converted from meeting action \xB7 ${item.meetingTitle}`,
-    assignedTo: item.assignedTo,
+    assignedTo: [...item.assignedTo],
     assignedBy,
     priority: "high",
     dueDate: item.deadline,
@@ -51519,7 +56876,7 @@ function convertAction(state, actionId, assignedBy) {
     fromActionItemId: actionId,
     workKind: item.workKind,
     workKindOther: item.workKindOther,
-    district: item.district,
+    district: [...item.district],
     facility: item.facility
   };
   return pushEvent(
@@ -51537,7 +56894,7 @@ function convertAction(state, actionId, assignedBy) {
 function addHubLog(state, entry) {
   const prefix = entry.kind === "extract_failed" ? "Extract failed" : entry.kind === "extract_restored" ? "Extract restored" : entry.kind === "late_reporting" ? "Late reporting" : entry.kind === "incident" ? "Incident" : "Hub note";
   return pushEvent(
-    { ...state, hubLog: [entry, ...state.hubLog ?? []].slice(0, 40) },
+    { ...state, hubLog: [entry, ...state.hubLog ?? []] },
     `${prefix} \xB7 ${entry.title}`,
     entry.kind === "extract_failed" || entry.kind === "incident" ? "danger" : "info"
   );
@@ -51597,8 +56954,8 @@ function removeHubLog(state, id) {
 }
 
 // server/persist.ts
-var import_node_fs = require("node:fs");
-var import_node_path = __toESM(require("node:path"), 1);
+var import_node_fs2 = require("node:fs");
+var import_node_path2 = __toESM(require("node:path"), 1);
 
 // node_modules/is-node-process/lib/index.mjs
 function isNodeProcess() {
@@ -53206,27 +58563,398 @@ var completeMultipartUpload2 = createCompleteMultipartUploadMethod({
   ]
 });
 
-// server/persist.ts
+// server/postgres.ts
+var import_node_fs = require("node:fs");
+var import_node_path = __toESM(require("node:path"), 1);
+
+// node_modules/pg/esm/index.mjs
+var import_lib = __toESM(require_lib3(), 1);
+var Client = import_lib.default.Client;
+var Pool = import_lib.default.Pool;
+var Connection = import_lib.default.Connection;
+var types = import_lib.default.types;
+var Query = import_lib.default.Query;
+var DatabaseError = import_lib.default.DatabaseError;
+var escapeIdentifier = import_lib.default.escapeIdentifier;
+var escapeLiteral = import_lib.default.escapeLiteral;
+var Result = import_lib.default.Result;
+var TypeOverrides = import_lib.default.TypeOverrides;
+var defaults = import_lib.default.defaults;
+var esm_default = import_lib.default;
+
+// server/snapshot.ts
 var SEED_VERSION = "live-empty-1";
 var BLOB_PATH = "ops-state.json";
+
+// server/postgres.ts
+var { Pool: Pool2 } = esm_default;
+var pool = null;
+function postgresConfigured() {
+  return Boolean(process.env.DATABASE_URL?.trim());
+}
+function postgresActive() {
+  if (process.env.VERCEL && process.env.FORCE_POSTGRES !== "1") return false;
+  const mode = (process.env.PERSISTENCE || "").trim().toLowerCase();
+  return mode === "postgres" && postgresConfigured();
+}
+function getPostgresPool() {
+  if (!pool) {
+    const connectionString = process.env.DATABASE_URL?.trim();
+    if (!connectionString) throw new Error("DATABASE_URL is not set");
+    pool = new Pool2({ connectionString });
+  }
+  return pool;
+}
+function getPool() {
+  return getPostgresPool();
+}
+async function migratePostgres() {
+  const sql = (0, import_node_fs.readFileSync)(import_node_path.default.join(process.cwd(), "db", "schema.sql"), "utf8");
+  await getPool().query(sql);
+  await getPool().query(
+    `ALTER TABLE hub_log ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'open'`
+  );
+  await getPool().query(`ALTER TABLE tasks DROP CONSTRAINT IF EXISTS tasks_assigned_to_fkey`);
+  await getPool().query(
+    `ALTER TABLE action_items DROP CONSTRAINT IF EXISTS action_items_assigned_to_fkey`
+  );
+  await getPool().query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS emr_phase TEXT`);
+}
+async function readPostgresSnapshot() {
+  try {
+    await migratePostgres();
+    const client = await getPool().connect();
+    try {
+      const versionRes = await client.query(
+        `SELECT value FROM meta WHERE key = 'seed_version'`
+      );
+      const membersRes = await client.query(`SELECT * FROM members ORDER BY id`);
+      if (membersRes.rowCount === 0 && versionRes.rowCount === 0) {
+        return { ok: false, missing: true };
+      }
+      const [tasks, meetings, activities, actionItems, hubLog, events] = await Promise.all([
+        client.query(`SELECT * FROM tasks ORDER BY created_at DESC`),
+        client.query(`SELECT * FROM meetings ORDER BY start_time`),
+        client.query(`SELECT * FROM activities ORDER BY start_time`),
+        client.query(`SELECT * FROM action_items ORDER BY deadline`),
+        client.query(`SELECT * FROM hub_log ORDER BY at DESC`),
+        client.query(`SELECT * FROM activity_events ORDER BY at DESC`)
+      ]);
+      const meetingParts = await client.query(
+        `SELECT meeting_id, member_id FROM meeting_participants`
+      );
+      const activityParts = await client.query(
+        `SELECT activity_id, member_id FROM activity_participants`
+      );
+      const meetingMap = groupIds(meetingParts.rows, "meeting_id", "member_id");
+      const activityMap = groupIds(activityParts.rows, "activity_id", "member_id");
+      const state = {
+        members: membersRes.rows.map(mapMember),
+        tasks: tasks.rows.map(mapTask),
+        meetings: meetings.rows.map((row) => mapMeeting(row, meetingMap.get(row.id) ?? [])),
+        activities: activities.rows.map((row) => mapActivity(row, activityMap.get(row.id) ?? [])),
+        actionItems: actionItems.rows.map(mapAction),
+        hubLog: hubLog.rows.map(mapHubLog),
+        events: events.rows.map(mapEvent)
+      };
+      return {
+        ok: true,
+        snapshot: {
+          version: versionRes.rows[0]?.value ?? SEED_VERSION,
+          state
+        }
+      };
+    } finally {
+      client.release();
+    }
+  } catch (error61) {
+    return {
+      ok: false,
+      missing: false,
+      error: error61 instanceof Error ? error61.message : String(error61)
+    };
+  }
+}
+async function writePostgresSnapshot(snapshot2) {
+  await migratePostgres();
+  const client = await getPool().connect();
+  const { state, version: version2 } = snapshot2;
+  try {
+    await client.query("BEGIN");
+    await client.query(`DELETE FROM activity_events`);
+    await client.query(`DELETE FROM hub_log`);
+    await client.query(`DELETE FROM action_items`);
+    await client.query(`DELETE FROM activity_participants`);
+    await client.query(`DELETE FROM activities`);
+    await client.query(`DELETE FROM meeting_participants`);
+    await client.query(`DELETE FROM meetings`);
+    await client.query(`DELETE FROM tasks`);
+    await client.query(`DELETE FROM members`);
+    await client.query(
+      `INSERT INTO meta (key, value) VALUES ('seed_version', $1)
+       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+      [version2]
+    );
+    for (const member of state.members) {
+      await client.query(
+        `INSERT INTO members (id, name, role, initials) VALUES ($1, $2, $3, $4)`,
+        [member.id, member.name, member.role, member.initials]
+      );
+    }
+    for (const task of state.tasks) {
+      await client.query(
+        `INSERT INTO tasks (
+          id, title, description, assigned_to, assigned_by, priority, due_date, status,
+          progress, created_at, completed_at, from_action_item_id, work_kind, work_kind_other,
+          district, facility, emr_phase
+        ) VALUES (
+          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17
+        )`,
+        [
+          task.id,
+          task.title,
+          task.description,
+          JSON.stringify(assigneeIds(task.assignedTo)),
+          task.assignedBy,
+          task.priority,
+          task.dueDate,
+          task.status,
+          task.progress,
+          task.createdAt,
+          task.completedAt ?? null,
+          task.fromActionItemId ?? null,
+          task.workKind,
+          task.workKindOther ?? null,
+          JSON.stringify(districtIds(task.district)),
+          task.facility ?? null,
+          task.emrPhase ?? null
+        ]
+      );
+    }
+    for (const meeting of state.meetings) {
+      await client.query(
+        `INSERT INTO meetings (id, title, start_time, end_time, agenda, notes, rolling)
+         VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+        [
+          meeting.id,
+          meeting.title,
+          meeting.startTime,
+          meeting.endTime,
+          meeting.agenda ?? null,
+          meeting.notes ?? null,
+          Boolean(meeting.rolling)
+        ]
+      );
+      for (const memberId of meeting.participantIds) {
+        await client.query(
+          `INSERT INTO meeting_participants (meeting_id, member_id) VALUES ($1, $2)`,
+          [meeting.id, memberId]
+        );
+      }
+    }
+    for (const activity of state.activities ?? []) {
+      await client.query(
+        `INSERT INTO activities (
+          id, title, kind, kind_other, start_time, end_time, district, facility, notes
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+        [
+          activity.id,
+          activity.title,
+          activity.kind,
+          activity.kindOther ?? null,
+          activity.startTime,
+          activity.endTime,
+          activity.district,
+          activity.facility ?? null,
+          activity.notes ?? null
+        ]
+      );
+      for (const memberId of activity.participantIds) {
+        await client.query(
+          `INSERT INTO activity_participants (activity_id, member_id) VALUES ($1, $2)`,
+          [activity.id, memberId]
+        );
+      }
+    }
+    for (const item of state.actionItems) {
+      await client.query(
+        `INSERT INTO action_items (
+          id, meeting_id, meeting_title, title, assigned_to, deadline, status,
+          converted_to_task_id, work_kind, work_kind_other, district, facility
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+        [
+          item.id,
+          item.meetingId,
+          item.meetingTitle,
+          item.title,
+          JSON.stringify(assigneeIds(item.assignedTo)),
+          item.deadline,
+          item.status,
+          item.convertedToTaskId ?? null,
+          item.workKind,
+          item.workKindOther ?? null,
+          JSON.stringify(districtIds(item.district)),
+          item.facility ?? null
+        ]
+      );
+    }
+    for (const entry of state.hubLog ?? []) {
+      await client.query(
+        `INSERT INTO hub_log (id, at, kind, status, title, detail, district, facility, author_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+        [
+          entry.id,
+          entry.at,
+          entry.kind,
+          entry.status ?? (entry.kind === "extract_restored" ? "completed" : entry.kind === "extract_failed" || entry.kind === "late_reporting" ? "overdue" : "open"),
+          entry.title,
+          entry.detail,
+          entry.district,
+          entry.facility ?? null,
+          entry.authorId
+        ]
+      );
+    }
+    for (const event of state.events) {
+      await client.query(
+        `INSERT INTO activity_events (id, at, message, tone) VALUES ($1,$2,$3,$4)`,
+        [event.id, event.at, event.message, event.tone]
+      );
+    }
+    await client.query("COMMIT");
+  } catch (error61) {
+    await client.query("ROLLBACK");
+    throw error61;
+  } finally {
+    client.release();
+  }
+}
+function groupIds(rows, parentKey, childKey) {
+  const map3 = /* @__PURE__ */ new Map();
+  for (const row of rows) {
+    const parent = row[parentKey];
+    const child = row[childKey];
+    const list = map3.get(parent) ?? [];
+    list.push(child);
+    map3.set(parent, list);
+  }
+  return map3;
+}
+function iso(value) {
+  return value instanceof Date ? value.toISOString() : value;
+}
+function mapMember(row) {
+  return { id: row.id, name: row.name, role: row.role, initials: row.initials };
+}
+function mapTask(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    assignedTo: assigneeIds(row.assigned_to),
+    assignedBy: row.assigned_by,
+    priority: row.priority,
+    dueDate: iso(row.due_date),
+    status: row.status,
+    progress: row.progress,
+    createdAt: iso(row.created_at),
+    completedAt: row.completed_at ? iso(row.completed_at) : void 0,
+    fromActionItemId: row.from_action_item_id ?? void 0,
+    workKind: row.work_kind,
+    workKindOther: row.work_kind_other ?? void 0,
+    district: districtIds(row.district),
+    facility: row.facility ?? void 0,
+    emrPhase: row.emr_phase ?? void 0
+  };
+}
+function mapMeeting(row, participantIds) {
+  return {
+    id: row.id,
+    title: row.title,
+    startTime: iso(row.start_time),
+    endTime: iso(row.end_time),
+    participantIds,
+    agenda: row.agenda ?? void 0,
+    notes: row.notes ?? void 0,
+    rolling: row.rolling || void 0
+  };
+}
+function mapActivity(row, participantIds) {
+  return {
+    id: row.id,
+    title: row.title,
+    kind: row.kind,
+    kindOther: row.kind_other ?? void 0,
+    startTime: iso(row.start_time),
+    endTime: iso(row.end_time),
+    participantIds,
+    district: row.district,
+    facility: row.facility ?? void 0,
+    notes: row.notes ?? void 0
+  };
+}
+function mapAction(row) {
+  return {
+    id: row.id,
+    meetingId: row.meeting_id,
+    meetingTitle: row.meeting_title,
+    title: row.title,
+    assignedTo: assigneeIds(row.assigned_to),
+    deadline: iso(row.deadline),
+    status: row.status,
+    convertedToTaskId: row.converted_to_task_id ?? void 0,
+    workKind: row.work_kind,
+    workKindOther: row.work_kind_other ?? void 0,
+    district: districtIds(row.district),
+    facility: row.facility ?? void 0
+  };
+}
+function mapHubLog(row) {
+  const kind = row.kind;
+  return {
+    id: row.id,
+    at: iso(row.at),
+    kind,
+    status: row.status ?? (kind === "extract_restored" ? "completed" : kind === "extract_failed" || kind === "late_reporting" ? "overdue" : "open"),
+    title: row.title,
+    detail: row.detail,
+    district: row.district,
+    facility: row.facility ?? void 0,
+    authorId: row.author_id
+  };
+}
+function mapEvent(row) {
+  return {
+    id: row.id,
+    at: iso(row.at),
+    message: row.message,
+    tone: row.tone
+  };
+}
+
+// server/persist.ts
 var KEY = "nhih-ops-state";
-var LOCAL_FILE = process.env.VERCEL ? import_node_path.default.join("/tmp", "ops-state.json") : import_node_path.default.join(process.cwd(), "data", "ops-state.json");
+var LOCAL_FILE = process.env.VERCEL ? import_node_path2.default.join("/tmp", "ops-state.json") : import_node_path2.default.join(process.cwd(), "data", "ops-state.json");
+var blobAllowed = process.env.ENABLE_BLOB === "1" || process.env.ENABLE_BLOB === "true";
 var blobBroken = false;
 function kvConfig() {
+  if (postgresActive()) return null;
   const url2 = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url2 || !token) return null;
   return { url: url2.replace(/\/$/, ""), token };
 }
 function blobConfigured() {
+  if (postgresActive()) return false;
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
 }
 function blobEnabled() {
-  return blobConfigured() && !blobBroken;
+  return blobAllowed && blobConfigured() && !blobBroken;
 }
 function storageKind() {
-  if (blobEnabled()) return "blob";
+  if (postgresActive()) return "postgres";
   if (kvConfig()) return "kv";
+  if (blobEnabled()) return "blob";
   return "file";
 }
 function storageStatus() {
@@ -53234,13 +58962,17 @@ function storageStatus() {
     kind: storageKind(),
     blobConfigured: blobConfigured(),
     blobBroken,
-    kvConfigured: Boolean(kvConfig())
+    blobAllowed,
+    kvConfigured: Boolean(kvConfig()),
+    postgresConfigured: postgresActive()
   };
 }
 function markBlobBroken(reason) {
   if (!blobBroken) {
     blobBroken = true;
-    console.error(`[persist] Vercel Blob unavailable, falling back to ${kvConfig() ? "kv" : "file"}: ${reason}`);
+    console.error(
+      `[persist] Vercel Blob unavailable, using ${kvConfig() ? "kv" : "file"}: ${reason}`
+    );
   }
 }
 async function redis(command) {
@@ -53316,9 +59048,9 @@ async function readKv() {
   }
 }
 function readFileStore() {
-  if (!(0, import_node_fs.existsSync)(LOCAL_FILE)) return { ok: false, missing: true };
+  if (!(0, import_node_fs2.existsSync)(LOCAL_FILE)) return { ok: false, missing: true };
   try {
-    return { ok: true, snapshot: parseSnapshot((0, import_node_fs.readFileSync)(LOCAL_FILE, "utf8")) };
+    return { ok: true, snapshot: parseSnapshot((0, import_node_fs2.readFileSync)(LOCAL_FILE, "utf8")) };
   } catch (error61) {
     return {
       ok: false,
@@ -53328,43 +59060,43 @@ function readFileStore() {
   }
 }
 function writeFileStore(snapshot2) {
-  (0, import_node_fs.mkdirSync)(import_node_path.default.dirname(LOCAL_FILE), { recursive: true });
-  (0, import_node_fs.writeFileSync)(LOCAL_FILE, JSON.stringify(snapshot2), "utf8");
+  (0, import_node_fs2.mkdirSync)(import_node_path2.default.dirname(LOCAL_FILE), { recursive: true });
+  (0, import_node_fs2.writeFileSync)(LOCAL_FILE, JSON.stringify(snapshot2), "utf8");
 }
 async function readSnapshot() {
-  if (blobEnabled()) {
-    const blob = await readBlob();
-    if (blob.ok) return blob;
-    if (!blob.missing) {
-      markBlobBroken(blob.error);
-    }
+  if (postgresActive()) {
+    return readPostgresSnapshot();
   }
   if (kvConfig()) {
     const kv = await readKv();
     if (kv.ok || !kv.missing) return kv;
   }
+  if (blobEnabled()) {
+    const blob = await readBlob();
+    if (blob.ok) return blob;
+    if (!blob.missing) markBlobBroken(blob.error);
+  }
   return readFileStore();
 }
 async function writeSnapshot(snapshot2) {
-  if (blobEnabled()) {
-    try {
-      await writeBlob(snapshot2);
-      if (kvConfig()) {
-        try {
-          await redis(["SET", KEY, JSON.stringify(snapshot2)]);
-        } catch {
-        }
-      }
-      writeFileStore(snapshot2);
-      return;
-    } catch (error61) {
-      markBlobBroken(error61 instanceof Error ? error61.message : String(error61));
-    }
+  if (postgresActive()) {
+    await writePostgresSnapshot(snapshot2);
+    writeFileStore(snapshot2);
+    return;
   }
   if (kvConfig()) {
     await redis(["SET", KEY, JSON.stringify(snapshot2)]);
     writeFileStore(snapshot2);
     return;
+  }
+  if (blobEnabled()) {
+    try {
+      await writeBlob(snapshot2);
+      writeFileStore(snapshot2);
+      return;
+    } catch (error61) {
+      markBlobBroken(error61 instanceof Error ? error61.message : String(error61));
+    }
   }
   writeFileStore(snapshot2);
 }
@@ -53372,20 +59104,38 @@ async function writeSnapshot(snapshot2) {
 // server/db.ts
 var memory = null;
 var loading = null;
+function normalizeAssigneesInState(state) {
+  return {
+    ...state,
+    tasks: state.tasks.map((task) => ({
+      ...task,
+      assignedTo: assigneeIds(task.assignedTo),
+      district: districtIds(task.district),
+      progress: task.status === "completed" ? 100 : task.progress
+    })),
+    actionItems: state.actionItems.map((item) => ({
+      ...item,
+      assignedTo: assigneeIds(item.assignedTo),
+      district: districtIds(item.district)
+    }))
+  };
+}
 function withRoster(state) {
   const current = state.members;
   const same = current.length === MEMBERS.length && current.every((member, index) => {
     const next = MEMBERS[index];
     return member.id === next.id && member.name === next.name && member.role === next.role && member.initials === next.initials;
   });
+  const normalized = normalizeAssigneesInState({
+    ...state,
+    hubLog: state.hubLog ?? [],
+    activities: state.activities ?? []
+  });
   if (same) {
-    return {
-      state: { ...state, hubLog: state.hubLog ?? [], activities: state.activities ?? [] },
-      changed: false
-    };
+    return { state: normalized, changed: false };
   }
   return {
-    state: { ...state, members: MEMBERS, hubLog: state.hubLog ?? [], activities: state.activities ?? [] },
+    state: { ...normalized, members: MEMBERS },
     changed: true
   };
 }
@@ -53482,9 +59232,9 @@ async function updateActivity2(id, patch) {
   const current = await snapshot();
   return commit(updateActivity(current.state, id, patch));
 }
-async function addActionItem2(item) {
+async function addActionItem2(item, assignedBy) {
   const current = await snapshot();
-  return commit(addActionItem(current.state, item));
+  return commit(addActionItem(current.state, item, assignedBy));
 }
 async function updateActionItem2(id, patch) {
   const current = await snapshot();
@@ -53530,15 +59280,41 @@ function persistenceStatus() {
 }
 
 // server/operator.ts
+var import_node_crypto = require("node:crypto");
+var DEFAULT_OPERATOR_CODE = "nhih-ops";
+function constantTimeMatch(a, b) {
+  const bufA = Buffer.from(a, "utf8");
+  const bufB = Buffer.from(b, "utf8");
+  if (bufA.length !== bufB.length) return false;
+  return (0, import_node_crypto.timingSafeEqual)(bufA, bufB);
+}
 function expectedOperatorCode() {
   const fromEnv = process.env.OPERATOR_CODE?.trim();
   if (fromEnv) return fromEnv;
   if (process.env.VERCEL) return "";
-  return "nhih-ops";
+  return DEFAULT_OPERATOR_CODE;
 }
 function isValidOperatorCode(given) {
   const expected = expectedOperatorCode();
-  return Boolean(expected) && given === expected;
+  return Boolean(expected) && constantTimeMatch(given, expected);
+}
+function configuredVisitorOperatorCode() {
+  const fromEnv = process.env.OPERATOR_CODE?.trim();
+  if (!fromEnv || fromEnv === DEFAULT_OPERATOR_CODE) return null;
+  return fromEnv;
+}
+function assertVisitorOperatorAccess(given) {
+  const expected = configuredVisitorOperatorCode();
+  if (!expected) {
+    throw new HttpError(
+      503,
+      "Visitor register requires a non-default OPERATOR_CODE to be configured on the server"
+    );
+  }
+  const trimmed = given.trim();
+  if (!trimmed || trimmed === DEFAULT_OPERATOR_CODE || !constantTimeMatch(trimmed, expected)) {
+    throw new HttpError(401, "Operator access required");
+  }
 }
 
 // server/hub.ts
@@ -53560,6 +59336,742 @@ function broadcast(state) {
 }
 function clientCount() {
   return clients.size;
+}
+
+// server/google-sheets.ts
+var import_node_crypto2 = require("node:crypto");
+var import_node_fs3 = require("node:fs");
+var SHEETS_READONLY_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly";
+var GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token";
+var DEFAULT_GOOGLE_SHEETS_TAB = "Form Responses 1";
+var cachedToken = null;
+function googleSheetsSpreadsheetId() {
+  return process.env.GOOGLE_SHEETS_SPREADSHEET_ID?.trim() || "";
+}
+function googleSheetsTabName() {
+  return process.env.GOOGLE_SHEETS_TAB_NAME?.trim() || DEFAULT_GOOGLE_SHEETS_TAB;
+}
+function loadServiceAccountCredentials() {
+  const keyFile = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE?.trim();
+  if (keyFile) {
+    if (!(0, import_node_fs3.existsSync)(keyFile)) {
+      throw new HttpError(503, `Google service account key file not found: ${keyFile}`);
+    }
+    try {
+      const parsed = JSON.parse((0, import_node_fs3.readFileSync)(keyFile, "utf8"));
+      return validateServiceAccount(parsed);
+    } catch (err) {
+      if (err instanceof HttpError) throw err;
+      throw new HttpError(503, "Google service account key file is not valid JSON");
+    }
+  }
+  const rawJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim();
+  if (rawJson) {
+    try {
+      const parsed = JSON.parse(rawJson);
+      return validateServiceAccount(parsed);
+    } catch (err) {
+      if (err instanceof HttpError) throw err;
+      throw new HttpError(503, "GOOGLE_SERVICE_ACCOUNT_JSON is not valid JSON");
+    }
+  }
+  const email3 = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim();
+  const key = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.trim();
+  if (email3 || key) {
+    return validateServiceAccount({
+      client_email: email3,
+      private_key: key?.replace(/\\n/g, "\n")
+    });
+  }
+  return null;
+}
+function validateServiceAccount(raw2) {
+  const email3 = raw2.client_email?.trim();
+  const privateKey = raw2.private_key?.replace(/\\n/g, "\n").trim();
+  if (!email3 || !privateKey) {
+    throw new HttpError(
+      503,
+      "Google service account credentials must include client_email and private_key"
+    );
+  }
+  return {
+    client_email: email3,
+    private_key: privateKey,
+    token_uri: raw2.token_uri?.trim() || GOOGLE_TOKEN_URI
+  };
+}
+function googleSheetsConfigured() {
+  if (!googleSheetsSpreadsheetId()) return false;
+  try {
+    return Boolean(loadServiceAccountCredentials());
+  } catch {
+    return false;
+  }
+}
+function base64UrlEncode(input2) {
+  return Buffer.from(input2).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+async function getGoogleAccessToken(creds) {
+  const nowMs = Date.now();
+  if (cachedToken && cachedToken.expiresAtMs - 6e4 > nowMs) {
+    return cachedToken.accessToken;
+  }
+  const iat = Math.floor(nowMs / 1e3);
+  const exp = iat + 3600;
+  const tokenUri = creds.token_uri || GOOGLE_TOKEN_URI;
+  const header = base64UrlEncode(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const claimSet = base64UrlEncode(
+    JSON.stringify({
+      iss: creds.client_email,
+      scope: SHEETS_READONLY_SCOPE,
+      aud: tokenUri,
+      iat,
+      exp
+    })
+  );
+  const unsignedJwt = `${header}.${claimSet}`;
+  const signer = (0, import_node_crypto2.createSign)("RSA-SHA256");
+  signer.update(unsignedJwt);
+  signer.end();
+  const signature = base64UrlEncode(signer.sign(creds.private_key));
+  const assertion = `${unsignedJwt}.${signature}`;
+  const res = await fetch(tokenUri, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion
+    }),
+    cache: "no-store"
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new HttpError(
+      502,
+      `Google OAuth token exchange failed (${res.status})${detail ? `: ${detail.slice(0, 160)}` : ""}`
+    );
+  }
+  const body = await res.json();
+  if (!body.access_token) {
+    throw new HttpError(502, "Google OAuth response did not include an access token");
+  }
+  cachedToken = {
+    accessToken: body.access_token,
+    expiresAtMs: nowMs + (body.expires_in ?? 3600) * 1e3
+  };
+  return body.access_token;
+}
+async function fetchGoogleSheetValues() {
+  const spreadsheetId = googleSheetsSpreadsheetId();
+  if (!spreadsheetId) {
+    throw new HttpError(503, "GOOGLE_SHEETS_SPREADSHEET_ID is not configured on the server");
+  }
+  const creds = loadServiceAccountCredentials();
+  if (!creds) {
+    throw new HttpError(
+      503,
+      "Google Sheets service account credentials are not configured on the server"
+    );
+  }
+  const tabName = googleSheetsTabName();
+  const accessToken = await getGoogleAccessToken(creds);
+  const quotedTab = `'${tabName.replace(/'/g, "''")}'`;
+  const url2 = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${encodeURIComponent(quotedTab)}?majorDimension=ROWS&valueRenderOption=FORMATTED_VALUE`;
+  const res = await fetch(url2, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store"
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new HttpError(
+      502,
+      `Google Sheets API request failed (${res.status})${detail ? `: ${detail.slice(0, 200)}` : ""}`
+    );
+  }
+  const body = await res.json();
+  const values = (body.values ?? []).map(
+    (row) => Array.isArray(row) ? row.map((cell) => String(cell ?? "")) : []
+  );
+  return { spreadsheetId, tabName, values };
+}
+function normalizeHeader(value) {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+function isSensitiveContactHeader(normalized) {
+  return /\b(email|e mail|phone|mobile|telephone|tel|contact|whatsapp)\b/.test(normalized);
+}
+function findColumnIndex(headers, overrideEnv, exactAliases, regexMatchers) {
+  const normalizedHeaders = headers.map(normalizeHeader);
+  if (overrideEnv?.trim()) {
+    const target = normalizeHeader(overrideEnv);
+    const idx = normalizedHeaders.findIndex(
+      (h) => h === target && !isSensitiveContactHeader(h)
+    );
+    return idx;
+  }
+  for (const alias of exactAliases) {
+    const idx = normalizedHeaders.findIndex(
+      (h) => h === alias && !isSensitiveContactHeader(h)
+    );
+    if (idx !== -1) return idx;
+  }
+  for (const pattern of regexMatchers) {
+    const idx = normalizedHeaders.findIndex(
+      (h) => pattern.test(h) && !isSensitiveContactHeader(h)
+    );
+    if (idx !== -1) return idx;
+  }
+  return -1;
+}
+function resolveColumnMapping(headers) {
+  if (!headers.length) {
+    throw new HttpError(422, "Sheet header row is empty; cannot verify column mapping");
+  }
+  const timestampIdx = findColumnIndex(
+    headers,
+    process.env.GOOGLE_SHEETS_COL_TIMESTAMP,
+    ["timestamp", "submission timestamp", "submitted at", "date and time", "date time"],
+    [/\btimestamp\b/, /\bsubmitted\b/]
+  );
+  const fullNameIdx = findColumnIndex(
+    headers,
+    process.env.GOOGLE_SHEETS_COL_NAME,
+    ["full name", "visitor full name", "visitor name", "visitors name", "name"],
+    [/\bfull name\b/, /\bvisitor.*name\b/, /^name$/]
+  );
+  const organizationIdx = findColumnIndex(
+    headers,
+    process.env.GOOGLE_SHEETS_COL_ORG,
+    [
+      "organization or unit",
+      "organisation or unit",
+      "organization unit",
+      "organisation unit",
+      "organization",
+      "organisation",
+      "unit",
+      "institution",
+      "affiliation",
+      "department",
+      "agency",
+      "organization institution",
+      "organisation institution"
+    ],
+    [/\borgani[sz]ation\b/, /\bunit\b/, /\binstitution\b/, /\baffiliation\b/, /\bdepartment\b/, /\bagency\b/]
+  );
+  const purposeIdx = findColumnIndex(
+    headers,
+    process.env.GOOGLE_SHEETS_COL_PURPOSE,
+    ["purpose of visit", "visit purpose", "purpose", "reason for visit", "reason"],
+    [/\bpurpose\b/, /\breason\b/]
+  );
+  const missing = [];
+  if (timestampIdx === -1) missing.push("submission timestamp");
+  if (fullNameIdx === -1) missing.push("full name");
+  if (organizationIdx === -1) missing.push("organization or unit");
+  if (purposeIdx === -1) missing.push("visit purpose");
+  if (missing.length > 0) {
+    const found = headers.map((h) => h.trim()).filter(Boolean).join(", ") || "(none)";
+    throw new HttpError(
+      422,
+      `Google Sheet column mapping verification failed. Missing: ${missing.join(", ")}. Detected headers: ${found}`
+    );
+  }
+  const used = /* @__PURE__ */ new Set([timestampIdx, fullNameIdx, organizationIdx, purposeIdx]);
+  const ignoredColumns = headers.map((h, i) => ({ header: h.trim(), index: i })).filter(({ header, index }) => Boolean(header) && !used.has(index)).map(({ header }) => header);
+  return {
+    timestampIdx,
+    fullNameIdx,
+    organizationIdx,
+    purposeIdx,
+    mapping: {
+      timestamp: headers[timestampIdx].trim(),
+      fullName: headers[fullNameIdx].trim(),
+      organization: headers[organizationIdx].trim(),
+      purpose: headers[purposeIdx].trim(),
+      ignoredColumns
+    }
+  };
+}
+function parseSubmissionTimestamp(raw2) {
+  const trimmed = raw2.trim();
+  if (!trimmed) return null;
+  const isoLike = /^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ](\d{1,2}):(\d{2})(?::(\d{2}))?(?:\.(\d+))?(Z|[+-]\d{2}:?\d{2})?)?$/.exec(
+    trimmed
+  );
+  if (isoLike) {
+    if (isoLike[8]) {
+      const parsed = new Date(trimmed);
+      return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+    }
+    const year = Number(isoLike[1]);
+    const month = Number(isoLike[2]);
+    const day = Number(isoLike[3]);
+    const hour = Number(isoLike[4] ?? 0);
+    const minute = Number(isoLike[5] ?? 0);
+    const second = Number(isoLike[6] ?? 0);
+    return buildUtcIso(year, month, day, hour, minute, second);
+  }
+  const slashLike = /^(\d{1,2})[/-](\d{1,2})[/-](\d{4})(?:[,\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?$/i.exec(
+    trimmed
+  );
+  if (slashLike) {
+    const first = Number(slashLike[1]);
+    const second = Number(slashLike[2]);
+    const year = Number(slashLike[3]);
+    let hour = Number(slashLike[4] ?? 0);
+    const minute = Number(slashLike[5] ?? 0);
+    const secondPart = Number(slashLike[6] ?? 0);
+    const meridiem = slashLike[7]?.toUpperCase();
+    if (meridiem) {
+      if (hour < 1 || hour > 12) return null;
+      if (meridiem === "AM" && hour === 12) hour = 0;
+      if (meridiem === "PM" && hour !== 12) hour += 12;
+    }
+    let month;
+    let day;
+    const preferDmy = (process.env.GOOGLE_SHEETS_DATE_ORDER || "").trim().toUpperCase() === "DMY";
+    if (first > 12 && second <= 12) {
+      day = first;
+      month = second;
+    } else if (second > 12 && first <= 12) {
+      month = first;
+      day = second;
+    } else if (preferDmy) {
+      day = first;
+      month = second;
+    } else {
+      month = first;
+      day = second;
+    }
+    return buildUtcIso(year, month, day, hour, minute, secondPart);
+  }
+  const fallback = new Date(trimmed);
+  if (!Number.isNaN(fallback.getTime())) {
+    return fallback.toISOString();
+  }
+  return null;
+}
+function buildUtcIso(year, month, day, hour, minute, second) {
+  if (month < 1 || month > 12 || day < 1 || day > 31 || hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) {
+    return null;
+  }
+  const date5 = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+  if (date5.getUTCFullYear() !== year || date5.getUTCMonth() !== month - 1 || date5.getUTCDate() !== day) {
+    return null;
+  }
+  return date5.toISOString();
+}
+function collapseSpaces(value) {
+  return value.replace(/\s+/g, " ").trim();
+}
+function buildSourceKey(parts) {
+  const payload = JSON.stringify([
+    parts.spreadsheetId.trim(),
+    parts.tabName.trim(),
+    parts.registeredAt,
+    collapseSpaces(parts.fullName).toLowerCase(),
+    collapseSpaces(parts.organization).toLowerCase(),
+    collapseSpaces(parts.purpose).toLowerCase()
+  ]);
+  return (0, import_node_crypto2.createHash)("sha256").update(payload).digest("hex");
+}
+function parseSheetRows(values, options) {
+  if (values.length === 0) {
+    throw new HttpError(422, `Tab "${options.tabName}" is empty; header row is required`);
+  }
+  const resolved = resolveColumnMapping(values[0]);
+  const records = [];
+  const skipped = [];
+  const seenKeys = /* @__PURE__ */ new Set();
+  for (let i = 1; i < values.length; i++) {
+    const row = values[i] ?? [];
+    const rowNumber = i + 1;
+    const hasAnyContent = row.some((cell) => cell.trim().length > 0);
+    if (!hasAnyContent) continue;
+    const rawTimestamp = (row[resolved.timestampIdx] ?? "").trim();
+    const fullName = collapseSpaces(row[resolved.fullNameIdx] ?? "");
+    const organization = collapseSpaces(row[resolved.organizationIdx] ?? "");
+    const purpose = collapseSpaces(row[resolved.purposeIdx] ?? "");
+    if (!fullName) {
+      skipped.push({ rowNumber, reason: "Missing full name" });
+      continue;
+    }
+    const registeredAt = parseSubmissionTimestamp(rawTimestamp);
+    if (!registeredAt) {
+      skipped.push({
+        rowNumber,
+        reason: rawTimestamp ? `Unrecognized submission timestamp "${rawTimestamp}"` : "Missing submission timestamp"
+      });
+      continue;
+    }
+    const sourceKey = buildSourceKey({
+      spreadsheetId: options.spreadsheetId,
+      tabName: options.tabName,
+      registeredAt,
+      fullName,
+      organization,
+      purpose
+    });
+    if (seenKeys.has(sourceKey)) {
+      skipped.push({ rowNumber, reason: "Duplicate submission within sheet" });
+      continue;
+    }
+    seenKeys.add(sourceKey);
+    records.push({
+      rowNumber,
+      sourceKey,
+      registeredAt,
+      fullName,
+      organization,
+      purpose
+    });
+  }
+  return {
+    columnMapping: resolved.mapping,
+    records,
+    skipped
+  };
+}
+
+// server/visitors.ts
+var LAST_SYNC_META_KEY = "visitor_last_sync";
+var schemaReady = null;
+async function ensureVisitorStorage() {
+  if (!postgresActive()) {
+    throw new HttpError(
+      503,
+      "Visitor register requires PostgreSQL persistence (PERSISTENCE=postgres and DATABASE_URL)"
+    );
+  }
+  if (!schemaReady) {
+    schemaReady = migratePostgres().catch((err) => {
+      schemaReady = null;
+      throw err;
+    });
+  }
+  await schemaReady;
+  return getPostgresPool();
+}
+function iso2(value) {
+  return value instanceof Date ? value.toISOString() : value;
+}
+function mapVisit(row) {
+  return {
+    id: row.id,
+    source: row.source,
+    sourceRowNumber: row.source_row_number ?? void 0,
+    fullName: row.full_name,
+    organization: row.organization,
+    purpose: row.purpose,
+    registeredAt: iso2(row.registered_at),
+    checkedInAt: row.checked_in_at ? iso2(row.checked_in_at) : void 0,
+    checkedOutAt: row.checked_out_at ? iso2(row.checked_out_at) : void 0,
+    status: row.status
+  };
+}
+async function queryCheckedInCount(client) {
+  const res = await client.query(
+    `SELECT COUNT(*)::text AS count
+     FROM visitor_visits
+     WHERE status = 'checked_in'
+       AND checked_in_at IS NOT NULL
+       AND checked_out_at IS NULL`
+  );
+  return Number(res.rows[0]?.count ?? 0);
+}
+async function readLastSync(client) {
+  const res = await client.query(
+    `SELECT value FROM meta WHERE key = $1`,
+    [LAST_SYNC_META_KEY]
+  );
+  const raw2 = res.rows[0]?.value;
+  if (!raw2) return null;
+  try {
+    return JSON.parse(raw2);
+  } catch {
+    return null;
+  }
+}
+async function getVisitorSummary() {
+  const pool2 = await ensureVisitorStorage();
+  const checkedInCount = await queryCheckedInCount(pool2);
+  return {
+    checkedInCount,
+    updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+  };
+}
+async function listVisitorRegister() {
+  const pool2 = await ensureVisitorStorage();
+  const [visitsRes, lastSync] = await Promise.all([
+    pool2.query(
+      `SELECT id, source, source_key, source_row_number, full_name, organization, purpose,
+              registered_at, checked_in_at, checked_out_at, status
+       FROM visitor_visits
+       ORDER BY
+         CASE status
+           WHEN 'checked_in' THEN 0
+           WHEN 'registered' THEN 1
+           ELSE 2
+         END,
+         COALESCE(checked_in_at, registered_at) DESC`
+    ),
+    readLastSync(pool2)
+  ]);
+  const visits = visitsRes.rows.map(mapVisit);
+  let checkedInCount = 0;
+  let registeredCount = 0;
+  let checkedOutCount = 0;
+  for (const visit2 of visits) {
+    if (visit2.status === "checked_in") checkedInCount++;
+    else if (visit2.status === "registered") registeredCount++;
+    else checkedOutCount++;
+  }
+  return {
+    checkedInCount,
+    registeredCount,
+    checkedOutCount,
+    visits,
+    lastSync,
+    sheetsConfigured: googleSheetsConfigured()
+  };
+}
+async function syncVisitorSheetValues(values, options) {
+  const pool2 = await ensureVisitorStorage();
+  const parsed = parseSheetRows(values, options);
+  const syncedAt = (/* @__PURE__ */ new Date()).toISOString();
+  const client = await pool2.connect();
+  let imported = 0;
+  let unchanged = 0;
+  try {
+    await client.query("BEGIN");
+    for (const record2 of parsed.records) {
+      const visitId = uid("vis");
+      const inserted = await client.query(
+        `INSERT INTO visitor_visits (
+           id, source, source_key, source_row_number, full_name, organization, purpose,
+           registered_at, checked_in_at, checked_out_at, status, created_at, updated_at
+         )
+         VALUES ($1, 'google_sheets', $2, $3, $4, $5, $6, $7, NULL, NULL, 'registered', $8, $8)
+         ON CONFLICT (source_key) DO NOTHING
+         RETURNING id`,
+        [
+          visitId,
+          record2.sourceKey,
+          record2.rowNumber,
+          record2.fullName,
+          record2.organization,
+          record2.purpose,
+          record2.registeredAt,
+          syncedAt
+        ]
+      );
+      if (inserted.rowCount && inserted.rowCount > 0) {
+        imported++;
+        await client.query(
+          `INSERT INTO visitor_events (id, visit_id, event_type, occurred_at, source, created_at)
+           VALUES ($1, $2, 'registered', $3, 'google_sheets', $4)`,
+          [uid("vev"), visitId, record2.registeredAt, syncedAt]
+        );
+      } else {
+        unchanged++;
+      }
+    }
+    const checkedInCount = await queryCheckedInCount(client);
+    const result = {
+      syncedAt,
+      spreadsheetId: options.spreadsheetId,
+      tabName: options.tabName,
+      imported,
+      unchanged,
+      skippedCount: parsed.skipped.length,
+      skipped: parsed.skipped,
+      columnMapping: parsed.columnMapping,
+      checkedInCount
+    };
+    await client.query(
+      `INSERT INTO meta (key, value) VALUES ($1, $2)
+       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+      [LAST_SYNC_META_KEY, JSON.stringify(result)]
+    );
+    await client.query("COMMIT");
+    return result;
+  } catch (error61) {
+    await client.query("ROLLBACK");
+    throw error61;
+  } finally {
+    client.release();
+  }
+}
+async function syncVisitorsFromGoogleSheets() {
+  const { spreadsheetId, tabName, values } = await fetchGoogleSheetValues();
+  return syncVisitorSheetValues(values, { spreadsheetId, tabName });
+}
+async function registerWalkIn(input2) {
+  const pool2 = await ensureVisitorStorage();
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  const visitId = uid("vis");
+  const status = input2.checkInNow ? "checked_in" : "registered";
+  const checkedInAt = input2.checkInNow ? now : null;
+  const client = await pool2.connect();
+  try {
+    await client.query("BEGIN");
+    const inserted = await client.query(
+      `INSERT INTO visitor_visits (
+         id, source, source_key, source_row_number, full_name, organization, purpose,
+         registered_at, checked_in_at, checked_out_at, status, created_at, updated_at
+       )
+       VALUES ($1, 'walk_in', NULL, NULL, $2, $3, $4, $5, $6, NULL, $7, $5, $5)
+       RETURNING id, source, source_key, source_row_number, full_name, organization, purpose,
+                 registered_at, checked_in_at, checked_out_at, status`,
+      [visitId, input2.fullName, input2.organization, input2.purpose, now, checkedInAt, status]
+    );
+    await client.query(
+      `INSERT INTO visitor_events (id, visit_id, event_type, occurred_at, source, created_at)
+       VALUES ($1, $2, 'registered', $3, 'walk_in', $3)`,
+      [uid("vev"), visitId, now]
+    );
+    if (input2.checkInNow) {
+      await client.query(
+        `INSERT INTO visitor_events (id, visit_id, event_type, occurred_at, source, created_at)
+         VALUES ($1, $2, 'checked_in', $3, 'operator', $3)`,
+        [uid("vev"), visitId, now]
+      );
+    }
+    const checkedInCount = await queryCheckedInCount(client);
+    await client.query("COMMIT");
+    return {
+      visit: mapVisit(inserted.rows[0]),
+      checkedInCount
+    };
+  } catch (error61) {
+    await client.query("ROLLBACK");
+    throw error61;
+  } finally {
+    client.release();
+  }
+}
+async function checkInVisit(id) {
+  const pool2 = await ensureVisitorStorage();
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  const client = await pool2.connect();
+  try {
+    await client.query("BEGIN");
+    const updated = await client.query(
+      `UPDATE visitor_visits
+       SET status = 'checked_in',
+           checked_in_at = $2,
+           updated_at = $2
+       WHERE id = $1
+         AND status = 'registered'
+         AND checked_in_at IS NULL
+         AND checked_out_at IS NULL
+       RETURNING id, source, source_key, source_row_number, full_name, organization, purpose,
+                 registered_at, checked_in_at, checked_out_at, status`,
+      [id, now]
+    );
+    if (updated.rowCount && updated.rowCount > 0) {
+      await client.query(
+        `INSERT INTO visitor_events (id, visit_id, event_type, occurred_at, source, created_at)
+         VALUES ($1, $2, 'checked_in', $3, 'operator', $3)`,
+        [uid("vev"), id, now]
+      );
+      const checkedInCount = await queryCheckedInCount(client);
+      await client.query("COMMIT");
+      return {
+        visit: mapVisit(updated.rows[0]),
+        alreadyCheckedIn: false,
+        checkedInCount
+      };
+    }
+    const existing = await client.query(
+      `SELECT id, source, source_key, source_row_number, full_name, organization, purpose,
+              registered_at, checked_in_at, checked_out_at, status
+       FROM visitor_visits
+       WHERE id = $1`,
+      [id]
+    );
+    if (existing.rowCount === 0) {
+      throw new HttpError(404, "Visitor record not found");
+    }
+    const row = existing.rows[0];
+    if (row.status === "checked_in") {
+      const checkedInCount = await queryCheckedInCount(client);
+      await client.query("COMMIT");
+      return {
+        visit: mapVisit(row),
+        alreadyCheckedIn: true,
+        checkedInCount
+      };
+    }
+    throw new HttpError(409, "This visit has already been checked out");
+  } catch (error61) {
+    await client.query("ROLLBACK");
+    throw error61;
+  } finally {
+    client.release();
+  }
+}
+async function checkOutVisit(id) {
+  const pool2 = await ensureVisitorStorage();
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  const client = await pool2.connect();
+  try {
+    await client.query("BEGIN");
+    const updated = await client.query(
+      `UPDATE visitor_visits
+       SET status = 'checked_out',
+           checked_out_at = $2,
+           updated_at = $2
+       WHERE id = $1
+         AND status = 'checked_in'
+         AND checked_in_at IS NOT NULL
+         AND checked_out_at IS NULL
+       RETURNING id, source, source_key, source_row_number, full_name, organization, purpose,
+                 registered_at, checked_in_at, checked_out_at, status`,
+      [id, now]
+    );
+    if (updated.rowCount && updated.rowCount > 0) {
+      await client.query(
+        `INSERT INTO visitor_events (id, visit_id, event_type, occurred_at, source, created_at)
+         VALUES ($1, $2, 'checked_out', $3, 'operator', $3)`,
+        [uid("vev"), id, now]
+      );
+      const checkedInCount = await queryCheckedInCount(client);
+      await client.query("COMMIT");
+      return {
+        visit: mapVisit(updated.rows[0]),
+        alreadyCheckedOut: false,
+        checkedInCount
+      };
+    }
+    const existing = await client.query(
+      `SELECT id, source, source_key, source_row_number, full_name, organization, purpose,
+              registered_at, checked_in_at, checked_out_at, status
+       FROM visitor_visits
+       WHERE id = $1`,
+      [id]
+    );
+    if (existing.rowCount === 0) {
+      throw new HttpError(404, "Visitor record not found");
+    }
+    const row = existing.rows[0];
+    if (row.status === "checked_out") {
+      const checkedInCount = await queryCheckedInCount(client);
+      await client.query("COMMIT");
+      return {
+        visit: mapVisit(row),
+        alreadyCheckedOut: true,
+        checkedInCount
+      };
+    }
+    throw new HttpError(409, "Visitor must be checked in before checking out");
+  } catch (error61) {
+    await client.query("ROLLBACK");
+    throw error61;
+  } finally {
+    client.release();
+  }
 }
 
 // server/validate.ts
@@ -53604,11 +60116,12 @@ var activityKind = external_exports.enum([
   "other"
 ]);
 var hubLogKind = external_exports.enum(["incident", "late_reporting", "extract_failed", "extract_restored", "note"]);
+var hubLogStatus = external_exports.enum(["open", "completed", "overdue"]);
 var taskCreate = external_exports.object({
   id: external_exports.string().optional(),
   title: external_exports.string().trim().min(1, "Title is required"),
   description: external_exports.string().optional().default(""),
-  assignedTo: external_exports.string().min(1, "Assignee is required"),
+  assignedTo: external_exports.union([external_exports.string().min(1), external_exports.array(external_exports.string().min(1))]).transform((value) => Array.isArray(value) ? value : [value]).pipe(external_exports.array(external_exports.string().min(1)).min(1, "Assignee is required")),
   assignedBy: external_exports.string().min(1, "Assigner is required"),
   priority,
   dueDate: isoDate,
@@ -53619,8 +60132,9 @@ var taskCreate = external_exports.object({
   fromActionItemId: external_exports.string().optional(),
   workKind: workKind.optional().default("facility_followup"),
   workKindOther: external_exports.string().optional().default(""),
-  district: districtId.optional().default("national"),
-  facility: external_exports.string().optional().default("")
+  district: external_exports.union([districtId, external_exports.array(districtId)]).transform((value) => Array.isArray(value) ? value : [value]).pipe(external_exports.array(districtId).min(1)).optional().default(["national"]),
+  facility: external_exports.string().optional().default(""),
+  emrPhase: external_exports.enum(["align", "prepare", "build", "integrate", "train", "launch"]).optional()
 }).refine((value) => value.workKind !== "other" || Boolean(value.workKindOther?.trim()), {
   message: "Type the other work type",
   path: ["workKindOther"]
@@ -53628,7 +60142,7 @@ var taskCreate = external_exports.object({
 var taskPatch = external_exports.object({
   title: external_exports.string().trim().min(1).optional(),
   description: external_exports.string().optional(),
-  assignedTo: external_exports.string().optional(),
+  assignedTo: external_exports.union([external_exports.string().min(1), external_exports.array(external_exports.string().min(1))]).transform((value) => Array.isArray(value) ? value : [value]).optional(),
   assignedBy: external_exports.string().optional(),
   priority: priority.optional(),
   dueDate: isoDate.optional(),
@@ -53637,8 +60151,9 @@ var taskPatch = external_exports.object({
   completedAt: external_exports.string().optional(),
   workKind: workKind.optional(),
   workKindOther: external_exports.string().optional(),
-  district: districtId.optional(),
-  facility: external_exports.string().optional()
+  district: external_exports.union([districtId, external_exports.array(districtId)]).transform((value) => Array.isArray(value) ? value : [value]).optional(),
+  facility: external_exports.string().optional(),
+  emrPhase: external_exports.enum(["align", "prepare", "build", "integrate", "train", "launch"]).optional()
 }).refine((value) => Object.keys(value).length > 0, "No fields to update");
 var meetingCreate = external_exports.object({
   id: external_exports.string().optional(),
@@ -53664,12 +60179,14 @@ var actionCreate = external_exports.object({
   meetingId: external_exports.string().min(1),
   meetingTitle: external_exports.string().min(1),
   title: external_exports.string().trim().min(1, "Title is required"),
-  assignedTo: external_exports.string().min(1),
+  assignedTo: external_exports.union([external_exports.string().min(1), external_exports.array(external_exports.string().min(1))]).transform((value) => Array.isArray(value) ? value : [value]).pipe(external_exports.array(external_exports.string().min(1)).min(1, "Assignee is required")),
   deadline: isoDate,
   status: actionStatus.optional().default("open"),
+  /** Who assigns the auto-created task when the action is converted. */
+  assignedBy: external_exports.string().min(1).optional(),
   workKind: workKind.optional().default("facility_followup"),
   workKindOther: external_exports.string().optional().default(""),
-  district: districtId.optional().default("national"),
+  district: external_exports.union([districtId, external_exports.array(districtId)]).transform((value) => Array.isArray(value) ? value : [value]).pipe(external_exports.array(districtId).min(1)).optional().default(["national"]),
   facility: external_exports.string().optional().default("")
 }).refine((value) => value.workKind !== "other" || Boolean(value.workKindOther?.trim()), {
   message: "Type the other work type",
@@ -53677,14 +60194,14 @@ var actionCreate = external_exports.object({
 });
 var actionPatch = external_exports.object({
   title: external_exports.string().trim().min(1).optional(),
-  assignedTo: external_exports.string().optional(),
+  assignedTo: external_exports.union([external_exports.string().min(1), external_exports.array(external_exports.string().min(1))]).transform((value) => Array.isArray(value) ? value : [value]).optional(),
   deadline: isoDate.optional(),
   status: actionStatus.optional(),
   meetingId: external_exports.string().optional(),
   meetingTitle: external_exports.string().optional(),
   workKind: workKind.optional(),
   workKindOther: external_exports.string().optional(),
-  district: districtId.optional(),
+  district: external_exports.union([districtId, external_exports.array(districtId)]).transform((value) => Array.isArray(value) ? value : [value]).optional(),
   facility: external_exports.string().optional()
 }).refine((value) => Object.keys(value).length > 0, "No fields to update");
 var convertBody = external_exports.object({
@@ -53720,6 +60237,7 @@ var hubLogCreate = external_exports.object({
   id: external_exports.string().optional(),
   at: external_exports.string().optional(),
   kind: hubLogKind,
+  status: hubLogStatus.optional(),
   title: external_exports.string().trim().min(1, "Title is required"),
   detail: external_exports.string().optional().default(""),
   district: districtId.optional().default("national"),
@@ -53728,6 +60246,7 @@ var hubLogCreate = external_exports.object({
 });
 var hubLogPatch = external_exports.object({
   kind: hubLogKind.optional(),
+  status: hubLogStatus.optional(),
   title: external_exports.string().trim().min(1).optional(),
   detail: external_exports.string().optional(),
   district: districtId.optional(),
@@ -53741,6 +60260,12 @@ var restoreBody = external_exports.object({
   actionItems: external_exports.array(external_exports.any()).optional(),
   hubLog: external_exports.array(external_exports.any()).optional(),
   events: external_exports.array(external_exports.any()).optional()
+});
+var visitorWalkInCreate = external_exports.object({
+  fullName: external_exports.string().trim().min(1, "Visitor full name is required").max(200),
+  organization: external_exports.string().trim().max(200).optional().default(""),
+  purpose: external_exports.string().trim().min(1, "Purpose of visit is required").max(500),
+  checkInNow: external_exports.boolean().optional().default(true)
 });
 
 // server/app.ts
@@ -53760,10 +60285,25 @@ api.use("*", async (c, next) => {
   c.header("CDN-Cache-Control", "no-store");
   c.header("Vercel-CDN-Cache-Control", "no-store");
 });
+function isVisitorPath(path3) {
+  return path3 === "/visitors" || path3.startsWith("/visitors/") || path3 === "/api/visitors" || path3.startsWith("/api/visitors/");
+}
+function isVisitorSummaryPath(path3) {
+  return path3 === "/visitors/summary" || path3 === "/api/visitors/summary";
+}
 api.use("*", async (c, next) => {
-  if (c.req.method === "GET" || c.req.method === "HEAD" || c.req.method === "OPTIONS") return next();
-  const path2 = c.req.path;
-  if (path2 === "/unlock" || path2 === "/operator/unlock" || path2.endsWith("/unlock") || path2.endsWith("/operator/unlock")) {
+  const path3 = c.req.path;
+  if (c.req.method === "OPTIONS") return next();
+  if (isVisitorPath(path3)) {
+    if (isVisitorSummaryPath(path3) && (c.req.method === "GET" || c.req.method === "HEAD")) {
+      return next();
+    }
+    const given2 = c.req.header("x-operator-code") ?? "";
+    assertVisitorOperatorAccess(given2);
+    return next();
+  }
+  if (c.req.method === "GET" || c.req.method === "HEAD") return next();
+  if (path3 === "/unlock" || path3 === "/operator/unlock" || path3.endsWith("/unlock") || path3.endsWith("/operator/unlock")) {
     return next();
   }
   const given = c.req.header("x-operator-code") ?? "";
@@ -53820,17 +60360,19 @@ api.post("/operator/unlock", async (c) => {
 });
 api.get("/state", async (c) => c.json(await getState()));
 api.get("/report", async (c) => {
-  const report = buildWeeklyReport(await getState());
+  const period = parseReportPeriod(c.req.query("period"));
+  const report = buildOpsReport(await getState(), period);
   if (c.req.query("format") === "html") {
-    c.header("Content-Disposition", `inline; filename="NHIH-weekly-ops-report.html"`);
+    c.header("Content-Disposition", `inline; filename="NHIH-${period.toLowerCase()}-ops-report.html"`);
     return c.html(reportToHtml(report));
   }
   return c.json(report);
 });
 api.get("/reports/weekly", async (c) => {
-  const report = buildWeeklyReport(await getState());
+  const period = parseReportPeriod(c.req.query("period") ?? "Weekly");
+  const report = buildOpsReport(await getState(), period);
   if (c.req.query("format") === "html") {
-    c.header("Content-Disposition", `inline; filename="NHIH-weekly-ops-report.html"`);
+    c.header("Content-Disposition", `inline; filename="NHIH-${period.toLowerCase()}-ops-report.html"`);
     return c.html(reportToHtml(report));
   }
   return c.json(report);
@@ -53919,12 +60461,16 @@ api.patch("/activity", async (c) => {
 });
 api.post("/actions", async (c) => {
   const body = await readBody(c, actionCreate);
+  const { assignedBy, ...item } = body;
   return c.json(
     await push(
-      await addActionItem2({
-        ...body,
-        id: body.id || uid("a")
-      })
+      await addActionItem2(
+        {
+          ...item,
+          id: item.id || uid("a")
+        },
+        assignedBy
+      )
     )
   );
 });
@@ -53954,10 +60500,12 @@ api.patch("/actions/:id", async (c) => {
 });
 api.post("/hub-log", async (c) => {
   const body = await readBody(c, hubLogCreate);
+  const status = body.status ?? (body.kind === "extract_restored" ? "completed" : body.kind === "extract_failed" || body.kind === "late_reporting" ? "overdue" : "open");
   return c.json(
     await push(
       await addHubLog2({
         ...body,
+        status,
         id: body.id || uid("log"),
         at: body.at || (/* @__PURE__ */ new Date()).toISOString()
       })
@@ -54000,6 +60548,21 @@ api.post("/restore", async (c) => {
   return c.json(await push(await restoreState(body)));
 });
 api.post("/reset", async (c) => c.json(await push(await resetState())));
+api.get("/visitors/summary", async (c) => c.json(await getVisitorSummary()));
+api.get("/visitors", async (c) => c.json(await listVisitorRegister()));
+api.post("/visitors/sync", async (c) => c.json(await syncVisitorsFromGoogleSheets()));
+api.post("/visitors/walk-in", async (c) => {
+  const body = await readBody(c, visitorWalkInCreate);
+  return c.json(await registerWalkIn(body), 201);
+});
+api.post(
+  "/visitors/:id/check-in",
+  async (c) => c.json(await checkInVisit(c.req.param("id")))
+);
+api.post(
+  "/visitors/:id/check-out",
+  async (c) => c.json(await checkOutVisit(c.req.param("id")))
+);
 var app = new Hono2();
 app.route("/api", api);
 app.route("/", api);

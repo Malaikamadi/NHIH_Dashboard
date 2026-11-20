@@ -1,5 +1,17 @@
 import { getOperatorCode, setOperatorCode } from './access'
-import type { ActionItem, HubLogEntry, Meeting, OpsState, PeriodId, Task, TeamActivity } from './types'
+import type {
+  ActionItem,
+  HubLogEntry,
+  Meeting,
+  OpsState,
+  PeriodId,
+  Task,
+  TeamActivity,
+  VisitorRegisterResponse,
+  VisitorSummary,
+  VisitorSyncResult,
+  VisitorVisit,
+} from './types'
 import type { WeeklyReport } from './utils/report'
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -138,6 +150,52 @@ export function deleteHubLog(id: string): Promise<OpsState> {
 
 export function fetchWeeklyReport(period: PeriodId = 'Weekly'): Promise<WeeklyReport> {
   return request<WeeklyReport>(`/api/report?period=${encodeURIComponent(period)}`)
+}
+
+export async function fetchVisitorSummary(): Promise<VisitorSummary> {
+  const res = await fetch('/api/visitors/summary', { cache: 'no-store' })
+  if (!res.ok) {
+    throw new Error(`${res.status} /api/visitors/summary`)
+  }
+  return res.json() as Promise<VisitorSummary>
+}
+
+export function fetchVisitorRegister(): Promise<VisitorRegisterResponse> {
+  return request<VisitorRegisterResponse>('/api/visitors')
+}
+
+export function syncVisitorsFromSheets(): Promise<VisitorSyncResult> {
+  return request<VisitorSyncResult>('/api/visitors/sync', { method: 'POST' })
+}
+
+export function registerWalkInVisitor(input: {
+  fullName: string
+  organization: string
+  purpose: string
+  checkInNow: boolean
+}): Promise<{ visit: VisitorVisit; checkedInCount: number }> {
+  return request<{ visit: VisitorVisit; checkedInCount: number }>('/api/visitors/walk-in', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function checkInVisitor(
+  id: string,
+): Promise<{ visit: VisitorVisit; alreadyCheckedIn: boolean; checkedInCount: number }> {
+  return request<{ visit: VisitorVisit; alreadyCheckedIn: boolean; checkedInCount: number }>(
+    `/api/visitors/${encodeURIComponent(id)}/check-in`,
+    { method: 'POST' },
+  )
+}
+
+export function checkOutVisitor(
+  id: string,
+): Promise<{ visit: VisitorVisit; alreadyCheckedOut: boolean; checkedInCount: number }> {
+  return request<{ visit: VisitorVisit; alreadyCheckedOut: boolean; checkedInCount: number }>(
+    `/api/visitors/${encodeURIComponent(id)}/check-out`,
+    { method: 'POST' },
+  )
 }
 
 export function restoreHub(state: OpsState): Promise<OpsState> {

@@ -243,3 +243,10 @@ export const restoreBody = z.object({
   hubLog: z.array(z.any()).optional(),
   events: z.array(z.any()).optional(),
 })
+
+export const visitorWalkInCreate = z.object({
+  fullName: z.string().trim().min(1, 'Visitor full name is required').max(200),
+  organization: z.string().trim().max(200).optional().default(''),
+  purpose: z.string().trim().min(1, 'Purpose of visit is required').max(500),
+  checkInNow: z.boolean().optional().default(true),
+})

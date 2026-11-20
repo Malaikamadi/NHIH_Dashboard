@@ -8,6 +8,7 @@ import { MeetingForm } from './MeetingForm'
 import { ParticipantPicker } from './ParticipantPicker'
 import { PlaceFields, placeFromForm } from './PlaceFields'
 import { TaskUpdatePanel } from './TaskUpdatePanel'
+import { VisitorDesk } from './VisitorDesk'
 import { WORK_TYPES } from '../data/catalog'
 import { useOps } from '../store/OpsContext'
 import { hubHasWork } from '../utils/hub'
@@ -25,7 +26,7 @@ interface Props {
   open: boolean
   onClose: () => void
   variant?: 'drawer' | 'page'
-  initialTab?: 'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | 'emr'
+  initialTab?: 'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | 'emr' | 'visitors'
 }
 
 const STATUSES: TaskStatus[] = [
@@ -42,7 +43,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer', initialTab = 'ta
   const { state, addTask, addActionItem, removeMeeting, removeActivity, resetDemo, restoreFromBrowser } =
     useOps()
   const lead = state.members.find((m) => m.role === 'Team Lead')?.id ?? 'm1'
-  const [tab, setTab] = useState<'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | 'emr'>(initialTab)
+  const [tab, setTab] = useState<'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | 'emr' | 'visitors'>(initialTab)
   const [saved, setSaved] = useState('')
   const [saveError, setSaveError] = useState('')
   const [restoring, setRestoring] = useState(false)
@@ -82,7 +83,7 @@ export function AdminPanel({ open, onClose, variant = 'drawer', initialTab = 'ta
         {saveError && <p className="warn-text" role="alert">{saveError}</p>}
 
         <div className="admin-tabs">
-          {(['task', 'update', 'meeting', 'activity', 'action', 'log', 'emr'] as const).map((id) => (
+          {(['task', 'update', 'meeting', 'activity', 'action', 'log', 'emr', 'visitors'] as const).map((id) => (
             <button
               key={id}
               type="button"
@@ -101,7 +102,9 @@ export function AdminPanel({ open, onClose, variant = 'drawer', initialTab = 'ta
                         ? 'Action item'
                         : id === 'log'
                           ? 'Hub incident log'
-                          : 'EMR Launch'}
+                          : id === 'emr'
+                            ? 'EMR Launch'
+                            : 'Visitors'}
             </button>
           ))}
         </div>
@@ -231,6 +234,8 @@ export function AdminPanel({ open, onClose, variant = 'drawer', initialTab = 'ta
         {tab === 'update' && <TaskUpdatePanel />}
 
         {tab === 'emr' && <EmrDesk onSaved={setSaved} />}
+
+        {tab === 'visitors' && <VisitorDesk onSaved={setSaved} />}
 
         {tab === 'meeting' && (
           <MeetingForm />

@@ -36,11 +36,21 @@ services:
     environment:
       PERSISTENCE: postgres
       DATABASE_URL: postgresql://${POSTGRES_USER:-nhih}:${POSTGRES_PASSWORD:-nhih_ops_change_me}@db:5432/${POSTGRES_DB:-nhih_ops}
+      # Set a non-default OPERATOR_CODE in .env to enable the operator-only Visitor Register
       OPERATOR_CODE: ${OPERATOR_CODE:-nhih-ops}
       PORT: '8787'
+      # Server-side Google Sheets visitor register configuration (read-only service account)
+      GOOGLE_SHEETS_SPREADSHEET_ID: ${GOOGLE_SHEETS_SPREADSHEET_ID:-}
+      GOOGLE_SHEETS_TAB_NAME: ${GOOGLE_SHEETS_TAB_NAME:-Form Responses 1}
+      GOOGLE_SERVICE_ACCOUNT_KEY_FILE: ${GOOGLE_SERVICE_ACCOUNT_KEY_FILE:-}
+      GOOGLE_SERVICE_ACCOUNT_JSON: ${GOOGLE_SERVICE_ACCOUNT_JSON:-}
+      GOOGLE_SERVICE_ACCOUNT_EMAIL: ${GOOGLE_SERVICE_ACCOUNT_EMAIL:-}
+      GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY: ${GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY:-}
     volumes:
       - ./data:/app/data
       - ./backups:/app/backups
+      # Optional: mount a read-only Google service account JSON key file
+      # - ./secrets/google-service-account.json:/run/secrets/google-service-account.json:ro
     depends_on:
       db:
         condition: service_healthy
