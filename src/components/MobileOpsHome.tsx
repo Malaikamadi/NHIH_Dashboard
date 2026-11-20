@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { OpsIntelligence } from './OpsIntelligence'
+import type { WorkFilter } from './MobileWorkQueue'
 import { useOps } from '../store/OpsContext'
 import { displayStatus, memberNames, meetingStatus, priorityTasks, todaysMeetings } from '../utils/metrics'
 
 type DeskTab = 'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | 'emr'
 
-export function MobileOpsHome({ onOpen }: { onOpen: (tab: DeskTab) => void }) {
+export function MobileOpsHome({ onOpen }: { onOpen: (tab: DeskTab, filter?: WorkFilter) => void }) {
   const { state, connected } = useOps()
   const [hasConnected, setHasConnected] = useState(connected)
   useEffect(() => { if (connected) setHasConnected(true) }, [connected])
@@ -27,10 +28,10 @@ export function MobileOpsHome({ onOpen }: { onOpen: (tab: DeskTab) => void }) {
         <span className={'mobile-ops-connection ' + (connected ? 'is-connected' : '')}>{connected ? '● Live connection' : hasConnected ? '● Connection unavailable — figures may be stale' : '● Connecting…'}</span>
       </div>
       <div className="mobile-ops-stats" aria-label="Operational summary">
-        <div><span>Active tasks</span><strong>{active.length}</strong></div>
-        <div><span>Overdue</span><strong>{overdue.length}</strong></div>
-        <div><span>High priority</span><strong>{urgent.length}</strong></div>
-        <div><span>Open actions</span><strong>{actions.length}</strong></div>
+        <button type="button" onClick={() => onOpen('update','active')}><span>Active tasks</span><strong>{active.length}</strong><small>View work queue ↗</small></button>
+        <button type="button" onClick={() => onOpen('update','overdue')}><span>Overdue</span><strong>{overdue.length}</strong><small>Review deadlines ↗</small></button>
+        <button type="button" onClick={() => onOpen('update','high')}><span>High priority</span><strong>{urgent.length}</strong><small>See critical work ↗</small></button>
+        <button type="button" onClick={() => onOpen('action')}><span>Open actions</span><strong>{actions.length}</strong><small>Manage follow-ups ↗</small></button>
       </div>
       <OpsIntelligence onOpen={onOpen} />
       <section className="mobile-ops-section"><div className="mobile-ops-section-head"><h2>Quick commands</h2></div>

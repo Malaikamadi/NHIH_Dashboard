@@ -24,7 +24,7 @@ const STATUSES: TaskStatus[] = [
 
 const PRIORITIES: Priority[] = ['critical', 'high', 'medium', 'low']
 
-export function TaskUpdatePanel() {
+export function TaskUpdatePanel({ selectedTaskId }: { selectedTaskId?: string } = {}) {
   const { state } = useOps()
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<'open' | 'all'>('open')
@@ -35,8 +35,9 @@ export function TaskUpdatePanel() {
     const q = query.trim().toLowerCase()
     return [...state.tasks]
       .filter((task) => {
+        if (selectedTaskId && task.id !== selectedTaskId) return false
         const status = displayStatus(task, now)
-        if (filter === 'open' && status === 'completed') return false
+        if (!selectedTaskId && filter === 'open' && status === 'completed') return false
         if (!q) return true
         const owner = memberNames(state.members, task.assignedTo).toLowerCase()
         return (
@@ -51,7 +52,7 @@ export function TaskUpdatePanel() {
         if (aDone !== bDone) return aDone - bDone
         return +new Date(a.dueDate) - +new Date(b.dueDate)
       })
-  }, [state.tasks, state.members, query, filter, now])
+  }, [state.tasks, state.members, query, filter, now, selectedTaskId])
 
   const openCount = state.tasks.filter((task) => displayStatus(task, now) !== 'completed').length
 
@@ -60,7 +61,7 @@ export function TaskUpdatePanel() {
       <p className="admin-help">
         Update progress, status, due date, owner, and the rest. Changes show on the dashboard.
       </p>
-      <div className="task-update-tools">
+      {!selectedTaskId && <div className="task-update-tools">
         <div className="admin-tabs compact">
           <button type="button" className={filter === 'open' ? 'is-active' : ''} onClick={() => setFilter('open')}>
             Open ({openCount})
@@ -73,6 +74,7 @@ export function TaskUpdatePanel() {
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search tasks" />
         </label>
       </div>
+      }
       {tasks.length === 0 && <p className="muted">No tasks to update yet. Assign one first.</p>}
       <div className="task-update-list">
         {tasks.map((task) => (
@@ -80,7 +82,7 @@ export function TaskUpdatePanel() {
             key={task.id}
             task={task}
             now={now}
-            editing={!collapsed[task.id]}
+            editing={selectedTaskId ? !collapsed[task.id] : !collapsed[task.id]}
             onToggle={() =>
               setCollapsed((current) => ({ ...current, [task.id]: !current[task.id] }))
             }
