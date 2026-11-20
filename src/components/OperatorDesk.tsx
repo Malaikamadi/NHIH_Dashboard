@@ -3,6 +3,7 @@ import { clearOperatorCode, isOperatorUnlocked } from '../access'
 import { unlockOperator } from '../api'
 import { AdminPanel } from './AdminPanel'
 import { MobileOpsHome } from './MobileOpsHome'
+import { MobileWorkQueue, type WorkFilter } from './MobileWorkQueue'
 import mohLogo from '../assets/mohs-logo.jpg'
 
 function goDashboard() {
@@ -16,6 +17,7 @@ export function OperatorDesk() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
+  const [workFilter, setWorkFilter] = useState<WorkFilter>('active')
   const [activeTab, setActiveTab] = useState<'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | 'emr' | null>(null)
 
   const signOut = () => {
@@ -27,7 +29,8 @@ export function OperatorDesk() {
     setShowCreate(false)
   }
 
-  const navigate = (tab: typeof activeTab) => {
+  const navigate = (tab: typeof activeTab, filter?: WorkFilter) => {
+    if (filter) setWorkFilter(filter)
     if (tab === activeTab) { setShowCreate(false); return }
     if (activeTab && !window.confirm('Leave this screen? Any unsaved form changes will be lost.')) return
     setShowCreate(false)
@@ -53,7 +56,7 @@ export function OperatorDesk() {
           {activeTab ? (
             <>
               <button type="button" className="mobile-ops-back" onClick={() => navigate(null)}>← Back to overview</button>
-              <AdminPanel key={activeTab} open variant="page" initialTab={activeTab} onClose={goDashboard} />
+              {activeTab === 'update' ? <><div className="operator-mobile-work"><MobileWorkQueue key={workFilter} initialFilter={workFilter} onCreate={() => navigate('task')} /></div><div className="operator-desktop-work"><AdminPanel key={activeTab} open variant="page" initialTab={activeTab} onClose={goDashboard} /></div></> : <AdminPanel key={activeTab} open variant="page" initialTab={activeTab} onClose={goDashboard} />}
             </>
           ) : <MobileOpsHome onOpen={navigate} />}
           <nav className="operator-mobile-nav" aria-label="Command Desk navigation">
