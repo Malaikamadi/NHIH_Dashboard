@@ -2,7 +2,7 @@ export function setupDeskPwa() {
   if (window.location.pathname.replace(/\/+$/, '') !== '/desk') return
   const link = document.createElement('link')
   link.rel = 'manifest'
-  link.href = '/desk-manifest.webmanifest'
+  link.href = '/desk-manifest.webmanifest?v=2'
   document.head.appendChild(link)
   const theme = document.querySelector('meta[name="theme-color"]') || document.createElement('meta')
   theme.setAttribute('name', 'theme-color')
