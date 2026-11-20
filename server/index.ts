@@ -15,6 +15,7 @@ if (existsSync('dist/index.html')) {
   app.get('/desk-icon.svg', serveStatic({ path: './dist/desk-icon.svg' }))
   app.get('/desk-icon-192.png', serveStatic({ path: './dist/desk-icon-192.png' }))
   app.get('/desk-icon-512.png', serveStatic({ path: './dist/desk-icon-512.png' }))
+  app.get('/desk-sw.js', serveStatic({ path: './dist/desk-sw.js' }))
   app.get('/desk/sw.js', serveStatic({ path: './dist/desk-sw.js' }))
   app.get('*', serveStatic({ path: './dist/index.html' }))
 }
