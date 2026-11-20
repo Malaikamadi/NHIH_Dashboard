@@ -9,15 +9,9 @@
   "theme_color": "#1f4e79",
   "icons": [
     {
-      "src": "/desk-logo.jpg",
+      "src": "/desk-logo.jpg?v=2",
       "sizes": "any",
       "type": "image/jpeg",
-      "purpose": "any"
-    },
-    {
-      "src": "/desk-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
       "purpose": "any"
     }
   ]
