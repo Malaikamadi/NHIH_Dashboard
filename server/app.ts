@@ -10,6 +10,7 @@ import { HttpError } from './errors'
 import { assertVisitorOperatorAccess, isValidOperatorCode } from './operator'
 import { broadcast, clientCount, subscribe } from './hub'
 import * as visitors from './visitors'
+import * as notifications from './team-notifications'
 import {
   actionCreate,
   actionPatch,
@@ -375,6 +376,19 @@ api.post('/visitors/:id/check-in', async (c) =>
 api.post('/visitors/:id/check-out', async (c) =>
   c.json(await visitors.checkOutVisit(c.req.param('id'))),
 )
+
+api.get('/team-notifications', async (c) => {
+  assertVisitorOperatorAccess(c.req.header('x-operator-code') ?? '')
+  return c.json(await notifications.listNotifications())
+})
+api.patch('/team-notifications/:id', async (c) => {
+  assertVisitorOperatorAccess(c.req.header('x-operator-code') ?? '')
+  const body = await readBody(c, z.object({
+    email: z.union([z.string().trim().email().max(254), z.literal('')]),
+    enabled: z.boolean(),
+  }))
+  return c.json(await notifications.saveNotification(c.req.param('id'), body.email, body.enabled))
+})
 
 export const app = new Hono()
 app.route('/api', api)
