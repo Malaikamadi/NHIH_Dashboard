@@ -4,6 +4,7 @@ import App from './App'
 import './index.css'
 import './desk-mobile.css'
 import './mobile-ops-home.css'
+import './components/OfficeWorkspace.css'
 import { setupDeskPwa } from './desk-pwa'
 
 setupDeskPwa()
