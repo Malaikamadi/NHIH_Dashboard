@@ -24,7 +24,9 @@ export function VisitorDesk({ onSaved }: { onSaved?: (message: string) => void }
   const [submitting, setSubmitting] = useState(false)
 
   const [historyQuery, setHistoryQuery] = useState('')
-  const [historyFilter, setHistoryFilter] = useState<'all' | VisitorStatus>('all')
+  const [historyFilter, setHistoryFilter] = useState<'all' | VisitorStatus | 'historical'>('all')
+  const [historyDate, setHistoryDate] = useState('')
+  const [today, setToday] = useState(() => new Date().toISOString().slice(0, 10))
 
   const load = useCallback(async () => {
     setError('')
@@ -32,7 +34,7 @@ export function VisitorDesk({ onSaved }: { onSaved?: (message: string) => void }
       const next = await fetchVisitorRegister()
       setData(next)
       if (next.lastSync) {
-        setSyncResult((prev) => prev ?? next.lastSync)
+        setSyncResult(next.lastSync)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to load visitor register')
@@ -43,6 +45,11 @@ export function VisitorDesk({ onSaved }: { onSaved?: (message: string) => void }
 
   useEffect(() => {
     void load()
+    const timer = window.setInterval(() => {
+      setToday(new Date().toISOString().slice(0, 10))
+      void load()
+    }, 60000)
+    return () => window.clearInterval(timer)
   }, [load])
 
   const activeVisitors = useMemo(
@@ -51,14 +58,33 @@ export function VisitorDesk({ onSaved }: { onSaved?: (message: string) => void }
   )
 
   const awaitingCheckIn = useMemo(
-    () => (data?.visits ?? []).filter((v) => v.status === 'registered'),
-    [data],
+    () => (data?.visits ?? []).filter((v) => v.status === 'registered' && v.registeredAt.slice(0, 10) === today),
+    [data, today],
   )
+
+  const historical = (data?.visits ?? []).filter(v => v.status === 'registered' && v.registeredAt.slice(0, 10) < today)
+  const weekStart = new Date(today + 'T00:00:00Z')
+  weekStart.setUTCDate(weekStart.getUTCDate() - (weekStart.getUTCDay() + 6) % 7)
+  const week = weekStart.toISOString().slice(0, 10)
+  const visits = data?.visits ?? []
+  const daily = visits.filter(v => v.registeredAt.slice(0, 10) === today).length
+  const weekly = visits.filter(v => v.registeredAt.slice(0, 10) >= week && v.registeredAt.slice(0, 10) <= today).length
+  const monthly = visits.filter(v => v.registeredAt.slice(0, 7) === today.slice(0, 7) && v.registeredAt.slice(0, 10) <= today).length
+  const breakdown = (field: 'organization' | 'purpose') => {
+    const counts = new Map<string, number>()
+    for (const visit of visits) {
+      const label = visit[field].trim() || 'Not specified'
+      counts.set(label, (counts.get(label) ?? 0) + 1)
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5)
+  }
 
   const filteredHistory = useMemo(() => {
     const q = historyQuery.trim().toLowerCase()
     return (data?.visits ?? []).filter((visit) => {
-      if (historyFilter !== 'all' && visit.status !== historyFilter) return false
+      const status = visit.status === 'registered' && visit.registeredAt.slice(0, 10) < today ? 'historical' : visit.status
+      if (historyFilter !== 'all' && status !== historyFilter) return false
+      if (historyDate && visit.registeredAt.slice(0, 10) !== historyDate) return false
       if (!q) return true
       return (
         visit.fullName.toLowerCase().includes(q) ||
@@ -66,7 +92,7 @@ export function VisitorDesk({ onSaved }: { onSaved?: (message: string) => void }
         visit.purpose.toLowerCase().includes(q)
       )
     })
-  }, [data, historyQuery, historyFilter])
+  }, [data, historyQuery, historyFilter, historyDate, today])
 
   const handleSync = async () => {
     setSyncing(true)
@@ -170,7 +196,7 @@ export function VisitorDesk({ onSaved }: { onSaved?: (message: string) => void }
     <div className="visitor-desk">
       <div className="visitor-desk-head">
         <div>
-          <h3>Visitor Register</h3>
+          <h3>Visitor Intelligence</h3>
           <p className="admin-help">
             Operator-only attendance log. All times are shown in Africa/Freetown. Only the checked-in count appears on the shared Overview.
           </p>
@@ -207,17 +233,38 @@ export function VisitorDesk({ onSaved }: { onSaved?: (message: string) => void }
           <strong>{data?.checkedInCount ?? 0}</strong>
         </div>
         <div className="visitor-kpi">
-          <span>Awaiting check-in</span>
-          <strong>{data?.registeredCount ?? 0}</strong>
+          <span>Awaiting check-in today</span>
+          <strong>{awaitingCheckIn.length}</strong>
         </div>
         <div className="visitor-kpi">
           <span>Checked out</span>
           <strong>{data?.checkedOutCount ?? 0}</strong>
         </div>
         <div className="visitor-kpi">
-          <span>Total visits</span>
+          <span>Total registrations</span>
           <strong>{data?.visits.length ?? 0}</strong>
         </div>
+      </div>
+
+      <div className="visitor-kpis">
+        <div className="visitor-kpi"><span>Historical registrations</span><strong>{historical.length}</strong></div>
+        <div className="visitor-kpi"><span>Today</span><strong>{daily}</strong></div>
+        <div className="visitor-kpi"><span>This week</span><strong>{weekly}</strong></div>
+        <div className="visitor-kpi"><span>This month</span><strong>{monthly}</strong></div>
+      </div>
+      <p className="admin-help">Historical registrations have no confirmed attendance. Registration counts are not confirmed visits. Week begins Monday; dates use Freetown time.</p>
+      <div className="visitor-grid">
+        {(['organization', 'purpose'] as const).map(field => (
+          <section className="visitor-panel" key={field}>
+            <h4>{field === 'organization' ? 'Top organisations' : 'Top purposes'} — all registrations</h4>
+            {breakdown(field).map(([label, count]) => (
+              <div key={label} style={{ marginBottom: 12 }}>
+                <div>{label} · {count}</div>
+                <progress value={count} max={Math.max(1, visits.length)} style={{ width: '100%' }} />
+              </div>
+            ))}
+          </section>
+        ))}
       </div>
 
       {data && !data.sheetsConfigured && (
@@ -400,14 +447,17 @@ export function VisitorDesk({ onSaved }: { onSaved?: (message: string) => void }
             />
             <select
               value={historyFilter}
-              onChange={(e) => setHistoryFilter(e.target.value as 'all' | VisitorStatus)}
+              onChange={(e) => setHistoryFilter(e.target.value as 'all' | VisitorStatus | 'historical')}
               aria-label="Filter visit status"
             >
               <option value="all">All statuses</option>
               <option value="checked_in">Checked in</option>
-              <option value="registered">Registered</option>
+              <option value="registered">Awaiting / future</option>
+              <option value="historical">Historical registration</option>
               <option value="checked_out">Checked out</option>
             </select>
+            <input type="date" value={historyDate} onChange={e => setHistoryDate(e.target.value)} aria-label="Filter registration date" />
+            <button type="button" className="ghost-btn" onClick={() => { setHistoryDate(''); setHistoryQuery(''); setHistoryFilter('all') }}>Clear filters</button>
           </div>
         </div>
 
@@ -444,7 +494,7 @@ export function VisitorDesk({ onSaved }: { onSaved?: (message: string) => void }
                         {visit.status === 'checked_in'
                           ? 'Checked in'
                           : visit.status === 'registered'
-                            ? 'Registered'
+                            ? (visit.registeredAt.slice(0, 10) < today ? 'Historical — unconfirmed' : 'Registered')
                             : 'Checked out'}
                       </span>
                     </td>
@@ -460,7 +510,7 @@ export function VisitorDesk({ onSaved }: { onSaved?: (message: string) => void }
                         : '—'}
                     </td>
                     <td>
-                      {visit.status === 'registered' && (
+                      {visit.status === 'registered' && visit.registeredAt.slice(0, 10) === today && (
                         <button
                           type="button"
                           className="primary-btn sm"
