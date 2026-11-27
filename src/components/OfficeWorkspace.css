@@ -1,0 +1,42 @@
+.office-root{--office-ink:#263545;--office-line:#deded8;--office-paper:#f7f6f2;background:var(--office-paper);color:var(--office-ink);min-height:100vh;color-scheme:light;font-family:system-ui,sans-serif}
+.office-root *{box-sizing:border-box}
+.office-root .office-shell{display:grid;grid-template-columns:220px minmax(0,1fr);width:100%;min-height:100vh;align-items:start}
+.office-root .office-shell.office-compact{grid-template-columns:64px minmax(0,1fr)}
+.office-root .office-side{position:sticky;top:0;display:flex;flex-direction:column;gap:20px;height:100vh;overflow:auto;background:#202e3b;color:#c7d1da;padding:20px 12px;min-width:0}
+.office-brand{display:flex;align-items:center;gap:10px;padding-bottom:16px;border-bottom:1px solid #40505d;font-size:17px;letter-spacing:2px;color:white}
+.office-root .office-brand img{width:36px;height:36px;object-fit:contain;flex:none;border-radius:4px}
+.office-brand small{display:block;font-size:8px;letter-spacing:1px;color:#e5d5b9}
+.office-group{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin:0 8px 8px;color:#aab8c4}
+.office-root .office-side button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;color:inherit;padding:10px 8px;border-radius:4px;text-align:left;font:inherit;font-size:13px;cursor:pointer}
+.office-root .office-side button[aria-current=page],.office-root .office-side button:hover{background:#384957;color:white;box-shadow:inset 3px 0 #d9be91}
+.office-side i{font-style:normal;width:20px;text-align:center;flex:none}.office-profile{margin-top:auto;border-top:1px solid #40505d;padding-top:16px;font-size:12px}
+.office-compact .office-side button span,.office-compact .office-brand span,.office-compact .office-group,.office-compact .office-profile{display:none}
+.office-root .office-body{min-width:0;width:100%;padding:0 24px 32px}
+.office-root .operator-bar{position:relative;display:flex;align-items:center;gap:12px;min-height:58px;height:auto;padding:12px 0;margin:0 0 18px;background:transparent;color:var(--office-ink);border:0;border-bottom:1px solid var(--office-line);box-shadow:none}
+.office-root .operator-brand{display:flex;align-items:center;flex:1;min-width:0}.office-root .operator-brand strong{color:var(--office-ink);font-size:15px}.office-root .hdr-kicker{color:#626d76;font-size:10px}
+.office-root .operator-bar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.office-root .ghost-btn,.office-root .office-toggle,.office-root .office-install summary{background:white;color:var(--office-ink);border:1px solid var(--office-line);border-radius:5px;padding:8px 10px;font-size:12px;cursor:pointer}
+.office-install{position:relative}.office-install[open]>:not(summary){position:absolute;right:0;top:100%;width:min(300px,80vw);z-index:20}
+.office-root .mobile-ops-back{display:none}
+.office-root .admin.is-page{position:static;display:block;inset:auto;transform:none;width:100%;max-width:none;min-width:0;height:auto;max-height:none;overflow:visible;background:transparent;color:var(--office-ink);padding:0;margin:0;border:0;box-shadow:none}
+.office-root .admin.is-page>.admin-tabs,.office-root .admin.is-page>.admin-h,.office-root .admin.is-page>.admin-help{display:none}
+.office-root .desk-task-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px);gap:20px;align-items:start;width:100%}
+.office-root .desk-task-layout>*{min-width:0;max-width:100%;position:static}
+.office-root .desk-step,.office-root .admin-live,.office-root .admin-item,.office-root .mobile-ops-section{background:white;color:var(--office-ink);border:1px solid var(--office-line);border-radius:6px;box-shadow:none}
+.office-root .admin-form input:not([type=checkbox]):not([type=radio]),.office-root .admin-form textarea,.office-root .admin-form select{background:white;color:var(--office-ink);border:1px solid #c9cdd0;max-width:100%;min-width:0}
+.office-root .admin-form label,.office-root .admin-help{color:#465566}
+.office-root .primary-btn,.office-root .mobile-ops-full{background:#263545;color:white;border:1px solid #263545;box-shadow:none;border-radius:5px}
+.office-root .mobile-ops-home{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;width:100%;max-width:none;margin:0;padding:0;color:var(--office-ink)}
+.office-root .mobile-ops-home>*{min-width:0;grid-column:1/-1}
+.office-root .mobile-ops-intro{background:transparent;color:var(--office-ink);border:0;padding:10px 0;box-shadow:none}
+.office-root .mobile-ops-intro h1{font:normal clamp(26px,3vw,38px) Georgia,serif;color:var(--office-ink)}
+.office-root .mobile-ops-intro p,.office-root .mobile-ops-eyebrow{color:#626d76}
+.office-root .mobile-ops-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--office-line);border:1px solid var(--office-line);border-radius:6px;overflow:hidden}
+.office-root .mobile-ops-stats button{background:white;color:var(--office-ink);border:0;border-radius:0;padding:16px;text-align:left;box-shadow:none;min-width:0}
+.office-root .mobile-ops-stats button strong{font:normal 32px Georgia,serif;color:var(--office-ink)}
+.office-root .mobile-ops-stats button:nth-child(2) strong{color:#a65343}
+.office-root .mobile-ops-stats button small,.office-root .mobile-ops-stats button span{color:#626d76}
+.office-root .operator-mobile-nav{display:none}
+.office-root .office-work{min-width:0;width:100%}
+@media(max-width:1100px){.office-root .desk-task-layout{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:850px){.office-root .office-shell{grid-template-columns:64px minmax(0,1fr)}.office-root .office-side button span,.office-root .office-brand span,.office-root .office-group,.office-root .office-profile{display:none}.office-root .office-body{padding:0 16px 24px}.office-root .mobile-ops-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.office-root .office-shell,.office-root .office-shell.office-compact{display:block}.office-root .office-side,.office-root .office-toggle{display:none}.office-root .office-body{padding:0 12px 90px}.office-root .operator-mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:30;background:#202e3b;color:#e5d5b9}.office-root .operator-mobile-nav button{color:#e5d5b9}.office-root .mobile-ops-home{grid-template-columns:minmax(0,1fr)}.office-root .desk-work-grid{grid-template-columns:minmax(0,1fr)}.office-root .operator-bar{flex-wrap:wrap}.office-root .operator-bar-actions{gap:4px}}
