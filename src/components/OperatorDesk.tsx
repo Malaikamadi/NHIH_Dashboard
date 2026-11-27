@@ -7,7 +7,6 @@ import { MobileWorkQueue, type WorkFilter } from './MobileWorkQueue'
 import mohLogo from '../assets/mohs-logo.jpg'
 import { InstallApp } from './InstallApp'
 import { NotificationDesk } from './NotificationDesk'
-import './OfficeWorkspace.css'
 
 function goDashboard() {
   window.history.pushState({}, '', '/')
@@ -53,7 +52,7 @@ export function OperatorDesk() {
           <header className="operator-bar"><button className="office-toggle" onClick={()=>setCompact(v=>!v)} aria-label="Toggle navigation">☰</button>
             <div className="operator-brand">
               <div><div className="hdr-kicker">NHIH · Operator only</div>
-              <strong>Operations Office</strong></div>
+              <strong>Operations Office</strong><small style={{display:'block',fontSize:10,color:'#647180'}}>Signature workspace · R4</small></div>
             </div>
             <div className="operator-bar-actions"><details className="office-install"><summary>Install</summary><InstallApp /></details><button className="ghost-btn" onClick={goDashboard}>Dashboard</button>
               <button type="button" className="ghost-btn" onClick={() => { setShowCreate(false); setNotificationsOpen(v => !v) }}>{notificationsOpen ? "Close notifications" : "Notifications"}</button>
