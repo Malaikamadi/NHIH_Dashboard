@@ -7,6 +7,7 @@ import { MobileWorkQueue, type WorkFilter } from './MobileWorkQueue'
 import mohLogo from '../assets/mohs-logo.jpg'
 import { InstallApp } from './InstallApp'
 import { NotificationDesk } from './NotificationDesk'
+import './OfficeWorkspace.css'
 
 function goDashboard() {
   window.history.pushState({}, '', '/')
@@ -14,6 +15,7 @@ function goDashboard() {
 }
 
 export function OperatorDesk() {
+  const [compact, setCompact] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [unlocked, setUnlocked] = useState(isOperatorUnlocked)
   const [code, setCode] = useState('')
@@ -34,26 +36,26 @@ export function OperatorDesk() {
   }
 
   const navigate = (tab: typeof activeTab, filter?: WorkFilter) => {
+    if (tab !== activeTab && activeTab && !window.confirm('Leave this screen? Any unsaved form changes will be lost.')) return
     setNotificationsOpen(false)
     if (filter) setWorkFilter(filter)
     if (tab === activeTab) { setShowCreate(false); return }
-    if (activeTab && !window.confirm('Leave this screen? Any unsaved form changes will be lost.')) return
     setShowCreate(false)
     setActiveTab(tab)
     window.scrollTo({ top: 0, behavior: 'instant' })
   }
 
   return (
-    <div className="operator-page">
-      <InstallApp />
+    <div className="office-root">
       {unlocked ? (
-        <>
-          <header className="operator-bar">
-            <div className="operator-brand"><img src={mohLogo} alt="Ministry of Health logo" />
+        <div className={`office-shell ${compact ? "office-compact" : ""}`}>
+          <nav className="office-side" aria-label="Workspace"><div className="office-brand"><img src={mohLogo} alt="Ministry of Health"/><span>NHIH<small>OPERATIONS OFFICE</small></span></div>{([["Workspace",[[null,"⌂","Overview"],["update","☑","Task directory"],["task","+","Assign task"],["meeting","▦","Meetings"],["activity","◷","Activities"],["action","↳","Action items"]]],["Hub management",[["visitors","◎","Visitors"],["log","⚑","Incidents"],["emr","▤","EMR programme"]]]] as const).map(([group,items])=><div key={group}><small className="office-group">{group}</small>{items.map(([tab,icon,label])=><button key={label} title={label} aria-current={!notificationsOpen&&activeTab===tab?"page":undefined} onClick={()=>navigate(tab,tab==="update"?"active":undefined)}><i>{icon}</i><span>{label}</span></button>)}</div>)}<div className="office-profile">Operations Manager</div></nav><div className="office-body">
+          <header className="operator-bar"><button className="office-toggle" onClick={()=>setCompact(v=>!v)} aria-label="Toggle navigation">☰</button>
+            <div className="operator-brand">
               <div><div className="hdr-kicker">NHIH · Operator only</div>
-              <strong>Operations Control Desk</strong></div>
+              <strong>Operations Office</strong></div>
             </div>
-            <div className="operator-bar-actions">
+            <div className="operator-bar-actions"><details className="office-install"><summary>Install</summary><InstallApp /></details><button className="ghost-btn" onClick={goDashboard}>Dashboard</button>
               <button type="button" className="ghost-btn" onClick={() => { setShowCreate(false); setNotificationsOpen(v => !v) }}>{notificationsOpen ? "Close notifications" : "Notifications"}</button>
               <button type="button" className="ghost-btn" onClick={signOut}>
                 Sign out
@@ -63,10 +65,10 @@ export function OperatorDesk() {
           {notificationsOpen ? <NotificationDesk /> : activeTab ? (
             <>
               <button type="button" className="mobile-ops-back" onClick={() => navigate(null)}>← Back to overview</button>
-              {activeTab === 'update' ? <><div className="operator-mobile-work"><MobileWorkQueue key={workFilter} initialFilter={workFilter} onCreate={() => navigate('task')} /></div><div className="operator-desktop-work"><AdminPanel key={activeTab} open variant="page" initialTab={activeTab} onClose={goDashboard} /></div></> : <AdminPanel key={activeTab} open variant="page" initialTab={activeTab} onClose={goDashboard} />}
+              {activeTab === 'update' ? <><div className="office-work"><MobileWorkQueue key={workFilter} initialFilter={workFilter} onCreate={() => navigate('task')} /></div></> : <AdminPanel key={activeTab} open variant="page" initialTab={activeTab} onClose={goDashboard} />}
             </>
           ) : <MobileOpsHome onOpen={navigate} />}
-          <nav className="operator-mobile-nav" aria-label="Command Desk navigation">
+          </div><nav className="operator-mobile-nav" aria-label="Command Desk navigation">
             <button type="button" className={!activeTab && !showCreate ? 'is-selected' : ''} aria-current={!activeTab && !showCreate ? 'page' : undefined} onClick={() => navigate(null)}><span aria-hidden="true">⌂</span>Home</button>
             <button type="button" className={activeTab === 'update' ? 'is-selected' : ''} aria-current={activeTab === 'update' ? 'page' : undefined} onClick={() => navigate('update')}><span aria-hidden="true">☑</span>Tasks</button>
             <button type="button" className="operator-nav-create" aria-expanded={showCreate} aria-controls="operator-create-menu" onClick={() => setShowCreate(v => !v)}><span aria-hidden="true">＋</span>Create</button>
@@ -81,7 +83,7 @@ export function OperatorDesk() {
               </div>
             </div>
           </div>}
-        </>
+        </div>
       ) : (
         <section className="operator-lock paper">
           <div className="hdr-kicker">Restricted</div>
