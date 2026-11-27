@@ -20,6 +20,7 @@ export function ParticipantPicker({
     selectedIds ?? (defaultAll ? members.map((member) => member.id) : []),
   )
   const [query, setQuery] = useState('')
+  const [expanded, setExpanded] = useState(false)
   const allOn = members.length > 0 && members.every((member) => ids.includes(member.id))
   const memberKey = members.map((member) => member.id).join(',')
   const selectedKey = selectedIds?.join(',') ?? ''
@@ -39,16 +40,19 @@ export function ParticipantPicker({
     const form = rootRef.current?.closest('form')
     if (!form) return
     const onReset = () => {
-      setIds(defaultAll ? members.map((member) => member.id) : [])
+      setIds(selectedIds ?? (defaultAll ? members.map((member) => member.id) : []))
       setQuery('')
     }
     form.addEventListener('reset', onReset)
     return () => form.removeEventListener('reset', onReset)
-  }, [defaultAll, members])
+  }, [defaultAll, members, selectedKey])
 
   return (
     <fieldset ref={rootRef} className="participant-picks desk-picker">
       <legend>{legend}</legend>
+      <div className="office-picker-summary"><span><strong>{ids.length}</strong> of {members.length} selected</span><button type="button" className="desk-picker-all" aria-expanded={expanded} onClick={()=>setExpanded(v=>!v)}>{expanded ? "Done" : "Manage selection"}</button></div>
+      {members.filter(m=>ids.includes(m.id)).map(m=><input key={m.id} type="hidden" name={name} value={m.id}/>)}
+      <div hidden={!expanded} className="office-picker-content">
       <div className="desk-picker-tools">
         <input
           className="desk-picker-search"
@@ -61,7 +65,7 @@ export function ParticipantPicker({
           {allOn ? 'Clear all' : 'Select all'}
         </button>
       </div>
-      {ids.length > 0 && (
+      {ids.length > 0 && !allOn && (
         <div className="desk-selected">
           {members.filter((m) => ids.includes(m.id)).map((member) => (
             <button key={member.id} type="button" onClick={() => setIds((current) => current.filter((id) => id !== member.id))}>
@@ -77,7 +81,6 @@ export function ParticipantPicker({
             <label key={member.id} className={`desk-person ${on ? 'is-selected' : ''}`}>
               <input
                 type="checkbox"
-                name={name}
                 value={member.id}
                 checked={on}
                 onChange={() =>
@@ -91,6 +94,7 @@ export function ParticipantPicker({
             </label>
           )
         })}
+      </div>
       </div>
     </fieldset>
   )
