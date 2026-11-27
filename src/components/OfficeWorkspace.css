@@ -343,3 +343,21 @@
 .office-root .office-body select{height:auto!important;min-height:42px!important;padding:9px 12px!important;background:white!important;color:#263545!important}
 .office-root .office-body .admin-split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 @media(max-width:600px){.office-root .desk-picker .desk-picker-grid{grid-template-columns:1fr!important}.office-root .office-body .admin-split{grid-template-columns:1fr}.office-root .office-body fieldset.desk-picker{padding:10px!important}}
+
+.office-root .office-picker-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;color:#647180}
+.office-root .office-picker-summary strong{color:#263545;font-size:16px}
+.office-root .office-picker-summary button{background:#263545;color:white;border:0;border-radius:5px;padding:9px 14px}
+.office-root .office-picker-content:not([hidden]){display:grid;gap:12px}
+.office-root .office-picker-content[hidden]{display:none!important}
+.office-root .desk-picker .desk-picker-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr))!important;max-height:280px}
+.office-root .desk-picker .desk-person{background:white;border-color:#e1e4e6;border-radius:5px;min-height:48px}
+.office-root .desk-picker .desk-person.is-selected{background:#f0f3f4;border-color:#a3b0ba}
+.office-root .desk-picker .desk-person-avatar{background:#e6ebee;color:#344b5d}
+.office-root .desk-picker .desk-person.is-selected .desk-person-avatar{background:#344b5d;color:white}
+.office-root .office-body .admin-list{display:grid;gap:0;border:1px solid #deded8;border-radius:8px;overflow:hidden;background:white}
+.office-root .office-body .admin-list>.admin-item{border:0;border-bottom:1px solid #deded8;border-radius:0;margin:0;padding:18px 20px}
+.office-root .office-body .admin-list>.admin-item:last-child{border-bottom:0}
+.office-root .office-body .admin-live h3{font:normal 23px Georgia,serif;color:#263545;text-transform:none;letter-spacing:0;margin:0 0 12px}
+.office-root .office-body .admin-item-head>span{font-size:14px;font-weight:600}
+.office-root .office-body .admin-item-head em{font-size:11px;font-weight:500;font-style:normal;color:#647180}
+.office-root .office-body select{appearance:none!important;-webkit-appearance:none!important;background:white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23647180' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 12px center!important;padding-right:36px!important;height:42px!important;box-sizing:border-box}
