@@ -19,3 +19,8 @@ CREATE TABLE IF NOT EXISTS notification_history (
 );
 -- A sending/uncertain record must be reconciled manually before retrying:
 -- Gmail may accept a message even if the client loses the response.
+
+ALTER TABLE notification_history ADD COLUMN IF NOT EXISTS ack_token_hash text;
+ALTER TABLE notification_history ADD COLUMN IF NOT EXISTS ack_expires_at timestamptz;
+ALTER TABLE notification_history ADD COLUMN IF NOT EXISTS acknowledged_at timestamptz;
+CREATE UNIQUE INDEX IF NOT EXISTS notification_ack_token_unique ON notification_history(ack_token_hash) WHERE ack_token_hash IS NOT NULL;
