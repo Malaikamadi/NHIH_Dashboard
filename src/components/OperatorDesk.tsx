@@ -6,6 +6,7 @@ import { MobileOpsHome } from './MobileOpsHome'
 import { MobileWorkQueue, type WorkFilter } from './MobileWorkQueue'
 import mohLogo from '../assets/mohs-logo.jpg'
 import { InstallApp } from './InstallApp'
+import { NotificationDesk } from './NotificationDesk'
 
 function goDashboard() {
   window.history.pushState({}, '', '/')
@@ -13,6 +14,7 @@ function goDashboard() {
 }
 
 export function OperatorDesk() {
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [unlocked, setUnlocked] = useState(isOperatorUnlocked)
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
@@ -22,6 +24,7 @@ export function OperatorDesk() {
   const [activeTab, setActiveTab] = useState<'task' | 'update' | 'meeting' | 'activity' | 'action' | 'log' | 'emr' | 'visitors' | null>(null)
 
   const signOut = () => {
+    setNotificationsOpen(false)
     clearOperatorCode()
     setUnlocked(false)
     setCode('')
@@ -31,6 +34,7 @@ export function OperatorDesk() {
   }
 
   const navigate = (tab: typeof activeTab, filter?: WorkFilter) => {
+    setNotificationsOpen(false)
     if (filter) setWorkFilter(filter)
     if (tab === activeTab) { setShowCreate(false); return }
     if (activeTab && !window.confirm('Leave this screen? Any unsaved form changes will be lost.')) return
@@ -50,12 +54,13 @@ export function OperatorDesk() {
               <strong>Operations Control Desk</strong></div>
             </div>
             <div className="operator-bar-actions">
+              <button type="button" className="ghost-btn" onClick={() => { setShowCreate(false); setNotificationsOpen(v => !v) }}>{notificationsOpen ? "Close notifications" : "Notifications"}</button>
               <button type="button" className="ghost-btn" onClick={signOut}>
                 Sign out
               </button>
             </div>
           </header>
-          {activeTab ? (
+          {notificationsOpen ? <NotificationDesk /> : activeTab ? (
             <>
               <button type="button" className="mobile-ops-back" onClick={() => navigate(null)}>← Back to overview</button>
               {activeTab === 'update' ? <><div className="operator-mobile-work"><MobileWorkQueue key={workFilter} initialFilter={workFilter} onCreate={() => navigate('task')} /></div><div className="operator-desktop-work"><AdminPanel key={activeTab} open variant="page" initialTab={activeTab} onClose={goDashboard} /></div></> : <AdminPanel key={activeTab} open variant="page" initialTab={activeTab} onClose={goDashboard} />}
