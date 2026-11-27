@@ -6,7 +6,7 @@ import json
 import subprocess
 from email.message import EmailMessage
 from email.headerregistry import Address
-from pathlib import Path
+import os
 
 SENDER = "nationalhealthinformationhub@gmail.com"
 TOKEN = "/var/lib/nhih-monitor/oauth/token.json"
@@ -64,14 +64,17 @@ def main():
         print("Test submitted")
         return
     failures = 0
+    summary = []
     for row in rows:
         if not row["enabled"] or not row["email"]:
+            summary.append(row["name"] + ": " + str(len(row["tasks"])) + " pending; not configured")
             continue
         params = {"week":week,"member":row["id"],"count":len(row["tasks"])}
         claimed = query("""INSERT INTO notification_history(week_start,member_id,status,task_count)
           VALUES (:'week',:'member','sending',:'count')
           ON CONFLICT DO NOTHING RETURNING member_id;""",params)
         if not claimed:
+            summary.append(row["name"] + ": already recorded; see delivery history")
             continue
         lines = ["Dear " + row["name"] + ",", "", "Please review your outstanding tasks for this week.", ""]
         for i,t in enumerate(row["tasks"],1):
@@ -87,6 +90,22 @@ def main():
         query("""UPDATE notification_history SET status=:'status',updated_at=now()
           WHERE week_start=:'week' AND member_id=:'member';""",dict(params,status=status))
         print(row["id"] + ": " + status)
+        summary.append(row["name"] + ": " + str(len(row["tasks"])) + " pending; " + status)
+    manager = os.environ.get("NHIH_NOTIFICATION_MANAGER", "")
+    if manager:
+        params = {"week":week,"member":"__management__","count":max(1,len(rows))}
+        claimed = query("""INSERT INTO notification_history(week_start,member_id,status,task_count)
+          VALUES (:'week',:'member','sending',:'count') ON CONFLICT DO NOTHING RETURNING member_id;""",params)
+        if claimed:
+            try:
+                deliver(manager,"NHIH Weekly Task Notification Summary",
+                        "\n".join(["Weekly task reminder summary", "", *(summary or ["No pending tasks"])]))
+                status = "submitted"
+            except Exception:
+                status = "uncertain"
+                failures += 1
+            query("""UPDATE notification_history SET status=:'status',updated_at=now()
+              WHERE week_start=:'week' AND member_id=:'member';""",dict(params,status=status))
     if failures:
         raise SystemExit(1)
 
