@@ -113,7 +113,7 @@ export async function getVisitorSummary(): Promise<VisitorSummary> {
     seen.add(key)
     activePurposes.push(clean)
   }
-  const total = await pool.query<{ count: string }>('SELECT count(*)::text AS count FROM visitor_visits')
+  const total = await pool.query<{ count: string }>("SELECT count(*)::text AS count FROM visitor_visits WHERE source = 'google_sheets'")
   return {
     totalVisits: Number(total.rows[0].count),
     checkedInCount: res.rows.length,
