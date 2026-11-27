@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getOperatorCode } from '../access'
 type Member = { id: string; name: string; role: string; email: string; enabled: boolean }
-type History = { week_start: string; member_id: string; name: string | null; status: string; task_count: number }
+type History = { week_start: string; member_id: string; name: string | null; status: string; task_count: number; acknowledgement_enabled: boolean; acknowledged_at: string | null; ack_expires_at: string | null }
 type Directory = { members: Member[]; history: History[] }
 async function request(path = '', body?: {email: string; enabled: boolean}): Promise<Directory> {
   const res = await fetch('/api/team-notifications' + path, {
@@ -42,9 +42,12 @@ export function NotificationDesk() {
       <label><input type="checkbox" checked={m.enabled} disabled={busy || !m.email.trim()} onChange={e => edit(m.id,{enabled:e.target.checked})}/> I have verified this address; enable weekly reminders</label>
       <button className="primary-btn" disabled={busy} type="submit">Save preferences</button>
     </form>)}
+    <h3>Notification Intelligence</h3>
+    <button type="button" onClick={() => request().then(setData).catch(e => setError(String(e)))}>Refresh history</button>
+    <p>Recent trackable submissions: {data.history.filter(h => h.acknowledgement_enabled && h.status === 'submitted').length} · Acknowledged: {data.history.filter(h => h.acknowledgement_enabled && h.status === 'submitted' && h.acknowledged_at).length} · Awaiting: {data.history.filter(h => h.acknowledgement_enabled && h.status === 'submitted' && !h.acknowledged_at && h.ack_expires_at && Date.parse(h.ack_expires_at)>Date.now()).length}</p>
     <h3>Delivery history</h3>
     {!data.history.length && <p>No notifications submitted yet.</p>}
-    {data.history.map(h => <p key={h.week_start+h.member_id}>{h.week_start.slice(0,10)} · {h.name ?? h.member_id} · {h.task_count} tasks · {h.status}</p>)}
+    {data.history.map(h => <p key={h.week_start+h.member_id}>{h.week_start.slice(0,10)} · {h.name ?? h.member_id} · {h.task_count} tasks · {h.status} · {h.acknowledged_at ? 'Acknowledged '+new Date(h.acknowledged_at).toLocaleString('en-GB',{timeZone:'UTC'})+' GMT' : !h.acknowledgement_enabled ? 'Not tracked' : h.ack_expires_at && Date.parse(h.ack_expires_at)<=Date.now() ? 'Link expired' : 'Awaiting acknowledgement'}</p>)}
     </>}
   </section>
 }
