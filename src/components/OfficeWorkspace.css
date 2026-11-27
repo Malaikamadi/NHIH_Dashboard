@@ -361,3 +361,14 @@
 .office-root .office-body .admin-item-head>span{font-size:14px;font-weight:600}
 .office-root .office-body .admin-item-head em{font-size:11px;font-weight:500;font-style:normal;color:#647180}
 .office-root .office-body select{appearance:none!important;-webkit-appearance:none!important;background:white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23647180' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 12px center!important;padding-right:36px!important;height:42px!important;box-sizing:border-box}
+
+/* Executive overview metrics: three explicit rows per card. */
+.office-root .mobile-ops-stats{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;background:transparent;border:0;border-radius:0;overflow:visible}
+.office-root .mobile-ops-stats>button{display:grid!important;grid-template-rows:auto 1fr auto;justify-items:start;align-items:start;align-content:start;gap:10px!important;min-height:144px;padding:18px 20px!important;background:#fff;border:1px solid #deded8;border-radius:8px;text-align:left;transition:background .15s,border-color .15s}
+.office-root .mobile-ops-stats>button:hover{background:#fbfaf6;border-color:#a9b3bb}
+.office-root .mobile-ops-stats>button:focus-visible{outline:2px solid #344b5d;outline-offset:3px}
+.office-root .mobile-ops-stats>button>span{display:block;font-size:12px;font-weight:600;line-height:1.4;color:#52606d}
+.office-root .mobile-ops-stats>button>strong{display:block;font:normal 40px/1 Georgia,serif;letter-spacing:-1px;margin:0;color:#263545}
+.office-root .mobile-ops-stats>button:nth-child(2)>strong{color:#a65343}
+.office-root .mobile-ops-stats>button>small{display:block;font-size:11px;font-weight:500;line-height:1.4;color:#647180;margin:0}
+@media(max-width:850px){.office-root .mobile-ops-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.office-root .mobile-ops-stats>button{min-height:120px;padding:14px!important}.office-root .mobile-ops-stats>button>strong{font-size:32px}}
