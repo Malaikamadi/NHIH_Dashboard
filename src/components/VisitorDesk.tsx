@@ -7,7 +7,7 @@ import {
   syncVisitorsFromSheets,
 } from '../api'
 import type { VisitorRegisterResponse, VisitorStatus, VisitorSyncResult } from '../types'
-import { formatFreetownDateTime, formatFreetownTime } from '../utils/time'
+import { formatFreetownDateTime } from '../utils/time'
 
 export function VisitorDesk({ onSaved }: { onSaved?: (message: string) => void }) {
   const [data, setData] = useState<VisitorRegisterResponse | null>(null)
@@ -26,6 +26,7 @@ export function VisitorDesk({ onSaved }: { onSaved?: (message: string) => void }
   const [historyQuery, setHistoryQuery] = useState('')
   const [historyFilter, setHistoryFilter] = useState<'all' | VisitorStatus | 'historical'>('all')
   const [historyDate, setHistoryDate] = useState('')
+  const [historyPage, setHistoryPage] = useState(1)
   const [today, setToday] = useState(() => new Date().toISOString().slice(0, 10))
 
   const load = useCallback(async () => {
@@ -103,6 +104,11 @@ export function VisitorDesk({ onSaved }: { onSaved?: (message: string) => void }
       )
     })
   }, [data, historyQuery, historyFilter, historyDate, today])
+
+  const pageCount = Math.max(1, Math.ceil(filteredHistory.length / 10))
+  const page = Math.min(historyPage, pageCount)
+  const pageVisits = filteredHistory.slice((page - 1) * 10, page * 10)
+  useEffect(() => { setHistoryPage(1) }, [historyQuery, historyFilter, historyDate])
 
   const handleSync = async () => {
     setSyncing(true)
@@ -221,6 +227,27 @@ export function VisitorDesk({ onSaved }: { onSaved?: (message: string) => void }
 .visitor-intelligence-light .visitor-history-table td {background:#fff;color:#19334c;border-color:#d9e4ec}
 .visitor-intelligence-light .visitor-status,.visitor-intelligence-light .visitor-badge {background:#eaf1f6;color:#174b70}
 .visitor-intelligence-light progress {accent-color:#24769b;height:10px}
+.visitor-directory {padding:clamp(16px,2vw,28px)}
+.visitor-directory-toolbar {display:grid;grid-template-columns:minmax(180px,2fr) minmax(130px,1fr) minmax(130px,1fr) auto;gap:12px;margin:20px 0}
+.visitor-directory-toolbar label {display:grid;gap:6px;font-size:12px;font-weight:600;color:#526579;min-width:0}
+.visitor-directory-toolbar input,.visitor-directory-toolbar select {width:100%;min-width:0;min-height:40px;box-sizing:border-box}
+.visitor-directory-toolbar button {align-self:end;min-height:40px}
+.visitor-directory-row {border-bottom:1px solid #e1e9ef}
+.visitor-directory-row summary,.visitor-directory-labels {display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.3fr) minmax(0,.8fr) minmax(0,1fr);gap:18px;align-items:center;padding:16px 10px;overflow-wrap:anywhere}
+.visitor-directory-labels {background:#edf3f7;border-radius:8px;font-size:12px;font-weight:700;color:#526579}
+.visitor-directory-row summary {cursor:pointer;list-style:none}
+.visitor-directory-row summary::-webkit-details-marker {display:none}
+.visitor-directory-row summary:hover {background:#f5f9fc}
+.visitor-directory-row summary:focus-visible {outline:2px solid #24769b}
+.visitor-directory-row summary small {display:block;margin-top:5px;color:#526579;font-size:12px}
+.visitor-directory-row .directory-expand {color:#175b83;font-size:12px;font-weight:600}
+.visitor-directory-row[open] .directory-expand {text-decoration:underline}
+.visitor-directory-detail {display:flex;flex-wrap:wrap;gap:20px;background:#f4f7fa;padding:16px;margin:0 10px 12px;border-radius:8px}
+.visitor-directory-detail div {flex:1 1 150px}
+.visitor-directory-detail small {display:block;color:#526579;margin-bottom:4px}
+.visitor-directory-footer {display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding-top:20px}
+.visitor-directory-pages {display:flex;align-items:center;gap:12px}
+@media(max-width:760px){.visitor-directory-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}.visitor-directory-toolbar label:first-child{grid-column:1/-1}.visitor-directory-labels{display:none}.visitor-directory-row{border:1px solid #d9e4ec;border-radius:10px;margin-bottom:12px}.visitor-directory-row summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px}.visitor-directory-row summary>div:first-child{grid-column:1/-1}.visitor-directory-row summary>div:last-child{grid-column:1/-1}.visitor-directory-footer{justify-content:center}}
 .visitor-intelligence-light .visitor-trend {display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:4px;align-items:end}
 @media(max-width:760px){.visitor-intelligence-light .visitor-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.visitor-intelligence-light .visitor-grid{grid-template-columns:minmax(0,1fr)}.visitor-intelligence-light .visitor-trend{gap:2px}}
 `}</style>
@@ -477,110 +504,47 @@ export function VisitorDesk({ onSaved }: { onSaved?: (message: string) => void }
         )}
       </section>
 
-      <section className="visitor-panel">
-        <div className="visitor-panel-head">
-          <h4>Visit history ({filteredHistory.length})</h4>
-          <div className="visitor-history-tools">
-            <input
-              type="search"
-              value={historyQuery}
-              onChange={(e) => setHistoryQuery(e.target.value)}
-              placeholder="Search name, org, purpose…"
-              aria-label="Search visit history"
-            />
-            <select
-              value={historyFilter}
-              onChange={(e) => setHistoryFilter(e.target.value as 'all' | VisitorStatus | 'historical')}
-              aria-label="Filter visit status"
-            >
-              <option value="all">All statuses</option>
-              <option value="checked_in">Checked in</option>
-              <option value="registered">Awaiting / future</option>
-              <option value="historical">Historical registration</option>
-              <option value="checked_out">Checked out</option>
-            </select>
-            <input type="date" value={historyDate} onChange={e => setHistoryDate(e.target.value)} aria-label="Filter registration date" />
-            <button type="button" className="ghost-btn" onClick={() => { setHistoryDate(''); setHistoryQuery(''); setHistoryFilter('all') }}>Clear filters</button>
-          </div>
+      <section className="visitor-panel visitor-directory">
+        <h4>Visitor directory</h4>
+        <p className="muted">{visits.length} registrations · Select a record to view attendance details.</p>
+        <div className="visitor-directory-toolbar">
+          <label>Search visitors<input type="search" value={historyQuery} onChange={e => setHistoryQuery(e.target.value)} placeholder="Name, organisation or purpose" /></label>
+          <label>Status<select value={historyFilter} onChange={e => setHistoryFilter(e.target.value as 'all' | VisitorStatus | 'historical')}>
+            <option value="all">All statuses</option><option value="checked_in">Checked in</option><option value="registered">Awaiting / future</option><option value="historical">Historical</option><option value="checked_out">Checked out</option>
+          </select></label>
+          <label>Registration date<input type="date" value={historyDate} onChange={e => setHistoryDate(e.target.value)} /></label>
+          <button type="button" className="ghost-btn" onClick={() => { setHistoryDate(''); setHistoryQuery(''); setHistoryFilter('all'); setHistoryPage(1) }}>Clear filters</button>
         </div>
-
-        {filteredHistory.length === 0 ? (
-          <p className="muted">No visit records match the current filter.</p>
-        ) : (
-          <div className="visitor-history-wrap">
-            <table className="visitor-history-table">
-              <thead>
-                <tr>
-                  <th>Visitor</th>
-                  <th>Organization / Unit</th>
-                  <th>Purpose</th>
-                  <th>Status</th>
-                  <th>Registered (Freetown)</th>
-                  <th>Check-in</th>
-                  <th>Check-out</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredHistory.map((visit) => (
-                  <tr key={visit.id}>
-                    <td>
-                      <strong>{visit.fullName}</strong>
-                      <div className="muted visitor-source-sub">
-                        {visit.source === 'google_sheets' ? 'Google Form' : 'Walk-in'}
-                      </div>
-                    </td>
-                    <td>{visit.organization || '—'}</td>
-                    <td>{visit.purpose || '—'}</td>
-                    <td>
-                      <span className={`visitor-status is-${visit.status}`}>
-                        {visit.status === 'checked_in'
-                          ? 'Checked in'
-                          : visit.status === 'registered'
-                            ? (visit.registeredAt.slice(0, 10) < today ? 'Historical — unconfirmed' : 'Registered')
-                            : 'Checked out'}
-                      </span>
-                    </td>
-                    <td>{formatFreetownDateTime(visit.registeredAt)}</td>
-                    <td>
-                      {visit.checkedInAt
-                        ? `${formatFreetownDateTime(visit.checkedInAt)}`
-                        : '—'}
-                    </td>
-                    <td>
-                      {visit.checkedOutAt
-                        ? `${formatFreetownTime(visit.checkedOutAt)} (${formatFreetownDateTime(visit.checkedOutAt)})`
-                        : '—'}
-                    </td>
-                    <td>
-                      {visit.status === 'registered' && visit.registeredAt.slice(0, 10) === today && (
-                        <button
-                          type="button"
-                          className="primary-btn sm"
-                          disabled={Boolean(busyIds[visit.id])}
-                          onClick={() => void handleCheckIn(visit.id, visit.fullName)}
-                        >
-                          Check in
-                        </button>
-                      )}
-                      {visit.status === 'checked_in' && (
-                        <button
-                          type="button"
-                          className="ghost-btn"
-                          disabled={Boolean(busyIds[visit.id])}
-                          onClick={() => void handleCheckOut(visit.id, visit.fullName)}
-                        >
-                          Check out
-                        </button>
-                      )}
-                      {visit.status === 'checked_out' && <span className="muted">Completed</span>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {filteredHistory.length === 0 ? <p className="muted">No matching registrations.</p> : <>
+          <div className="visitor-directory-labels"><span>Visitor</span><span>Organisation / unit</span><span>Purpose</span><span>Registration</span></div>
+          {pageVisits.map(visit => {
+            const historicalVisit = visit.status === 'registered' && visit.registeredAt.slice(0,10) < today
+            const status = historicalVisit ? 'Historical · unconfirmed' : visit.status === 'checked_in' ? 'Checked in' : visit.status === 'checked_out' ? 'Checked out' : 'Registered'
+            return <details className="visitor-directory-row" key={visit.id}>
+              <summary>
+                <div><strong>{visit.fullName}</strong><small>{visit.source === 'google_sheets' ? 'Google Form' : 'Walk-in'}</small></div>
+                <div>{visit.organization || 'Not specified'}</div>
+                <div>{visit.purpose || 'Not specified'}</div>
+                <div>{formatFreetownDateTime(visit.registeredAt)}<small>{status}</small><small className="directory-expand">View details ↕</small></div>
+              </summary>
+              <div className="visitor-directory-detail">
+                <div><small>Attendance status</small>{status}</div>
+                <div><small>Check-in</small>{visit.checkedInAt ? formatFreetownDateTime(visit.checkedInAt) : 'Not recorded'}</div>
+                <div><small>Check-out</small>{visit.checkedOutAt ? formatFreetownDateTime(visit.checkedOutAt) : 'Not recorded'}</div>
+                {visit.status === 'registered' && visit.registeredAt.slice(0,10) === today && <button type="button" className="primary-btn sm" disabled={Boolean(busyIds[visit.id])} onClick={() => void handleCheckIn(visit.id, visit.fullName)}>Check in</button>}
+                {visit.status === 'checked_in' && <button type="button" className="ghost-btn" disabled={Boolean(busyIds[visit.id])} onClick={() => void handleCheckOut(visit.id, visit.fullName)}>Check out</button>}
+              </div>
+            </details>
+          })}
+          <div className="visitor-directory-footer">
+            <span className="muted">Showing {(page - 1) * 10 + 1}–{Math.min(page * 10, filteredHistory.length)} of {filteredHistory.length}</span>
+            <div className="visitor-directory-pages">
+              <button type="button" className="ghost-btn" disabled={page === 1} onClick={() => setHistoryPage(page - 1)}>Previous</button>
+              <span>Page {page} of {pageCount}</span>
+              <button type="button" className="ghost-btn" disabled={page === pageCount} onClick={() => setHistoryPage(page + 1)}>Next</button>
+            </div>
           </div>
-        )}
+        </>}
       </section>
     </div>
   )
