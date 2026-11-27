@@ -71,6 +71,7 @@ api.use('*', async (c, next) => {
     return next()
   }
   if (c.req.method === 'GET' || c.req.method === 'HEAD') return next()
+  if (c.req.method === 'POST' && (path === '/notification-ack' || path === '/api/notification-ack')) return next()
   if (
     path === '/unlock' ||
     path === '/operator/unlock' ||
@@ -388,6 +389,17 @@ api.patch('/team-notifications/:id', async (c) => {
     enabled: z.boolean(),
   }))
   return c.json(await notifications.saveNotification(c.req.param('id'), body.email, body.enabled))
+})
+
+api.get('/notification-ack', (c) => {
+  c.header('Referrer-Policy', 'no-referrer')
+  c.header('Content-Security-Policy', "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'")
+  return c.html(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NHIH Receipt Confirmation</title><body style="font:17px Arial;background:#edf4f0;color:#103c35;margin:0;padding:24px"><main style="max-width:480px;margin:40px auto;background:white;padding:24px;border-radius:12px"><small>MINISTRY OF HEALTH | SIERRA LEONE</small><h1>National Health Information Hub</h1><h2>Acknowledge receipt</h2><p>Confirm that you received your operational briefing. This does not complete any assignment.</p><button id="confirm" style="background:#103c35;color:white;padding:14px;border:0;border-radius:6px">Confirm receipt</button><p id="result" role="status"></p></main><script>const token=location.hash.slice(1);history.replaceState(null,'',location.pathname);const button=document.getElementById('confirm');const result=document.getElementById('result');button.onclick=async()=>{button.disabled=true;try{const r=await fetch('/api/notification-ack',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})});result.textContent=r.ok?'Thank you. Your acknowledgement has been recorded.':r.status===404?'This link is invalid or expired.':'Unable to confirm. Please try again.';if(!r.ok&&r.status!==404)button.disabled=false;}catch{result.textContent='Connection failed. Please try again.';button.disabled=false;}};</script></body></html>`)
+})
+api.post('/notification-ack', async (c) => {
+  const body = await readBody(c, z.object({token:z.string().regex(/^[A-Za-z0-9_-]{43}$/)}))
+  if (!await notifications.acknowledgeNotification(body.token)) throw new HttpError(404,'Invalid or expired link')
+  return c.json({ok:true})
 })
 
 export const app = new Hono()
