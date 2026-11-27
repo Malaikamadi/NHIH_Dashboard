@@ -35,7 +35,6 @@ export function OperatorDesk() {
   }
 
   const navigate = (tab: typeof activeTab, filter?: WorkFilter) => {
-    if (tab !== activeTab && activeTab && !window.confirm('Leave this screen? Any unsaved form changes will be lost.')) return
     setNotificationsOpen(false)
     if (filter) setWorkFilter(filter)
     if (tab === activeTab) { setShowCreate(false); return }
@@ -52,7 +51,7 @@ export function OperatorDesk() {
           <header className="operator-bar"><button className="office-toggle" onClick={()=>setCompact(v=>!v)} aria-label="Toggle navigation">☰</button>
             <div className="operator-brand">
               <div><div className="hdr-kicker">NHIH · Operator only</div>
-              <strong>Operations Office</strong><small style={{display:'block',fontSize:10,color:'#647180'}}>Signature workspace · R4</small></div>
+              <strong>Operations Office</strong><small style={{display:'block',fontSize:10,color:'#647180'}}>Signature workspace · R5</small></div>
             </div>
             <div className="operator-bar-actions"><details className="office-install"><summary>Install</summary><InstallApp /></details><button className="ghost-btn" onClick={goDashboard}>Dashboard</button>
               <button type="button" className="ghost-btn" onClick={() => { setShowCreate(false); setNotificationsOpen(v => !v) }}>{notificationsOpen ? "Close notifications" : "Notifications"}</button>
