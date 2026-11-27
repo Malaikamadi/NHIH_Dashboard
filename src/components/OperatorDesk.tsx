@@ -7,6 +7,7 @@ import { MobileWorkQueue, type WorkFilter } from './MobileWorkQueue'
 import mohLogo from '../assets/mohs-logo.jpg'
 import { InstallApp } from './InstallApp'
 import { NotificationDesk } from './NotificationDesk'
+import './SignatureDesk.css'
 
 function goDashboard() {
   window.history.pushState({}, '', '/')
@@ -14,6 +15,7 @@ function goDashboard() {
 }
 
 export function OperatorDesk() {
+  const [rail, setRail] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [unlocked, setUnlocked] = useState(isOperatorUnlocked)
   const [code, setCode] = useState('')
@@ -34,27 +36,35 @@ export function OperatorDesk() {
   }
 
   const navigate = (tab: typeof activeTab, filter?: WorkFilter) => {
+    if (tab !== activeTab && activeTab && !window.confirm('Leave this screen? Any unsaved form changes will be lost.')) return
     setNotificationsOpen(false)
     if (filter) setWorkFilter(filter)
     if (tab === activeTab) { setShowCreate(false); return }
-    if (activeTab && !window.confirm('Leave this screen? Any unsaved form changes will be lost.')) return
     setShowCreate(false)
     setActiveTab(tab)
     window.scrollTo({ top: 0, behavior: 'instant' })
   }
 
   return (
-    <div className="operator-page">
+    <div className={`operator-page signature-desk ${unlocked ? "signature-unlocked" : ""} ${rail ? "signature-rail" : ""}`}>
       <InstallApp />
       {unlocked ? (
         <>
-          <header className="operator-bar">
+          <aside className="signature-sidebar" aria-label="Workspace navigation">
+<div className="signature-brand"><img src={mohLogo} alt="Ministry of Health"/><div><strong>NHIH</strong><small>THE OPERATIONS OFFICE</small></div></div>
+<button className="signature-collapse" type="button" onClick={()=>setRail(v=>!v)} aria-label={rail?'Expand navigation':'Collapse navigation'}>{rail?'»':'«'}</button>
+{([['Workspace',[[null,'⌂','My workspace'],['update','☑','Task directory'],['meeting','▦','Meetings'],['activity','◷','Activities'],['action','↳','Action items']]],['Hub operations',[['visitors','◎','Visitor register'],['log','⚑','Incident register'],['emr','▤','EMR programme']]]] as const).map(([group,items])=><section key={group}><small>{group}</small>{items.map(([tab,icon,label])=><button key={label} type="button" title={label} aria-current={!notificationsOpen&&activeTab===tab?'page':undefined} onClick={()=>navigate(tab,tab==='update'?'active':undefined)}><span aria-hidden="true">{icon}</span><b>{label}</b></button>)}</section>)}
+<section><small>Administration</small><button type="button" title="Team notifications" aria-current={notificationsOpen?'page':undefined} onClick={()=>{if(activeTab&&!window.confirm('Leave this screen? Any unsaved form changes will be lost.'))return;setActiveTab(null);setNotificationsOpen(true)}}><span>♧</span><b>Team notifications</b></button></section>
+<div className="signature-profile"><span>OM</span><div><strong>Operations Manager</strong><small>Secure workspace</small></div></div>
+</aside>
+<div className="signature-main">
+<header className="operator-bar">
             <div className="operator-brand"><img src={mohLogo} alt="Ministry of Health logo" />
-              <div><div className="hdr-kicker">NHIH · Operator only</div>
-              <strong>Operations Control Desk</strong></div>
+              <div><div className="hdr-kicker">National Health Information Hub</div>
+              <strong>The Operations Office</strong></div>
             </div>
             <div className="operator-bar-actions">
-              <button type="button" className="ghost-btn" onClick={() => { setShowCreate(false); setNotificationsOpen(v => !v) }}>{notificationsOpen ? "Close notifications" : "Notifications"}</button>
+              <button type="button" className="ghost-btn" onClick={() => { if(activeTab && !window.confirm('Leave this screen? Any unsaved form changes will be lost.')) return; setActiveTab(null); setShowCreate(false); setNotificationsOpen(v => !v) }}>{notificationsOpen ? "Close notifications" : "Notifications"}</button>
               <button type="button" className="ghost-btn" onClick={signOut}>
                 Sign out
               </button>
@@ -66,7 +76,7 @@ export function OperatorDesk() {
               {activeTab === 'update' ? <><div className="operator-mobile-work"><MobileWorkQueue key={workFilter} initialFilter={workFilter} onCreate={() => navigate('task')} /></div><div className="operator-desktop-work"><AdminPanel key={activeTab} open variant="page" initialTab={activeTab} onClose={goDashboard} /></div></> : <AdminPanel key={activeTab} open variant="page" initialTab={activeTab} onClose={goDashboard} />}
             </>
           ) : <MobileOpsHome onOpen={navigate} />}
-          <nav className="operator-mobile-nav" aria-label="Command Desk navigation">
+          </div><nav className="operator-mobile-nav" aria-label="Command Desk navigation">
             <button type="button" className={!activeTab && !showCreate ? 'is-selected' : ''} aria-current={!activeTab && !showCreate ? 'page' : undefined} onClick={() => navigate(null)}><span aria-hidden="true">⌂</span>Home</button>
             <button type="button" className={activeTab === 'update' ? 'is-selected' : ''} aria-current={activeTab === 'update' ? 'page' : undefined} onClick={() => navigate('update')}><span aria-hidden="true">☑</span>Tasks</button>
             <button type="button" className="operator-nav-create" aria-expanded={showCreate} aria-controls="operator-create-menu" onClick={() => setShowCreate(v => !v)}><span aria-hidden="true">＋</span>Create</button>
