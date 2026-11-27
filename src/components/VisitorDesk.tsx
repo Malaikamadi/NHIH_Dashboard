@@ -73,11 +73,21 @@ export function VisitorDesk({ onSaved }: { onSaved?: (message: string) => void }
   const breakdown = (field: 'organization' | 'purpose') => {
     const counts = new Map<string, number>()
     for (const visit of visits) {
-      const label = visit[field].trim() || 'Not specified'
-      counts.set(label, (counts.get(label) ?? 0) + 1)
+      const raw = visit[field].trim().replace(/\s+/g, ' ') || 'Not specified'
+      const label = field === 'organization' && /^(moh|ministry of health)$/i.test(raw) ? 'Ministry of Health (MoH)' : raw
+      const existing = [...counts.keys()].find(key => key.toLowerCase() === label.toLowerCase()) ?? label
+      counts.set(existing, (counts.get(existing) ?? 0) + 1)
     }
     return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5)
   }
+
+  const trend = Array.from({ length: 14 }, (_, i) => {
+    const date = new Date(today + 'T00:00:00Z')
+    date.setUTCDate(date.getUTCDate() - 13 + i)
+    const day = date.toISOString().slice(0, 10)
+    return { day, count: visits.filter(v => v.registeredAt.slice(0, 10) === day).length }
+  })
+  const peak = Math.max(1, ...trend.map(d => d.count))
 
   const filteredHistory = useMemo(() => {
     const q = historyQuery.trim().toLowerCase()
@@ -193,7 +203,27 @@ export function VisitorDesk({ onSaved }: { onSaved?: (message: string) => void }
   const latestSync = syncResult ?? data?.lastSync ?? null
 
   return (
-    <div className="visitor-desk">
+    <div className="visitor-desk visitor-intelligence-light">
+      <style>{`.visitor-intelligence-light {color:#19334c;background:#f4f7fa;padding:clamp(12px,2vw,24px);border-radius:12px;min-width:0}
+.visitor-intelligence-light h3,.visitor-intelligence-light h4,.visitor-intelligence-light strong {color:#173b57}
+.visitor-intelligence-light .muted,.visitor-intelligence-light .admin-help,.visitor-intelligence-light .visitor-org,.visitor-intelligence-light .visitor-purpose {color:#526579}
+.visitor-intelligence-light .visitor-kpi,.visitor-intelligence-light .visitor-panel,.visitor-intelligence-light .visitor-sync-card,.visitor-intelligence-light .visitor-card {background:#fff;color:#19334c;border:1px solid #d9e4ec;box-shadow:0 2px 8px #173b5708}
+.visitor-intelligence-light .visitor-kpi span {color:#526579}
+.visitor-intelligence-light .visitor-kpi.is-active {border-left:4px solid #19845d}
+.visitor-intelligence-light .visitor-kpi strong {font-size:clamp(24px,3vw,34px)}
+.visitor-intelligence-light .visitor-kpis {grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.visitor-intelligence-light .visitor-grid {grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.visitor-intelligence-light input,.visitor-intelligence-light select {background:#fff;color:#19334c;border:1px solid #b9cbd9}
+.visitor-intelligence-light .ghost-btn {background:#fff;color:#174b70;border:1px solid #b9cbd9}
+.visitor-intelligence-light .primary-btn {background:#175b83;color:white}
+.visitor-intelligence-light .visitor-history-table {color:#19334c;background:white}
+.visitor-intelligence-light .visitor-history-table th {background:#eaf1f6;color:#173b57}
+.visitor-intelligence-light .visitor-history-table td {background:#fff;color:#19334c;border-color:#d9e4ec}
+.visitor-intelligence-light .visitor-status,.visitor-intelligence-light .visitor-badge {background:#eaf1f6;color:#174b70}
+.visitor-intelligence-light progress {accent-color:#24769b;height:10px}
+.visitor-intelligence-light .visitor-trend {display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:4px;align-items:end}
+@media(max-width:760px){.visitor-intelligence-light .visitor-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.visitor-intelligence-light .visitor-grid{grid-template-columns:minmax(0,1fr)}.visitor-intelligence-light .visitor-trend{gap:2px}}
+`}</style>
       <div className="visitor-desk-head">
         <div>
           <h3>Visitor Intelligence</h3>
@@ -253,6 +283,19 @@ export function VisitorDesk({ onSaved }: { onSaved?: (message: string) => void }
         <div className="visitor-kpi"><span>This month</span><strong>{monthly}</strong></div>
       </div>
       <p className="admin-help">Historical registrations have no confirmed attendance. Registration counts are not confirmed visits. Week begins Monday; dates use Freetown time.</p>
+      <section className="visitor-panel" style={{marginBottom:16}}>
+        <h4>Registration activity · Last 14 days</h4>
+        <div className="visitor-trend" role="group" aria-label="Daily registrations over the last 14 days">
+          {trend.map(d => <div key={d.day} title={d.day + ': ' + d.count} style={{textAlign:'center',minWidth:0}}>
+            <small>{d.count}</small>
+            <div style={{height:100,display:'flex',alignItems:'flex-end',justifyContent:'center'}}>
+              <div style={{width:'72%',height:(d.count / peak * 100) + '%',background:'#24769b',borderRadius:'4px 4px 0 0'}} />
+            </div>
+            <small>{d.day.slice(8)}</small>
+          </div>)}
+        </div>
+        <p className="muted">{trend[0].day} — {today} · Freetown time</p>
+      </section>
       <div className="visitor-grid">
         {(['organization', 'purpose'] as const).map(field => (
           <section className="visitor-panel" key={field}>
