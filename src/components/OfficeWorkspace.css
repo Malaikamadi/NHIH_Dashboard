@@ -306,3 +306,16 @@
 .office-root .work-progress-track{height:6px;background:#e4e7e8;border-radius:5px;overflow:hidden;flex:1}.office-root .work-progress-track span{display:block;height:100%;background:#527866}.office-root .work-create-fab{margin-top:18px;position:static}.office-root .work-empty{padding:24px;background:#fff;border:1px solid #deded8}
 @media(max-width:1100px){.office-root .desk-task-layout{grid-template-columns:minmax(0,1fr)}.office-root .desk-context{position:static}}
 @media(max-width:760px){.office-root .work-queue-card{grid-template-columns:1fr 1fr;gap:10px}.office-root .work-queue-card>strong{grid-column:1/-1;grid-row:1}.office-root .work-card-meta{grid-column:1;grid-row:2}.office-root .work-card-top{grid-column:2;grid-row:2}.office-root .work-card-bottom{grid-column:1/-1;grid-row:3}.office-root .desk-work-grid{grid-template-columns:1fr}.office-root .desk-step{padding:14px}}
+
+.office-root .office-task-tools{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin:16px 0}
+.office-task-tools label{display:grid;gap:5px;font-size:11px;color:#647180}.office-task-tools select{min-width:140px}
+.office-root .office-task-tools .work-create-fab{margin:0 0 0 auto}
+.office-view-switch{display:flex;gap:2px;background:#e9e8e3;border-radius:5px;padding:3px}
+.office-view-switch button{border:0;padding:9px 14px;background:transparent;color:#263545;border-radius:4px;cursor:pointer}.office-view-switch button[aria-pressed=true]{background:white;box-shadow:0 1px 3px #0002}
+.office-table-head{display:grid;grid-template-columns:minmax(0,2fr) minmax(140px,1fr) minmax(120px,1fr) 100px;gap:16px;padding:13px 18px;background:#eeede8;color:#52606d;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.office-board{display:grid;grid-template-columns:repeat(5,minmax(160px,1fr));gap:12px;overflow-x:auto;padding-bottom:12px}
+.office-board section{background:#eeede8;border:1px solid #deded8;border-radius:6px;padding:10px;min-height:240px}
+.office-board h3{font-size:13px;text-transform:capitalize;margin:4px 0 14px;display:flex;justify-content:space-between;gap:6px}
+.office-board button{display:grid;gap:8px;text-align:left;width:100%;background:white;color:#263545;border:1px solid #deded8;border-radius:5px;padding:12px;margin-bottom:8px;cursor:pointer;overflow-wrap:anywhere}
+.office-board button strong{font-size:13px}.office-board button small,.office-board button span{font-size:11px;color:#647180}
+@media(max-width:760px){.office-table-head{display:none}.office-root .office-task-tools .work-create-fab{margin:0}.office-board{grid-template-columns:repeat(5,220px)}}
