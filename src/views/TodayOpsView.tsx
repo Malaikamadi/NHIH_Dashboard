@@ -1,3 +1,4 @@
+import { PowerCard } from '../components/PowerDesk'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { fetchVisitorSummary } from '../api'
 import { ActivitySession } from '../components/ActivityForm'
@@ -323,6 +324,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
           </span>
         </div>
         <div className="gcard gcard-info is-static" aria-live="polite"><div><span>Cumulative Hub Visits</span><strong>{visitorUnavailable || totalVisits === null ? "—" : totalVisits.toLocaleString()}</strong><em>All recorded visits since inception</em></div><span className="gcard-icon" aria-hidden="true"><Icon name="users" size={22}/></span></div>
+        <PowerCard/>
       </div>
 
       <div className="hero-row">
