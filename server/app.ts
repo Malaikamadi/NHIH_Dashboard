@@ -27,6 +27,7 @@ import {
   visitorWalkInCreate,
 } from './validate'
 
+import * as power from './power'
 const api = new Hono()
 
 api.use('*', logger())
@@ -138,6 +139,9 @@ api.post('/operator/unlock', async (c) => {
   return c.json({ ok: true })
 })
 
+api.get('/power/status',async c=>c.json(await power.powerStatus()))
+api.get('/power/history',async c=>{assertVisitorOperatorAccess(c.req.header('x-operator-code')??'');return c.json(await power.powerHistory())})
+api.post('/power/status',async c=>{assertVisitorOperatorAccess(c.req.header('x-operator-code')??'');const body=await readBody(c,z.object({source:z.enum(['grid','generator']),reason:z.string().trim().max(500).default('')}));return c.json(await power.changePower(body.source,body.reason))})
 api.get('/state', async (c) => c.json(await repo.getState()))
 
 api.get('/report', async (c) => {

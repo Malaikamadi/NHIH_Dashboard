@@ -1,3 +1,4 @@
+import { PowerCard } from '../components/PowerDesk'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { fetchVisitorSummary } from '../api'
 import { ActivitySession } from '../components/ActivityForm'
@@ -48,6 +49,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
   const [districtFilter, setDistrictFilter] = useState<DistrictId | null>(null)
   const [dueDay, setDueDay] = useState(() => new Date())
   const [dismissedSoon, setDismissedSoon] = useState<string[]>([])
+  const [totalVisits, setTotalVisits] = useState<number | null>(null)
   const [visitorCount, setVisitorCount] = useState<number | null>(null)
   const [visitorPurposes, setVisitorPurposes] = useState<string[]>([])
   const [visitorUnavailable, setVisitorUnavailable] = useState(false)
@@ -65,6 +67,7 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
         const summary = await fetchVisitorSummary()
         if (cancelled) return
         setVisitorCount(summary.checkedInCount)
+        setTotalVisits(summary.totalVisits ?? null)
         setVisitorPurposes(summary.activePurposes ?? [])
         setVisitorUnavailable(false)
       } catch {
@@ -320,6 +323,8 @@ export function TodayOpsView({ onOpenView }: { onOpenView: (id: ViewId) => void 
             <Icon name="users" size={22} />
           </span>
         </div>
+        <div className="gcard gcard-info is-static" aria-live="polite"><div><span>Cumulative Hub Visits</span><strong>{visitorUnavailable || totalVisits === null ? "—" : totalVisits.toLocaleString()}</strong><em>All Google Sheet registrations</em></div><span className="gcard-icon" aria-hidden="true"><Icon name="users" size={22}/></span></div>
+        <PowerCard/>
       </div>
 
       <div className="hero-row">

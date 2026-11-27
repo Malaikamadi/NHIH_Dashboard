@@ -256,3 +256,9 @@ export function openStateStream(onState: (state: OpsState) => void, onStatus: (l
     window.clearInterval(timer)
   }
 }
+
+export type PowerStatus={source:'grid'|'generator'|null;changedAt:string|null}
+export type PowerEvent={id:string;source:'grid'|'generator';changedAt:string;reason:string}
+export const fetchPowerStatus=()=>request<PowerStatus>('/api/power/status')
+export const fetchPowerHistory=()=>request<PowerEvent[]>('/api/power/history')
+export const updatePower=(source:'grid'|'generator',reason:string)=>request<PowerStatus>('/api/power/status',{method:'POST',body:JSON.stringify({source,reason})})
