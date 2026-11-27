@@ -372,3 +372,16 @@
 .office-root .mobile-ops-stats>button:nth-child(2)>strong{color:#a65343}
 .office-root .mobile-ops-stats>button>small{display:block;font-size:11px;font-weight:500;line-height:1.4;color:#647180;margin:0}
 @media(max-width:850px){.office-root .mobile-ops-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.office-root .mobile-ops-stats>button{min-height:120px;padding:14px!important}.office-root .mobile-ops-stats>button>strong{font-size:32px}}
+
+.office-power{display:grid;gap:20px;max-width:1100px;margin:24px auto}
+.office-power header h1{font:normal 34px Georgia,serif;margin:0 0 8px}.office-power header p,.office-power p{color:#647180}
+.office-power-current,.office-power-form,.office-power-history{background:white;border:1px solid #deded8;border-radius:8px;padding:24px}
+.office-power-current small{font-size:11px;letter-spacing:.08em;color:#647180}.office-power-current h2{font:normal 30px Georgia,serif;margin:10px 0}
+.office-power-form{display:grid;gap:16px}.office-power-form h2,.office-power-history h2{font:normal 23px Georgia,serif;margin:0}
+.office-power-options{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.office-root .office-power-options label{display:grid!important;grid-template-columns:20px 1fr;gap:6px 12px!important;padding:16px;border:1px solid #deded8;border-radius:6px;cursor:pointer}
+.office-power-options label:has(input:checked){background:#edf2f5;border-color:#8197a8}.office-power-options small{grid-column:2;color:#647180}
+.office-power-form>.primary-btn{justify-self:start}.office-power-table{border:1px solid #deded8;border-radius:6px;overflow:hidden}
+.office-power-table>div{display:grid;grid-template-columns:1fr 1fr 2fr;gap:12px;padding:14px;border-bottom:1px solid #deded8;font-size:13px;overflow-wrap:anywhere}.office-power-table>div:first-child{background:#eeede8;font-size:11px;text-transform:uppercase}
+.office-power-pages{display:flex;align-items:center;justify-content:space-between;margin-top:16px;font-size:12px}.office-power-pages button{padding:8px 12px;border:1px solid #deded8;background:white;border-radius:5px}
+@media(max-width:600px){.office-power-options{grid-template-columns:1fr}.office-power-current,.office-power-form,.office-power-history{padding:14px}.office-power-table>div{grid-template-columns:1fr 1fr}.office-power-table>div>*:last-child{grid-column:1/-1}}
